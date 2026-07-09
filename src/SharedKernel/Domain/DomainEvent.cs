@@ -1,13 +1,7 @@
 ﻿namespace SharedKernel.Domain;
 
-public abstract class DomainEvent<T> where T : TypedId
+public abstract class DomainEvent<T>(T aggregateId) where T : TypedId
 {
-    public T AggregateId { get; init; }
-    public DateTime OccurredOn  { get; init; }
-
-    protected DomainEvent(T aggregateId)
-    {
-        AggregateId = aggregateId;
-        OccurredOn = DateTime.UtcNow;
-    }
+    public T AggregateId { get; init; } = aggregateId;
+    public DateTimeOffset OccurredOn { get; init; } = DateTimeOffset.UtcNow;
 }
