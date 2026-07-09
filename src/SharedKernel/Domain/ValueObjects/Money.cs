@@ -6,7 +6,7 @@ public record Money : IComparable<Money>
 {
     public Currency Currency { get; }
     public decimal Amount { get; }
-    
+
     public Money(Currency currency, decimal amount)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(amount, 0);
@@ -14,19 +14,19 @@ public record Money : IComparable<Money>
         Amount = amount;
     }
 
-    public Money Add(Money other)
+    public static Money operator +(Money current, Money other)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(Currency, other.Currency);
-        return new Money(Currency, Amount + other.Amount);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(current.Currency, other.Currency);
+        return new Money(current.Currency, current.Amount + other.Amount);
     }
-    
-    public Money Subtract(Money other)
+
+    public static Money operator -(Money current, Money other)
     {
-        var newAmount = Amount - other.Amount;
-        if (newAmount < 0 || Currency != other.Currency) throw new ArgumentOutOfRangeException();
-        return new Money(Currency, newAmount);
+        var newAmount = current.Amount - other.Amount;
+        if (newAmount < 0 || current.Currency != other.Currency) throw new ArgumentOutOfRangeException();
+        return new Money(current.Currency, newAmount);
     }
-    
+
     public int CompareTo(Money? other)
     {
         if (other is null) return 1;

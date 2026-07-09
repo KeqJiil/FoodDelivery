@@ -16,3 +16,24 @@ public record Result<T, TE>
 
     public static Result<T, TE> Fail(TE err) => new(default, err) { IsSuccess = false };
 };
+
+public record Result<TE>
+{
+    public bool IsSuccess { get; init; }
+    public TE? Error { get; init; }
+
+    private Result(TE? err)
+    {
+        Error = err;
+    }
+
+    public static Result<TE> Success()
+    {
+        return new Result<TE>(default(TE)) { IsSuccess = true };
+    }
+
+    public static Result<TE> Fail(TE err)
+    {
+        return new Result<TE>(err) { IsSuccess = false };
+    }
+}
