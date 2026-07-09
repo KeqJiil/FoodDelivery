@@ -12,7 +12,8 @@
 
   <ItemGroup>
     <Folder Include="Application\" />
-    <Folder Include="Domain\" />
+    <Folder Include="Domain\Enums\" />
+    <Folder Include="Domain\ValueObjects\" />
     <Folder Include="Infrastructure\" />
   </ItemGroup>
 
