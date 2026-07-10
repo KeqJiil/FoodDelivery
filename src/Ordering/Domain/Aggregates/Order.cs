@@ -79,29 +79,24 @@ public class Order : AggregateRoot<OrderId>
         return Result<Error>.Success();
     }
 
-    public Result<Error> CreateOrderLineItem(
-        OrderLineId id, Money newPrice, MenuItemRefId menuItemRefId, byte quantity
-    )
+    public Result<Error> AddOrderLineItem(OrderLineId orderLineId, Money newPrice, MenuItemRefId menuItemRefId,
+        byte quantity = 1)
     {
         if (Status is not OrderStatus.Draft)
             return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Status can't be changed"));
+        var orderLine = FindOrderLineByMenuItem(menuItemRefId);
 
-        var orderLine = OrderLine.Create(id, newPrice, menuItemRefId, quantity);
-        _orderLines.Add(orderLine);
-
-        return Result<Error>.Success();
-    }
-
-    public Result<Error> AddOrderLineItem(OrderLineId orderLineId)
-    {
-        if (Status is not OrderStatus.Draft)
-            return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Status can't be changed"));
-        var orderLine = FindOrderLineOrThrow(orderLineId);
+        if (orderLine is null)
+        {
+            var orderLineNewItem = OrderLine.Create(orderLineId, newPrice, menuItemRefId, quantity);
+            _orderLines.Add(orderLineNewItem);
+            return Result<Error>.Success();
+        }
 
         if (orderLine.Quantity >= 255)
             return Result<Error>.Fail(new Error(ErrorEnum.Validation, "Quantity can't be greater than 255"));
 
-        orderLine.IncreaseQuantity();
+        orderLine.IncreaseQuantity(quantity);
         return Result<Error>.Success();
     }
 
@@ -122,12 +117,13 @@ public class Order : AggregateRoot<OrderId>
         return Result<Error>.Success();
     }
 
-    public Result<Error> ChangeOrderLinePrice(OrderLineId orderLineId, Money newPrice)
+    public Result<Error> ChangeOrderLinePrice(MenuItemRefId menuItemRefId, Money newPrice)
     {
         if (Status is not OrderStatus.Draft)
-            return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Status can't be changed"));
+            return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Price can't be changed"));
 
-        var orderLine = FindOrderLineOrThrow(orderLineId);
+        var orderLine = FindOrderLineByMenuItem(menuItemRefId);
+        if (orderLine is null) return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Order line not found"));
 
         orderLine.ChangePrice(newPrice);
         return Result<Error>.Success();
@@ -136,5 +132,10 @@ public class Order : AggregateRoot<OrderId>
     private OrderLine FindOrderLineOrThrow(OrderLineId id)
     {
         return _orderLines.Find(x => x.Id == id) ?? throw new KeyNotFoundException("Order line not found");
+    }
+
+    private OrderLine? FindOrderLineByMenuItem(MenuItemRefId menuItemRefId)
+    {
+        return _orderLines.Find(x => x.MenuItemRefId == menuItemRefId);
     }
 }

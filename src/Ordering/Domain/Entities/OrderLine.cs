@@ -22,7 +22,7 @@ public class OrderLine
     {
         return quantity == 0
             ? throw new InvalidOperationException($"Cannot create a new order line with 0 quantity")
-            : new OrderLine(id,  price, refId, quantity);
+            : new OrderLine(id, price, refId, quantity);
     }
 
     public void ChangePrice(Money price)
@@ -35,9 +35,9 @@ public class OrderLine
         return Price * Quantity;
     }
 
-    public void IncreaseQuantity()
+    public void IncreaseQuantity(byte quantity = 1)
     {
-        Quantity++;
+        Quantity += quantity;
     }
 
     public void DecreaseQuantity()

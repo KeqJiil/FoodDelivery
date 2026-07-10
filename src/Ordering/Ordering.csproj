@@ -11,9 +11,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Application\AddOrderLineItem\"/>
-        <Folder Include="Application\ChangeOrderLinePrice\"/>
-        <Folder Include="Application\RemoveOrderLineItem\"/>
         <Folder Include="Domain\ValueObjects\"/>
         <Folder Include="Infrastructure\"/>
     </ItemGroup>
