@@ -27,13 +27,13 @@ public class Order : AggregateRoot<OrderId>
 
     private Order(
         OrderId id, RestaurantRefId restaurantRefId,
-        OrderStatus status = OrderStatus.Draft, List<OrderLine>? list = null
+        OrderStatus status = OrderStatus.Draft, List<OrderLine>? orderLines = null
     )
     {
         Id = id;
         RestaurantRefId = restaurantRefId;
         Status = status;
-        _orderLines = list ?? [];
+        _orderLines = orderLines ?? [];
     }
 
     public static Order Create(OrderId id, RestaurantRefId restaurantRefId)
@@ -106,6 +106,7 @@ public class Order : AggregateRoot<OrderId>
             return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Status can't be changed"));
 
         var orderLine = FindOrderLineOrThrow(orderLineId);
+        if (orderLine is null) return Result<Error>.Success();
 
         if (orderLine.Quantity <= 1)
         {
@@ -129,9 +130,9 @@ public class Order : AggregateRoot<OrderId>
         return Result<Error>.Success();
     }
 
-    private OrderLine FindOrderLineOrThrow(OrderLineId id)
+    private OrderLine? FindOrderLineOrThrow(OrderLineId id)
     {
-        return _orderLines.Find(x => x.Id == id) ?? throw new KeyNotFoundException("Order line not found");
+        return _orderLines.Find(x => x.Id == id);
     }
 
     private OrderLine? FindOrderLineByMenuItem(MenuItemRefId menuItemRefId)

@@ -10,11 +10,11 @@ public class OrderLine
     public MenuItemRefId MenuItemRefId { get; }
     public byte Quantity { get; private set; }
 
-    private OrderLine(OrderLineId id, Money price, MenuItemRefId refId, byte quantity)
+    private OrderLine(OrderLineId id, Money price, MenuItemRefId menuItemRefId, byte quantity)
     {
         Id = id;
         Price = price;
-        MenuItemRefId = refId;
+        MenuItemRefId = menuItemRefId;
         Quantity = quantity;
     }
 
