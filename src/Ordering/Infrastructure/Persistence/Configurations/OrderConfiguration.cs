@@ -15,8 +15,10 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.Status).HasColumnName("status").HasConversion<string>().IsRequired();
         builder.Property(o => o.RestaurantRefId).HasColumnName("restaurant_ref_id")
             .HasConversion(o => o.Id, o => new RestaurantRefId(o));
+        builder.Property<DateTime>(OrderShadowProperties.CreatedAt).HasColumnName("created_at")
+            .HasDefaultValueSql("NOW()");
 
-        builder.HasMany(o => o.OrderLines).WithOne().HasForeignKey("order_lines");
+        builder.HasMany(o => o.OrderLines).WithOne().HasForeignKey("order_id");
 
         builder.Ignore(o => o.TotalPrice);
         builder.Ignore(o => o.Events);
