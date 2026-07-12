@@ -6,23 +6,25 @@ namespace Ordering.Domain.Entities;
 public class OrderLine
 {
     public OrderLineId Id { get; }
-    public Money Price { get; private set; }
+    public Money Price { get; private set; } = null!;
     public MenuItemRefId MenuItemRefId { get; }
     public byte Quantity { get; private set; }
 
-    private OrderLine(OrderLineId id, Money price, MenuItemRefId menuItemRefId, byte quantity)
+    private OrderLine(OrderLineId id, MenuItemRefId menuItemRefId, byte quantity)
     {
         Id = id;
-        Price = price;
         MenuItemRefId = menuItemRefId;
         Quantity = quantity;
     }
 
     public static OrderLine Create(OrderLineId id, Money price, MenuItemRefId refId, byte quantity)
     {
-        return quantity == 0
-            ? throw new InvalidOperationException($"Cannot create a new order line with 0 quantity")
-            : new OrderLine(id, price, refId, quantity);
+        if (quantity == 0)
+            throw new InvalidOperationException("Cannot create a new order line with 0 quantity");
+
+        var orderLine = new OrderLine(id, refId, quantity);
+        orderLine.ChangePrice(price);
+        return orderLine;
     }
 
     public void ChangePrice(Money price)

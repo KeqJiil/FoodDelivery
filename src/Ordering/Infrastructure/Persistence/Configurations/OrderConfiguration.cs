@@ -19,6 +19,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasDefaultValueSql("NOW()");
 
         builder.HasMany(o => o.OrderLines).WithOne().HasForeignKey("order_id");
+        builder.Navigation(o => o.OrderLines).HasField("_orderLines").UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.Ignore(o => o.TotalPrice);
         builder.Ignore(o => o.Events);

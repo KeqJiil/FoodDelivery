@@ -25,15 +25,12 @@ public class Order : AggregateRoot<OrderId>
         ? null
         : _orderLines.Select(l => l.GetTotalPrice()).Aggregate((a, b) => a + b);
 
-    private Order(
-        OrderId id, RestaurantRefId restaurantRefId,
-        OrderStatus status = OrderStatus.Draft, List<OrderLine>? orderLines = null
-    )
+    private Order(OrderId id, RestaurantRefId restaurantRefId, OrderStatus status = OrderStatus.Draft)
     {
         Id = id;
         RestaurantRefId = restaurantRefId;
         Status = status;
-        _orderLines = orderLines ?? [];
+        _orderLines = [];
     }
 
     public static Order Create(OrderId id, RestaurantRefId restaurantRefId)
@@ -45,7 +42,9 @@ public class Order : AggregateRoot<OrderId>
     public static Order Rehydrate(OrderId id, RestaurantRefId restaurantRefId,
         OrderStatus status, List<OrderLine> list)
     {
-        return new Order(id, restaurantRefId, status, list);
+        var order = new Order(id, restaurantRefId, status);
+        order._orderLines.AddRange(list);
+        return order;
     }
 
     public Result<Error> Place(Money minimalPrice)

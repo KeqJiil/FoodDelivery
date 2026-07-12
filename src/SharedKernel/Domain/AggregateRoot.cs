@@ -1,6 +1,12 @@
 ﻿namespace SharedKernel.Domain;
 
-public abstract class AggregateRoot<T> where T : TypedId
+public interface IHasDomainEvents
+{
+    IReadOnlyList<object> GetDomainEvents();
+    void ClearDomainEvents();
+}
+
+public abstract class AggregateRoot<T> : IHasDomainEvents where T : TypedId
 {
     private List<DomainEvent<T>> _events = [];
 
@@ -11,8 +17,18 @@ public abstract class AggregateRoot<T> where T : TypedId
         _events.Add(newEvent);
     }
 
-    public void ClearEvents()
+    private void ClearEvents()
     {
         _events = [];
+    }
+
+    public IReadOnlyList<object> GetDomainEvents()
+    {
+        return _events;
+    }
+
+    public void ClearDomainEvents()
+    {
+        ClearEvents();
     }
 }

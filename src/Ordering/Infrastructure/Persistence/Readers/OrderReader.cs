@@ -2,6 +2,7 @@
 using Ordering.Application.Abstractions;
 using Ordering.Application.GetOrderById;
 using Ordering.Domain.Enums;
+using Ordering.Domain.Ids;
 using Ordering.Infrastructure.Persistence.Configurations;
 
 namespace Ordering.Infrastructure.Persistence.Readers;
@@ -10,7 +11,8 @@ public class OrderReader(OrderingDbContext context) : IOrderReader
 {
     public async Task<OrderDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var raw = await context.Orders.Where(o => o.Id.Id == id).Select(o => new RawOrderDto(
+        var orderId = new OrderId(id);
+        var raw = await context.Orders.AsNoTracking().Where(o => o.Id == orderId).Select(o => new RawOrderDto(
             o.Id.Id,
             o.Status,
             o.RestaurantRefId.Id,
