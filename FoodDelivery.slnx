@@ -6,4 +6,12 @@
     <Project Path="src/Ordering/Ordering.csproj" />
     <Project Path="src/SharedKernel/SharedKernel.csproj" />
   </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/UnitTest/" />
+  <Folder Name="/tests/UnitTest/Ordering/">
+    <Project Path="tests/UnitTest/Ordering/Ordering.UnitTest.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTest/SharedKernel/">
+    <Project Path="tests/UnitTest/SharedKernel/SharedKernel.UnitTest.csproj" />
+  </Folder>
 </Solution>
