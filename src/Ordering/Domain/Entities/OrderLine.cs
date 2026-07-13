@@ -17,7 +17,7 @@ public class OrderLine
         Quantity = quantity;
     }
 
-    public static OrderLine Create(OrderLineId id, Money price, MenuItemRefId refId, byte quantity)
+    public static OrderLine Create(OrderLineId id, Money price, MenuItemRefId refId, byte quantity = 1)
     {
         if (quantity == 0)
             throw new InvalidOperationException("Cannot create a new order line with 0 quantity");

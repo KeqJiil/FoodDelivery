@@ -92,7 +92,7 @@ public class Order : AggregateRoot<OrderId>
             return Result<Error>.Success();
         }
 
-        if (orderLine.Quantity >= 255)
+        if (orderLine.Quantity >= 255 || orderLine.Quantity + quantity >= 255)
             return Result<Error>.Fail(new Error(ErrorEnum.Validation, "Quantity can't be greater than 255"));
 
         orderLine.IncreaseQuantity(quantity);
