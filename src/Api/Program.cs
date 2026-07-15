@@ -6,6 +6,7 @@ using Ordering.Infrastructure.Persistence;
 using Ordering.Infrastructure.Persistence.Interceptors;
 using Ordering.Infrastructure.Persistence.Readers;
 using Ordering.Infrastructure.Persistence.Repositories;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,14 @@ builder.Services.AddMassTransit(x =>
 });
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(OrderingDbContext).Assembly));
+
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+});
 
 var app = builder.Build();
 

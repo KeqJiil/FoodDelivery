@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Ordering.Application.Abstractions;
 using Ordering.Domain.Aggregates;
 using Ordering.Domain.Ids;
@@ -7,7 +8,7 @@ using SharedKernel.Domain.Errors;
 
 namespace Ordering.Application.CreateOrder;
 
-public class CreateOrderHandler(IOrderRepository repository, IUnitOfWork unitOfWork)
+public class CreateOrderHandler(IOrderRepository repository, IUnitOfWork unitOfWork, ILogger<CreateOrderHandler> logger)
     : IRequestHandler<CreateOrderCommand, Result<OrderId, Error>>
 {
     public async Task<Result<OrderId, Error>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -17,6 +18,8 @@ public class CreateOrderHandler(IOrderRepository repository, IUnitOfWork unitOfW
 
         repository.Add(order);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Created order {OrderId}", orderId);
 
         return Result<OrderId, Error>.Success(orderId);
     }
