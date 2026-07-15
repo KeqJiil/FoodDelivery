@@ -98,6 +98,24 @@ public class Restaurant : AggregateRoot<RestaurantId>
         return Result<Error>.Success();
     }
 
+    public Result<Error> ChangeMenuItemName(MenuItemId id, Name name)
+    {
+        var menuItem = _menuItems.FirstOrDefault(x => x.Id == id);
+        if (menuItem == null) return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Item not found"));
+
+        menuItem.ChangeName(name);
+        return Result<Error>.Success();
+    }
+
+    public Result<Error> ChangeMenuItemDescription(MenuItemId id, Description description)
+    {
+        var menuItem = _menuItems.FirstOrDefault(x => x.Id == id);
+        if (menuItem == null) return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Item not found"));
+
+        menuItem.ChangeDescription(description);
+        return Result<Error>.Success();
+    }
+
     public Result<Error> SetMinimalOrderPrice(Money price)
     {
         if (MinimalOrderPrice.Currency != price.Currency)
