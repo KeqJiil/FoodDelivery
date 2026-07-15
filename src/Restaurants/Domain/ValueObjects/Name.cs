@@ -7,9 +7,9 @@ public record Name
 
     public string Data { get; private set; }
 
-    public Name(string name)
+    public Name(string data)
     {
-        if (name.Length is > MaxNameLength or < MinNameLength) throw new ArgumentOutOfRangeException(nameof(name));
-        Data = name;
+        if (data.Length is > MaxNameLength or < MinNameLength) throw new ArgumentOutOfRangeException(nameof(data));
+        Data = data;
     }
 }

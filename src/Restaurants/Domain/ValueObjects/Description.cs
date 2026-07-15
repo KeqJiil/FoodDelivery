@@ -7,10 +7,10 @@ public record Description
 
     public string Data { get; private set; }
 
-    public Description(string desc)
+    public Description(string data)
     {
-        if (desc.Length is > MaxDescriptionLength or < MinDescriptionLength)
-            throw new ArgumentOutOfRangeException(nameof(desc));
-        Data = desc;
+        if (data.Length is > MaxDescriptionLength or < MinDescriptionLength)
+            throw new ArgumentOutOfRangeException(nameof(data));
+        Data = data;
     }
 }
