@@ -10,7 +10,7 @@ using Ordering.Domain.Ids;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 
-namespace Api.Controllers;
+namespace Api.Controllers.Ordering ;
 
 [ApiController]
 [Route("v1/[controller]")]
@@ -61,7 +61,7 @@ public class OrderingController : ControllerBase
     [HttpPost("{id:guid}/add-items")]
     public async Task<IActionResult> AddOrderLineItem([FromRoute] Guid id, [FromBody] AddOrderLineRequest request)
     {
-        var result = await _mediator.Send(new AddOrderLineItemCommand(new OrderId(id), new MenuItemRefId(request.menuId)));
+        var result = await _mediator.Send(new AddOrderLineItemCommand(new OrderId(id), new MenuItemRefId(request.MenuId)));
 
         return result.IsSuccess ? Ok(result.Ok) : MapError(result.Error!);
     }
@@ -69,7 +69,7 @@ public class OrderingController : ControllerBase
     [HttpDelete("{id:guid}/remove")]
     public async Task<IActionResult> RemoveOrderLineItem([FromRoute] Guid id, [FromBody] RemoveOrderLineRequest request)
     {
-        var result = await _mediator.Send(new RemoveOrderLineItemCommand(new OrderId(id), new OrderLineId(request.orderlineId)));
+        var result = await _mediator.Send(new RemoveOrderLineItemCommand(new OrderId(id), new OrderLineId(request.OrderLineId)));
 
         return result.IsSuccess ? NoContent() : MapError(result.Error!);
     }
@@ -89,5 +89,5 @@ public class OrderingController : ControllerBase
 
 public sealed record CreateOrderRequest(Guid RestaurantId);
 
-public sealed record AddOrderLineRequest(Guid menuId);
-public sealed record RemoveOrderLineRequest(Guid orderlineId);
+public sealed record AddOrderLineRequest(Guid MenuId);
+public sealed record RemoveOrderLineRequest(Guid OrderLineId);

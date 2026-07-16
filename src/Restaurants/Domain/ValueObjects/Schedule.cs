@@ -6,9 +6,9 @@ public record Schedule
 
     public IReadOnlyList<OpeningWindow> OpeningWindows => _openingWindows.AsReadOnly();
 
-    public Schedule(List<OpeningWindow>? openingWindows = null)
+    public Schedule(IEnumerable<OpeningWindow>? openingWindows = null)
     {
-        _openingWindows = openingWindows ?? [];
+        _openingWindows = openingWindows?.ToList() ?? [];
     }
 
     private Schedule()
