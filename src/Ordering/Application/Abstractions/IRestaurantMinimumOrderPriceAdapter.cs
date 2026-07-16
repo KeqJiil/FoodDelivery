@@ -1,5 +1,5 @@
-﻿using Ordering.Domain.Ids;
-using SharedKernel.Domain.ValueObjects;
+﻿using SharedKernel.Domain.ValueObjects;
+using Ordering.Domain.Ids;
 
 namespace Ordering.Application.Abstractions;
 

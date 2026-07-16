@@ -1,11 +1,11 @@
 using FluentAssertions;
 using Moq;
+using SharedKernel.Domain.Enums;
+using SharedKernel.Domain.ValueObjects;
 using Ordering.Application.Abstractions;
 using Ordering.Application.ChangeOrderLinePrice;
 using Ordering.Domain.Aggregates;
 using Ordering.Domain.Ids;
-using SharedKernel.Domain.Enums;
-using SharedKernel.Domain.ValueObjects;
 
 namespace Ordering.UnitTest.Application.ChangeOrderLinePrice;
 
@@ -18,7 +18,8 @@ public class ChangeOrderLinePriceHandlerTests
 
     public ChangeOrderLinePriceHandlerTests()
     {
-        _handler = new ChangeOrderLinePriceHandler(_repository.Object, _unitOfWork.Object, Mock.Of<Microsoft.Extensions.Logging.ILogger<ChangeOrderLinePriceHandler>>());
+        _handler = new ChangeOrderLinePriceHandler(_repository.Object, _unitOfWork.Object,
+            Mock.Of<Microsoft.Extensions.Logging.ILogger<ChangeOrderLinePriceHandler>>());
     }
 
     [Fact]

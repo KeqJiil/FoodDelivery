@@ -15,8 +15,8 @@ public class OrderCanBePlacedPolicy
             return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Status can't be changed"));
 
         if (order.OrderLines.Count == 0) return Result<Error>.Fail(new Error(ErrorEnum.Validation, "No order lines"));
-        
-        return minimalPrice.CompareTo(order.TotalPrice) <= 0 
+
+        return minimalPrice.CompareTo(order.TotalPrice) <= 0
             ? Result<Error>.Success()
             : Result<Error>.Fail(new Error(ErrorEnum.Validation, "Order price is too small"));
     }

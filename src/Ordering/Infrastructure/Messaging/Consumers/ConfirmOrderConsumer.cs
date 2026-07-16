@@ -1,10 +1,10 @@
 ﻿using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using SharedKernel.Domain.Enums;
 using Ordering.Application.ConfirmOrder;
 using Ordering.Domain.Ids;
-using SharedKernel.Domain.Enums;
-using SharedKernel.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 
 namespace Ordering.Infrastructure.Messaging.Consumers;
 
@@ -23,7 +23,8 @@ public class ConfirmOrderConsumer(ISender mediator, ILogger<ConfirmOrderConsumer
             }
 
             logger.LogError("Failed to confirm order {OrderId}: {Error}", msg.OrderId, result.Error.Message);
-            throw new InvalidOperationException($"Failed to confirm order {msg.OrderId}, Error: {result.Error.Message}");
+            throw new InvalidOperationException(
+                $"Failed to confirm order {msg.OrderId}, Error: {result.Error.Message}");
         }
 
         logger.LogInformation("Consumed ConfirmOrder for {OrderId}", msg.OrderId);

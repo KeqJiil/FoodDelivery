@@ -2,7 +2,6 @@
 using Ordering.Domain.Ids;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
-using SharedKernel.Domain.ValueObjects;
 
 namespace Ordering.Application.AddOrderLineItem;
 

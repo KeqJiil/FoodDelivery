@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Ordering.Application.Abstractions;
 using Ordering.Infrastructure.Adapters;
 using Ordering.Infrastructure.Persistence;
-using Ordering.Infrastructure.Persistence.Interceptors;
+using Ordering.Infrastructure.Messaging.Translators;
 using Ordering.Infrastructure.Persistence.Readers;
 using Ordering.Infrastructure.Persistence.Repositories;
 using Serilog;
+using SharedKernel.Infrastructure.Interceptors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,15 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IOrderReader, OrderReader>();
 builder.Services.AddScoped<IRestaurantMinimumOrderPriceAdapter, StubRestaurantMinimumOrderPriceAdapter>();
 builder.Services.AddScoped<IMenuPriceForOrderLineAdapter, StubMenuPriceForOrderLineAdapter>();
+builder.Services
+    .AddScoped<IIntegrationEventTranslator<Ordering.Domain.Events.OrderPlaced>,
+        OrderPlacedIntegrationEventTranslator>();
+builder.Services
+    .AddScoped<IIntegrationEventTranslator<Ordering.Domain.Events.OrderConfirmed>,
+        OrderConfirmedIntegrationEventTranslator>();
+builder.Services
+    .AddScoped<IIntegrationEventTranslator<Ordering.Domain.Events.OrderCancelled>,
+        OrderCancelledIntegrationEventTranslator>();
 builder.Services.AddDbContext<OrderingDbContext>((sp, options) =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -29,7 +39,7 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumers(typeof(OrderingDbContext).Assembly);
 
-    x.AddConfigureEndpointsCallback((context, name, cfg) =>
+    x.AddConfigureEndpointsCallback((context, _, cfg) =>
     {
         cfg.UseDelayedRedelivery(r =>
             r.Intervals(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30)));

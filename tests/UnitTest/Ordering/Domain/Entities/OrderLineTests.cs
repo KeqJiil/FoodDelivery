@@ -1,8 +1,8 @@
 using FluentAssertions;
-using Ordering.Domain.Entities;
-using Ordering.Domain.Ids;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.ValueObjects;
+using Ordering.Domain.Entities;
+using Ordering.Domain.Ids;
 
 namespace Ordering.UnitTest.Domain.Entities;
 

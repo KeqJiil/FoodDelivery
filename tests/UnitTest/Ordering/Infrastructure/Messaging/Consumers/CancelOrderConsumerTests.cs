@@ -8,7 +8,7 @@ using Ordering.Infrastructure.Messaging.Consumers;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
-using SharedKernel.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 
 namespace Ordering.UnitTest.Infrastructure.Messaging.Consumers;
 
@@ -20,7 +20,8 @@ public class CancelOrderConsumerTests
 
     public CancelOrderConsumerTests()
     {
-        _consumer = new CancelOrderConsumer(_sender.Object);
+        _consumer = new CancelOrderConsumer(_sender.Object,
+            Mock.Of<Microsoft.Extensions.Logging.ILogger<CancelOrderConsumer>>());
     }
 
     [Fact]
@@ -29,7 +30,9 @@ public class CancelOrderConsumerTests
         var orderId = Guid.NewGuid();
         _sender.Setup(s => s.Send(It.IsAny<CancelOrderCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrderId, Error>.Success(new OrderId(orderId)));
-        var context = Mock.Of<ConsumeContext<CancelOrder>>(c => c.Message == new CancelOrder(orderId));
+        var context =
+            Mock.Of<ConsumeContext<CancelOrder>>(c =>
+                c.Message == new CancelOrder(orderId));
 
         await _consumer.Consume(context);
 
@@ -45,7 +48,9 @@ public class CancelOrderConsumerTests
         _sender.Setup(s => s.Send(It.IsAny<CancelOrderCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrderId, Error>.Fail(new Error(ErrorEnum.Conflict, "Some conflict")));
 
-        var context = Mock.Of<ConsumeContext<CancelOrder>>(c => c.Message == new CancelOrder(orderId));
+        var context =
+            Mock.Of<ConsumeContext<CancelOrder>>(c =>
+                c.Message == new CancelOrder(orderId));
 
         var act = () => _consumer.Consume(context);
 
@@ -59,7 +64,9 @@ public class CancelOrderConsumerTests
         _sender.Setup(s => s.Send(It.IsAny<CancelOrderCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrderId, Error>.Fail(new Error(ErrorEnum.Unexpected, "Unexpected error")));
 
-        var context = Mock.Of<ConsumeContext<CancelOrder>>(c => c.Message == new CancelOrder(orderId));
+        var context =
+            Mock.Of<ConsumeContext<CancelOrder>>(c =>
+                c.Message == new CancelOrder(orderId));
 
         var act = () => _consumer.Consume(context);
 

@@ -1,9 +1,8 @@
-﻿using Ordering.Domain.Ids;
-using SharedKernel.Domain;
+﻿using SharedKernel.Domain;
+using Ordering.Domain.Ids;
 
 namespace Ordering.Domain.Events;
 
 public class OrderPlaced(OrderId id) : DomainEvent<OrderId>(id)
 {
-
 };

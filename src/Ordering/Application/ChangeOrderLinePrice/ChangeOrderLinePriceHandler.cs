@@ -1,14 +1,17 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
-using Ordering.Application.Abstractions;
-using Ordering.Domain.Aggregates;
 using Ordering.Domain.Ids;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
+using Ordering.Application.Abstractions;
+using Ordering.Domain.Aggregates;
 
 namespace Ordering.Application.ChangeOrderLinePrice;
 
-public class ChangeOrderLinePriceHandler(IOrderRepository repository, IUnitOfWork unitOfWork, ILogger<ChangeOrderLinePriceHandler> logger)
+public class ChangeOrderLinePriceHandler(
+    IOrderRepository repository,
+    IUnitOfWork unitOfWork,
+    ILogger<ChangeOrderLinePriceHandler> logger)
     : IRequestHandler<ChangeOrderLinePriceCommand, Result<Error>>
 {
     public async Task<Result<Error>> Handle(ChangeOrderLinePriceCommand request,
@@ -18,7 +21,7 @@ public class ChangeOrderLinePriceHandler(IOrderRepository repository, IUnitOfWor
             await repository.GetByMenuItemIdAsync(request.MenuItemRefId, cancellationToken);
         if (orders.Count == 0) return Result<Error>.Success();
 
-        foreach (Order order in orders)
+        foreach (var order in orders)
         {
             var result = order.ChangeOrderLinePrice(request.MenuItemRefId, request.NewPrice);
             if (!result.IsSuccess)
@@ -26,7 +29,7 @@ public class ChangeOrderLinePriceHandler(IOrderRepository repository, IUnitOfWor
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        
+
         return Result<Error>.Success();
     }
 }

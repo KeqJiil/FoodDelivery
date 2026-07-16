@@ -1,9 +1,9 @@
 using FluentAssertions;
+using SharedKernel.Domain.Enums;
+using SharedKernel.Domain.ValueObjects;
 using Ordering.Domain.Aggregates;
 using Ordering.Domain.Ids;
 using Ordering.Domain.Policies;
-using SharedKernel.Domain.Enums;
-using SharedKernel.Domain.ValueObjects;
 
 namespace Ordering.UnitTest.Domain.Policies;
 

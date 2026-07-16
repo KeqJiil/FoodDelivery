@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using Ordering.Application.Abstractions;
-using Ordering.Domain.Aggregates;
 using Ordering.Domain.Ids;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Enums;

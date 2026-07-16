@@ -1,11 +1,11 @@
 using FluentAssertions;
 using Moq;
-using Ordering.Application.AddOrderLineItem;
-using Ordering.Application.Abstractions;
-using Ordering.Domain.Aggregates;
-using Ordering.Domain.Ids;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.ValueObjects;
+using Ordering.Application.Abstractions;
+using Ordering.Application.AddOrderLineItem;
+using Ordering.Domain.Aggregates;
+using Ordering.Domain.Ids;
 
 namespace Ordering.UnitTest.Application.AddOrderLineItem;
 
@@ -19,7 +19,8 @@ public class AddOrderLineItemHandlerTests
 
     public AddOrderLineItemHandlerTests()
     {
-        _handler = new AddOrderLineItemHandler(_repository.Object, _unitOfWork.Object, _menuPriceAdapter.Object);
+        _handler = new AddOrderLineItemHandler(_repository.Object, _unitOfWork.Object, _menuPriceAdapter.Object,
+            Mock.Of<Microsoft.Extensions.Logging.ILogger<AddOrderLineItemHandler>>());
     }
 
     [Fact]

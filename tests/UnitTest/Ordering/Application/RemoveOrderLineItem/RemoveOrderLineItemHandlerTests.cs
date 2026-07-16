@@ -1,11 +1,11 @@
 using FluentAssertions;
 using Moq;
+using SharedKernel.Domain.Enums;
+using SharedKernel.Domain.ValueObjects;
 using Ordering.Application.Abstractions;
 using Ordering.Application.RemoveOrderLineItem;
 using Ordering.Domain.Aggregates;
 using Ordering.Domain.Ids;
-using SharedKernel.Domain.Enums;
-using SharedKernel.Domain.ValueObjects;
 
 namespace Ordering.UnitTest.Application.RemoveOrderLineItem;
 
@@ -18,7 +18,8 @@ public class RemoveOrderLineItemHandlerTests
 
     public RemoveOrderLineItemHandlerTests()
     {
-        _handler = new RemoveOrderLineItemHandler(_repository.Object, _unitOfWork.Object);
+        _handler = new RemoveOrderLineItemHandler(_repository.Object, _unitOfWork.Object,
+            Mock.Of<Microsoft.Extensions.Logging.ILogger<RemoveOrderLineItemHandler>>());
     }
 
     [Fact]

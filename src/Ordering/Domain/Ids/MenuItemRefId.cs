@@ -2,10 +2,9 @@
 
 namespace Ordering.Domain.Ids;
 
-public record MenuItemRefId: TypedId
+public record MenuItemRefId : TypedId
 {
-   public MenuItemRefId(Guid id) : base(id)
-   {
-      
-   }
+    public MenuItemRefId(Guid id) : base(id)
+    {
+    }
 }

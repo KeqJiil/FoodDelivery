@@ -1,5 +1,5 @@
-﻿using Ordering.Domain.Enums;
-using SharedKernel.Domain.ValueObjects;
+﻿using SharedKernel.Domain.ValueObjects;
+using Ordering.Domain.Enums;
 
 namespace Ordering.Application.GetOrderById;
 

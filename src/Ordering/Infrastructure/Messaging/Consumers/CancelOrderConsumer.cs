@@ -4,11 +4,12 @@ using Microsoft.Extensions.Logging;
 using Ordering.Application.CancelOrder;
 using Ordering.Domain.Ids;
 using SharedKernel.Domain.Enums;
-using SharedKernel.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 
 namespace Ordering.Infrastructure.Messaging.Consumers;
 
-public class CancelOrderConsumer(ISender mediator, ILogger<CancelOrderConsumer> logger) : IConsumer<CancelOrder>
+public class CancelOrderConsumer(ISender mediator, ILogger<CancelOrderConsumer> logger)
+    : IConsumer<CancelOrder>
 {
     public async Task Consume(ConsumeContext<CancelOrder> context)
     {

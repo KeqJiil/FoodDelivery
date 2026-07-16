@@ -11,6 +11,11 @@ public record Schedule
         _openingWindows = openingWindows ?? [];
     }
 
+    private Schedule()
+    {
+        _openingWindows = [];
+    }
+
     public bool IsOpenNow(DateTimeOffset moment)
     {
         return _openingWindows.Any(x => Contains(x, moment));

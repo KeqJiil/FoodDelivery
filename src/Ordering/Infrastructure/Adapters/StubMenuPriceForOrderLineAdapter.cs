@@ -1,7 +1,7 @@
-using Ordering.Application.Abstractions;
-using Ordering.Domain.Ids;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.ValueObjects;
+using Ordering.Application.Abstractions;
+using Ordering.Domain.Ids;
 
 namespace Ordering.Infrastructure.Adapters;
 

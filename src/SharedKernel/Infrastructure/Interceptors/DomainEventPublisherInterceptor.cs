@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using SharedKernel.Domain;
 
-namespace Ordering.Infrastructure.Persistence.Interceptors;
+namespace SharedKernel.Infrastructure.Interceptors;
 
 public sealed class DomainEventPublishInterceptor(IServiceProvider serviceProvider) : SaveChangesInterceptor
 {
@@ -30,9 +30,23 @@ public sealed class DomainEventPublishInterceptor(IServiceProvider serviceProvid
         {
             var domainEvents = aggregate.GetDomainEvents().ToList();
             foreach (var domainEvent in domainEvents)
-                await publishEndpoint.Publish(domainEvent, domainEvent.GetType(), ct);
+            {
+                var integrationEvent = TranslateToIntegrationEvent(domainEvent);
+                if (integrationEvent is not null)
+                    await publishEndpoint.Publish(integrationEvent, integrationEvent.GetType(), ct);
+            }
 
             aggregate.ClearDomainEvents();
         }
+    }
+
+    private object? TranslateToIntegrationEvent(object domainEvent)
+    {
+        var translatorType = typeof(IIntegrationEventTranslator<>).MakeGenericType(domainEvent.GetType());
+        var translator = serviceProvider.GetService(translatorType);
+        if (translator is null) return null;
+
+        return translatorType.GetMethod(nameof(IIntegrationEventTranslator<object>.Translate))!
+            .Invoke(translator, [domainEvent]);
     }
 }

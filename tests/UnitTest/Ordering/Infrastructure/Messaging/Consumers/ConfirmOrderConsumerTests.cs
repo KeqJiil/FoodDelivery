@@ -2,13 +2,13 @@ using FluentAssertions;
 using MassTransit;
 using MediatR;
 using Moq;
-using Ordering.Application.ConfirmOrder;
-using Ordering.Domain.Ids;
-using Ordering.Infrastructure.Messaging.Consumers;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
-using SharedKernel.IntegrationEvents;
+using Ordering.Application.ConfirmOrder;
+using Ordering.Domain.Ids;
+using Ordering.Infrastructure.Messaging.Consumers;
+using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 
 namespace Ordering.UnitTest.Infrastructure.Messaging.Consumers;
 
@@ -20,7 +20,8 @@ public class ConfirmOrderConsumerTests
 
     public ConfirmOrderConsumerTests()
     {
-        _consumer = new ConfirmOrderConsumer(_sender.Object);
+        _consumer = new ConfirmOrderConsumer(_sender.Object,
+            Mock.Of<Microsoft.Extensions.Logging.ILogger<ConfirmOrderConsumer>>());
     }
 
     [Fact]

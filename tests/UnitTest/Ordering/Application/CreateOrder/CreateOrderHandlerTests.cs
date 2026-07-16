@@ -17,7 +17,8 @@ public class CreateOrderHandlerTests
 
     public CreateOrderHandlerTests()
     {
-        _handler = new CreateOrderHandler(_repository.Object, _unitOfWork.Object);
+        _handler = new CreateOrderHandler(_repository.Object, _unitOfWork.Object,
+            Mock.Of<Microsoft.Extensions.Logging.ILogger<CreateOrderHandler>>());
     }
 
     [Fact]

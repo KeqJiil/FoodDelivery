@@ -1,12 +1,12 @@
-﻿using Ordering.Domain.Entities;
+﻿using SharedKernel.Domain;
+using SharedKernel.Domain.Enums;
+using SharedKernel.Domain.Errors;
+using SharedKernel.Domain.ValueObjects;
+using Ordering.Domain.Entities;
 using Ordering.Domain.Enums;
 using Ordering.Domain.Events;
 using Ordering.Domain.Ids;
 using Ordering.Domain.Policies;
-using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
-using SharedKernel.Domain.Errors;
-using SharedKernel.Domain.ValueObjects;
 
 namespace Ordering.Domain.Aggregates;
 
@@ -37,14 +37,6 @@ public class Order : AggregateRoot<OrderId>
     {
         var aggregate = new Order(id, restaurantRefId);
         return aggregate;
-    }
-
-    public static Order Rehydrate(OrderId id, RestaurantRefId restaurantRefId,
-        OrderStatus status, List<OrderLine> list)
-    {
-        var order = new Order(id, restaurantRefId, status);
-        order._orderLines.AddRange(list);
-        return order;
     }
 
     public Result<Error> Place(Money minimalPrice)

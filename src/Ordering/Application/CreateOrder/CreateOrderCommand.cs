@@ -1,8 +1,8 @@
 ﻿using MediatR;
 using Ordering.Domain.Aggregates;
-using Ordering.Domain.Ids;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
+using Ordering.Domain.Ids;
 
 namespace Ordering.Application.CreateOrder;
 

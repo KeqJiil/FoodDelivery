@@ -35,19 +35,21 @@ public class Restaurant : AggregateRoot<RestaurantId>
         _menuItems = [];
     }
 
+    private Restaurant()
+    {
+        Id = null!;
+        Name = null!;
+        Description = null!;
+        MinimalOrderPrice = null!;
+        Schedule = null!;
+        _menuItems = [];
+    }
+
     public static Restaurant Create(RestaurantId id, Name name, Description description, Money minimalOrderPrice,
         Schedule? schedule = null)
     {
         return new Restaurant(id, name, description, minimalOrderPrice, schedule ?? new Schedule(),
             RestaurantStatus.Active);
-    }
-
-    public static Restaurant Rehydrate(RestaurantId id, Name name, Description description, Money minimalOrderPrice,
-        Schedule schedule, RestaurantStatus status, List<MenuItem> menuItems)
-    {
-        var restaurant = new Restaurant(id, name, description, minimalOrderPrice, schedule, status);
-        restaurant._menuItems.AddRange(menuItems);
-        return restaurant;
     }
 
     public Result<Error> ChangeName(Name newName)

@@ -1,5 +1,5 @@
-﻿using Ordering.Application.GetOrderById;
-using Ordering.Domain.Ids;
+﻿using Ordering.Domain.Ids;
+using Ordering.Application.GetOrderById;
 
 namespace Ordering.Application.Abstractions;
 

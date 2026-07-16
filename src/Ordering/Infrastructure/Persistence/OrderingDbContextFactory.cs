@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Ordering.Infrastructure.Persistence;
 
@@ -7,8 +9,10 @@ public sealed class OrderingDbContextFactory : IDesignTimeDbContextFactory<Order
 {
     public OrderingDbContext CreateDbContext(string[] args)
     {
-        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
-            ?? "Host=localhost;Port=5432;Database=fooddelivery;Username=postgres;Password=postgres";
+        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+        if (connectionString is null)
+            throw new InvalidOperationException(
+                "No connection string found.");
 
         var optionsBuilder = new DbContextOptionsBuilder<OrderingDbContext>();
         optionsBuilder.UseNpgsql(connectionString);

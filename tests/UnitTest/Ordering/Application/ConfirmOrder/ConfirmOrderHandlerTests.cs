@@ -1,12 +1,12 @@
 using FluentAssertions;
 using Moq;
+using SharedKernel.Domain.Enums;
+using SharedKernel.Domain.ValueObjects;
 using Ordering.Application.Abstractions;
 using Ordering.Application.ConfirmOrder;
 using Ordering.Domain.Aggregates;
 using Ordering.Domain.Enums;
 using Ordering.Domain.Ids;
-using SharedKernel.Domain.Enums;
-using SharedKernel.Domain.ValueObjects;
 
 namespace Ordering.UnitTest.Application.ConfirmOrder;
 
@@ -19,7 +19,8 @@ public class ConfirmOrderHandlerTests
 
     public ConfirmOrderHandlerTests()
     {
-        _handler = new ConfirmOrderHandler(_repository.Object, _unitOfWork.Object);
+        _handler = new ConfirmOrderHandler(_repository.Object, _unitOfWork.Object,
+            Mock.Of<Microsoft.Extensions.Logging.ILogger<ConfirmOrderHandler>>());
     }
 
     [Fact]
@@ -39,7 +40,8 @@ public class ConfirmOrderHandlerTests
     public async Task Handle_ShouldFail_WhenStatusCannotChange()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), new MenuItemRefId(Guid.NewGuid()));
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+            new MenuItemRefId(Guid.NewGuid()));
         var command = new ConfirmOrderCommand(order.Id);
         _repository.Setup(r => r.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);
 
@@ -55,7 +57,8 @@ public class ConfirmOrderHandlerTests
     public async Task Handle_ShouldConfirmOrder_AndPersist_WhenValid()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), new MenuItemRefId(Guid.NewGuid()));
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+            new MenuItemRefId(Guid.NewGuid()));
         order.Place(new Money(Currency.Usd, 1m));
         var command = new ConfirmOrderCommand(order.Id);
         _repository.Setup(r => r.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);

@@ -7,6 +7,5 @@ public record RestaurantRefId : TypedId
     public RestaurantRefId(Guid id)
         : base(id)
     {
-        
     }
 }

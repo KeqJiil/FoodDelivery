@@ -1,12 +1,12 @@
 using FluentAssertions;
 using Moq;
+using SharedKernel.Domain.Enums;
+using SharedKernel.Domain.ValueObjects;
 using Ordering.Application.Abstractions;
 using Ordering.Application.CancelOrder;
 using Ordering.Domain.Aggregates;
 using Ordering.Domain.Enums;
 using Ordering.Domain.Ids;
-using SharedKernel.Domain.Enums;
-using SharedKernel.Domain.ValueObjects;
 
 namespace Ordering.UnitTest.Application.CancelOrder;
 
@@ -19,7 +19,8 @@ public class CancelOrderHandlerTests
 
     public CancelOrderHandlerTests()
     {
-        _handler = new CancelOrderHandler(_repository.Object, _unitOfWork.Object);
+        _handler = new CancelOrderHandler(_repository.Object, _unitOfWork.Object,
+            Mock.Of<Microsoft.Extensions.Logging.ILogger<CancelOrderHandler>>());
     }
 
     [Fact]
@@ -39,7 +40,8 @@ public class CancelOrderHandlerTests
     public async Task Handle_ShouldFail_WhenStatusCannotChange()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), new MenuItemRefId(Guid.NewGuid()));
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+            new MenuItemRefId(Guid.NewGuid()));
         order.Place(new Money(Currency.Usd, 1m));
         order.Confirm();
         var command = new CancelOrderCommand(order.Id);

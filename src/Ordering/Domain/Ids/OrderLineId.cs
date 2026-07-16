@@ -7,6 +7,5 @@ public record OrderLineId : TypedId
     public OrderLineId(Guid id)
         : base(id)
     {
-        
     }
 }

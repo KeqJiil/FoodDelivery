@@ -27,7 +27,7 @@ public class OrderReader(OrderingDbContext context) : IOrderReader
 
         return new OrderDto(raw.Id, raw.Status, raw.RestaurantRefId, totalPrice, raw.OrderLines, raw.CreatedAt);
     }
-    
+
     private record RawOrderDto(
         Guid Id,
         OrderStatus Status,

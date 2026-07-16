@@ -1,11 +1,11 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
-using Ordering.Application.Abstractions;
 using Ordering.Domain.Aggregates;
-using Ordering.Domain.Ids;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
+using Ordering.Application.Abstractions;
+using Ordering.Domain.Ids;
 
 namespace Ordering.Application.PlaceOrder;
 

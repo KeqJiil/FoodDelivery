@@ -22,6 +22,14 @@ public class MenuItem
         Price = price;
     }
 
+    private MenuItem()
+    {
+        Id = null!;
+        Name = null!;
+        Description = null!;
+        Price = null!;
+    }
+
     public static MenuItem Create(MenuItemId id, Name name, Description description, Money price)
     {
         return new MenuItem(id, name, description, price);
