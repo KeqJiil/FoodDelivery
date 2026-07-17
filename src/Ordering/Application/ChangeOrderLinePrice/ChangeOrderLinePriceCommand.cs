@@ -1,9 +1,10 @@
-﻿using MediatR;
-using SharedKernel.Domain;
-using SharedKernel.Domain.Errors;
-using SharedKernel.Domain.ValueObjects;
+using MediatR;
 using Ordering.Domain.Ids;
+using SharedKernel.Domain;
+using SharedKernel.Domain.Enums;
+using SharedKernel.Domain.Errors;
 
 namespace Ordering.Application.ChangeOrderLinePrice;
 
-public record ChangeOrderLinePriceCommand(MenuItemRefId MenuItemRefId, Money NewPrice) : IRequest<Result<Error>>;
+public record ChangeOrderLinePriceCommand(MenuItemRefId MenuItemRefId, Currency Currency, decimal Amount)
+    : IRequest<Result<Error>>;

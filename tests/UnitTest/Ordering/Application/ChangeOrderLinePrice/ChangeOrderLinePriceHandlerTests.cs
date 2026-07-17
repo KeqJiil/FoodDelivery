@@ -26,7 +26,7 @@ public class ChangeOrderLinePriceHandlerTests
     public async Task Handle_ShouldReturnSuccess_WhenNoOrdersFound()
     {
         var menuItemRefId = new MenuItemRefId(Guid.NewGuid());
-        var command = new ChangeOrderLinePriceCommand(menuItemRefId, new Money(Currency.Usd, 5m));
+        var command = new ChangeOrderLinePriceCommand(menuItemRefId, Currency.Usd, 5m);
         _repository.Setup(r => r.GetByMenuItemIdAsync(menuItemRefId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Order>());
 
@@ -41,12 +41,12 @@ public class ChangeOrderLinePriceHandlerTests
     {
         var menuItemRefId = new MenuItemRefId(Guid.NewGuid());
         var order1 = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order1.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), menuItemRefId);
+        order1.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!, menuItemRefId);
         var order2 = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order2.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), menuItemRefId);
+        order2.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!, menuItemRefId);
 
-        var newPrice = new Money(Currency.Usd, 7m);
-        var command = new ChangeOrderLinePriceCommand(menuItemRefId, newPrice);
+        var newPrice = Money.Create(Currency.Usd, 7m).Ok!;
+        var command = new ChangeOrderLinePriceCommand(menuItemRefId, Currency.Usd, 7m);
         _repository.Setup(r => r.GetByMenuItemIdAsync(menuItemRefId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Order> { order1, order2 });
 
@@ -64,14 +64,14 @@ public class ChangeOrderLinePriceHandlerTests
         var menuItemRefId = new MenuItemRefId(Guid.NewGuid());
 
         var draftOrder = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        draftOrder.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), menuItemRefId);
+        draftOrder.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!, menuItemRefId);
 
         var placedOrder = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        placedOrder.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), menuItemRefId);
-        placedOrder.Place(new Money(Currency.Usd, 1m));
+        placedOrder.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!, menuItemRefId);
+        placedOrder.Place(Money.Create(Currency.Usd, 1m).Ok!);
 
-        var newPrice = new Money(Currency.Usd, 7m);
-        var command = new ChangeOrderLinePriceCommand(menuItemRefId, newPrice);
+        var newPrice = Money.Create(Currency.Usd, 7m).Ok!;
+        var command = new ChangeOrderLinePriceCommand(menuItemRefId, Currency.Usd, 7m);
         _repository.Setup(r => r.GetByMenuItemIdAsync(menuItemRefId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Order> { draftOrder, placedOrder });
 

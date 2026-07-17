@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
+using SharedKernel.Domain.ValueObjects;
 
 namespace Restaurants.Application.SetMinimalOrderPrice;
 
@@ -14,6 +15,9 @@ public class SetMinimalOrderPriceHandler(
 {
     public async Task<Result<Error>> Handle(SetMinimalOrderPriceCommand request, CancellationToken cancellationToken)
     {
+        var moneyResult = Money.Create(request.Currency, request.Amount);
+        if (!moneyResult.IsSuccess) return Result<Error>.Fail(moneyResult.Error!);
+
         var restaurant = await repository.GetById(request.Id, cancellationToken);
         if (restaurant is null)
         {
@@ -21,7 +25,7 @@ public class SetMinimalOrderPriceHandler(
             return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
-        var result = restaurant.SetMinimalOrderPrice(request.Price);
+        var result = restaurant.SetMinimalOrderPrice(moneyResult.Ok!);
         if (!result.IsSuccess)
         {
             logger.LogWarning("Failed to set minimal order price of restaurant {RestaurantId}: {Error}", request.Id,

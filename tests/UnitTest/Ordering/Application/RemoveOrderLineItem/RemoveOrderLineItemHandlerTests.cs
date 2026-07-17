@@ -41,8 +41,8 @@ public class RemoveOrderLineItemHandlerTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var orderLineId = new OrderLineId(Guid.NewGuid());
-        order.AddOrderLineItem(orderLineId, new Money(Currency.Usd, 10m), new MenuItemRefId(Guid.NewGuid()));
-        order.Place(new Money(Currency.Usd, 1m));
+        order.AddOrderLineItem(orderLineId, Money.Create(Currency.Usd, 10m).Ok!, new MenuItemRefId(Guid.NewGuid()));
+        order.Place(Money.Create(Currency.Usd, 1m).Ok!);
 
         var command = new RemoveOrderLineItemCommand(order.Id, orderLineId);
         _repository.Setup(x => x.GetByIdAsync(command.Id)).ReturnsAsync(order);
@@ -59,7 +59,7 @@ public class RemoveOrderLineItemHandlerTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var orderLineId = new OrderLineId(Guid.NewGuid());
-        order.AddOrderLineItem(orderLineId, new Money(Currency.Usd, 10m), new MenuItemRefId(Guid.NewGuid()));
+        order.AddOrderLineItem(orderLineId, Money.Create(Currency.Usd, 10m).Ok!, new MenuItemRefId(Guid.NewGuid()));
 
         var command = new RemoveOrderLineItemCommand(order.Id, orderLineId);
         _repository.Setup(x => x.GetByIdAsync(command.Id)).ReturnsAsync(order);

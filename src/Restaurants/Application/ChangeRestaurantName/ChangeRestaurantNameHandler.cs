@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
+using Restaurants.Domain.ValueObjects;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
 
@@ -14,6 +15,9 @@ public class ChangeRestaurantNameHandler(
 {
     public async Task<Result<Error>> Handle(ChangeRestaurantNameCommand request, CancellationToken cancellationToken)
     {
+        var nameResult = Name.Create(request.NewName);
+        if (!nameResult.IsSuccess) return Result<Error>.Fail(nameResult.Error!);
+
         var restaurant = await repository.GetById(request.Id, cancellationToken);
         if (restaurant is null)
         {
@@ -21,7 +25,7 @@ public class ChangeRestaurantNameHandler(
             return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
-        var result = restaurant.ChangeName(request.NewName);
+        var result = restaurant.ChangeName(nameResult.Ok!);
         if (!result.IsSuccess)
         {
             logger.LogWarning("Failed to change name of restaurant {RestaurantId}: {Error}", request.Id,

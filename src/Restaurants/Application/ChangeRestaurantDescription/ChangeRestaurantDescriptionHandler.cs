@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
+using Restaurants.Domain.ValueObjects;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
 
@@ -15,6 +16,9 @@ public class ChangeRestaurantDescriptionHandler(
     public async Task<Result<Error>> Handle(ChangeRestaurantDescriptionCommand request,
         CancellationToken cancellationToken)
     {
+        var descriptionResult = Description.Create(request.NewDescription);
+        if (!descriptionResult.IsSuccess) return Result<Error>.Fail(descriptionResult.Error!);
+
         var restaurant = await repository.GetById(request.Id, cancellationToken);
         if (restaurant is null)
         {
@@ -22,7 +26,7 @@ public class ChangeRestaurantDescriptionHandler(
             return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
-        var result = restaurant.ChangeDescription(request.NewDescription);
+        var result = restaurant.ChangeDescription(descriptionResult.Ok!);
         if (!result.IsSuccess)
         {
             logger.LogWarning("Failed to change description of restaurant {RestaurantId}: {Error}", request.Id,

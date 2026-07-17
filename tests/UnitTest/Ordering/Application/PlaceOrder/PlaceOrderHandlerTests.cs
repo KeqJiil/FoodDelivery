@@ -42,7 +42,7 @@ public class PlaceOrderHandlerTests
     public async Task Handle_ShouldFail_WhenRestaurantNotFound()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
         var command = new PlaceOrderCommand(order.Id);
         _repository.Setup(r => r.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);
@@ -61,13 +61,13 @@ public class PlaceOrderHandlerTests
     public async Task Handle_ShouldFail_WhenOrderCannotBePlaced()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
         var command = new PlaceOrderCommand(order.Id);
         _repository.Setup(r => r.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);
         _minimumPriceAdapter.Setup(a =>
                 a.GetMinimumPriceForOrderAsync(order.RestaurantRefId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Money(Currency.Usd, 15m));
+            .ReturnsAsync(Money.Create(Currency.Usd, 15m).Ok!);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -80,13 +80,13 @@ public class PlaceOrderHandlerTests
     public async Task Handle_ShouldPlaceOrder_AndPersist_WhenValid()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
         var command = new PlaceOrderCommand(order.Id);
         _repository.Setup(r => r.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);
         _minimumPriceAdapter.Setup(a =>
                 a.GetMinimumPriceForOrderAsync(order.RestaurantRefId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Money(Currency.Usd, 1m));
+            .ReturnsAsync(Money.Create(Currency.Usd, 1m).Ok!);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 

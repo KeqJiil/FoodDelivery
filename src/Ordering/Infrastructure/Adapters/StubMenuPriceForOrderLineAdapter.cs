@@ -9,6 +9,6 @@ public sealed class StubMenuPriceForOrderLineAdapter : IMenuPriceForOrderLineAda
 {
     public Task<Money?> GetMenuItemPriceByIdAsync(MenuItemRefId id, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<Money?>(new Money(Currency.Usd, 9.99m));
+        return Task.FromResult<Money?>(Money.Create(Currency.Usd, 9.99m).Ok);
     }
 }

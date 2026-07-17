@@ -7,17 +7,17 @@ namespace SharedKernel.UnitTest.Domain.ValueObjects;
 public class MoneyTests
 {
     [Fact]
-    public void Constructor_ShouldThrow_WhenAmountIsNegative()
+    public void Create_ShouldFail_WhenAmountIsNegative()
     {
-        var fn = () => new Money(Currency.Eur, -1m);
-        fn.Should().Throw<ArgumentOutOfRangeException>();
+        var result = Money.Create(Currency.Eur, -1m);
+        result.IsSuccess.Should().BeFalse();
     }
 
     [Fact]
     public void Add_ShouldSumAmounts_WhenSameCurrency()
     {
-        var money1 = new Money(Currency.Eur, 1m);
-        var money2 = new Money(Currency.Eur, 1m);
+        var money1 = Money.Create(Currency.Eur, 1m).Ok!;
+        var money2 = Money.Create(Currency.Eur, 1m).Ok!;
         var result = money1 + money2;
         result.Amount.Should().Be(2m);
     }
@@ -25,8 +25,8 @@ public class MoneyTests
     [Fact]
     public void Add_ShouldThrow_WhenCurrenciesDiffer()
     {
-        var money1 = new Money(Currency.Eur, 1m);
-        var money2 = new Money(Currency.Usd, 1m);
+        var money1 = Money.Create(Currency.Eur, 1m).Ok!;
+        var money2 = Money.Create(Currency.Usd, 1m).Ok!;
         var fn = () => money2 + money1;
         fn.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -34,8 +34,8 @@ public class MoneyTests
     [Fact]
     public void Subtract_ShouldSubtractAmounts_WhenSameCurrency()
     {
-        var money1 = new Money(Currency.Eur, 2m);
-        var money2 = new Money(Currency.Eur, 1m);
+        var money1 = Money.Create(Currency.Eur, 2m).Ok!;
+        var money2 = Money.Create(Currency.Eur, 1m).Ok!;
         var result = money1 - money2;
         result.Amount.Should().Be(1m);
     }
@@ -43,8 +43,8 @@ public class MoneyTests
     [Fact]
     public void Subtract_ShouldThrow_WhenResultWouldBeNegative()
     {
-        var money1 = new Money(Currency.Eur, 5m);
-        var money2 = new Money(Currency.Eur, 2m);
+        var money1 = Money.Create(Currency.Eur, 5m).Ok!;
+        var money2 = Money.Create(Currency.Eur, 2m).Ok!;
         var fn = () => money2 - money1;
         fn.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -52,8 +52,8 @@ public class MoneyTests
     [Fact]
     public void Subtract_ShouldThrow_WhenCurrenciesDiffer()
     {
-        var money1 = new Money(Currency.Eur, 5m);
-        var money2 = new Money(Currency.Usd, 10m);
+        var money1 = Money.Create(Currency.Eur, 5m).Ok!;
+        var money2 = Money.Create(Currency.Usd, 10m).Ok!;
         var fn = () => money2 - money1;
         fn.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -61,8 +61,8 @@ public class MoneyTests
     [Fact]
     public void CompareTo_ShouldReflectAmountDifference_WhenSameCurrency()
     {
-        var money1 = new Money(Currency.Eur, 5m);
-        var money2 = new Money(Currency.Eur, 2m);
+        var money1 = Money.Create(Currency.Eur, 5m).Ok!;
+        var money2 = Money.Create(Currency.Eur, 2m).Ok!;
         var fn = () => money1.CompareTo(money2);
         fn.Should().NotThrow();
         fn().Should().Be(1);
@@ -71,8 +71,8 @@ public class MoneyTests
     [Fact]
     public void CompareTo_ShouldThrow_WhenCurrenciesDiffer()
     {
-        var money1 = new Money(Currency.Eur, 5m);
-        var money2 = new Money(Currency.Usd, 2m);
+        var money1 = Money.Create(Currency.Eur, 5m).Ok!;
+        var money2 = Money.Create(Currency.Usd, 2m).Ok!;
         var fn = () => money1.CompareTo(money2);
         fn.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -80,7 +80,7 @@ public class MoneyTests
     [Fact]
     public void Multiply_ShouldScaleAmount()
     {
-        var money1 = new Money(Currency.Eur, 5m);
+        var money1 = Money.Create(Currency.Eur, 5m).Ok!;
         var newMoney = money1 * 10;
         newMoney.Amount.Should().Be(50m);
     }

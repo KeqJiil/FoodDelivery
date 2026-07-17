@@ -13,9 +13,9 @@ public class OrderCanBePlacedPolicyTests
     public void CanBePlaced_ShouldFail_WhenStatusTransitionNotAllowed()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Eur, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Eur, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-        var money = new Money(Currency.Eur, 2m);
+        var money = Money.Create(Currency.Eur, 2m).Ok!;
         order.Place(money);
 
         var result = OrderCanBePlacedPolicy.CanBePlaced(order, money);
@@ -27,7 +27,7 @@ public class OrderCanBePlacedPolicyTests
     public void CanBePlaced_ShouldFail_WhenNoOrderLines()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        var money = new Money(Currency.Eur, 2m);
+        var money = Money.Create(Currency.Eur, 2m).Ok!;
 
         var result = OrderCanBePlacedPolicy.CanBePlaced(order, money);
 
@@ -39,9 +39,9 @@ public class OrderCanBePlacedPolicyTests
     public void CanBePlaced_ShouldFail_WhenTotalPriceBelowMinimum()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Eur, 1m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Eur, 1m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-        var money = new Money(Currency.Eur, 2m);
+        var money = Money.Create(Currency.Eur, 2m).Ok!;
 
         var result = OrderCanBePlacedPolicy.CanBePlaced(order, money);
 
@@ -53,9 +53,9 @@ public class OrderCanBePlacedPolicyTests
     public void CanBePlaced_ShouldSucceed_WhenTotalPriceMeetsMinimum()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Eur, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Eur, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-        var money = new Money(Currency.Eur, 2m);
+        var money = Money.Create(Currency.Eur, 2m).Ok!;
 
         var result = OrderCanBePlacedPolicy.CanBePlaced(order, money);
 

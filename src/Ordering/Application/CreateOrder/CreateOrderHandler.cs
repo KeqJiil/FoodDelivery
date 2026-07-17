@@ -13,7 +13,7 @@ public class CreateOrderHandler(IOrderRepository repository, IUnitOfWork unitOfW
 {
     public async Task<Result<OrderId, Error>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
-        var orderId = new OrderId(Guid.NewGuid());
+        var orderId = new OrderId();
         var order = Order.Create(orderId, request.RestaurantRefId);
 
         repository.Add(order);

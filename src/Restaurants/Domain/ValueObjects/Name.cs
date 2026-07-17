@@ -1,3 +1,6 @@
+using SharedKernel.Domain;
+using SharedKernel.Domain.Errors;
+
 namespace Restaurants.Domain.ValueObjects;
 
 public record Name
@@ -7,9 +10,15 @@ public record Name
 
     public string Data { get; private set; }
 
-    public Name(string data)
+    private Name(string data)
     {
-        if (data.Length is > MaxNameLength or < MinNameLength) throw new ArgumentOutOfRangeException(nameof(data));
         Data = data;
+    }
+
+    public static Result<Name, Error> Create(string data)
+    {
+        return data.Length is > MaxNameLength or < MinNameLength
+            ? Result<Name, Error>.Fail(Error.Validation($"Name must be between {MinNameLength} and {MaxNameLength} characters"))
+            : Result<Name, Error>.Success(new Name(data));
     }
 }

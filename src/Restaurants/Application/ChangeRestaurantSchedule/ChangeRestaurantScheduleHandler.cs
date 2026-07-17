@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
+using Restaurants.Domain.ValueObjects;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
 
@@ -22,7 +23,7 @@ public class ChangeRestaurantScheduleHandler(
             return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
-        var result = restaurant.ChangeSchedule(request.NewSchedule);
+        var result = restaurant.ChangeSchedule(new Schedule(request.NewSchedule));
         if (!result.IsSuccess)
         {
             logger.LogWarning("Failed to change schedule of restaurant {RestaurantId}: {Error}", request.Id,

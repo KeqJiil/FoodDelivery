@@ -1,4 +1,5 @@
 ﻿using SharedKernel.Domain.Enums;
+using SharedKernel.Domain.Errors;
 
 namespace SharedKernel.Domain.ValueObjects;
 
@@ -7,11 +8,17 @@ public record Money : IComparable<Money>
     public Currency Currency { get; }
     public decimal Amount { get; }
 
-    public Money(Currency currency, decimal amount)
+    private Money(Currency currency, decimal amount)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(amount, 0);
         Currency = currency;
         Amount = amount;
+    }
+
+    public static Result<Money, Error> Create(Currency currency, decimal amount)
+    {
+        return amount < 0
+            ? Result<Money, Error>.Fail(Error.Validation("Amount can't be negative"))
+            : Result<Money, Error>.Success(new Money(currency, amount));
     }
 
     public static Money operator +(Money current, Money other)
@@ -38,6 +45,8 @@ public record Money : IComparable<Money>
 
     public static Money operator *(Money money, decimal amount)
     {
-        return new Money(money.Currency, money.Amount * amount);
+        var newAmount = money.Amount * amount;
+        ArgumentOutOfRangeException.ThrowIfLessThan(newAmount, 0);
+        return new Money(money.Currency, newAmount);
     }
 }

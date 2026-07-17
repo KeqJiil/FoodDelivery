@@ -6,4 +6,5 @@ using SharedKernel.Domain.Errors;
 
 namespace Restaurants.Application.ChangeRestaurantSchedule;
 
-public record ChangeRestaurantScheduleCommand(RestaurantId Id, Schedule NewSchedule) : IRequest<Result<Error>>;
+public record ChangeRestaurantScheduleCommand(RestaurantId Id, List<OpeningWindow> NewSchedule)
+    : IRequest<Result<Error>>;

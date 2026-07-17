@@ -4,6 +4,10 @@ namespace Restaurants.Domain.Ids;
 
 public record MenuItemId : TypedId
 {
+    public MenuItemId()
+    {
+    }
+
     public MenuItemId(Guid id) : base(id)
     {
     }

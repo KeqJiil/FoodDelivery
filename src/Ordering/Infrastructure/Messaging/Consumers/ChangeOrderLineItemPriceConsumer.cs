@@ -2,7 +2,6 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using SharedKernel.Domain.Enums;
-using SharedKernel.Domain.ValueObjects;
 using Ordering.Application.ChangeOrderLinePrice;
 using Ordering.Domain.Ids;
 using SharedKernel.Infrastructure.IntegrationEvents;
@@ -16,8 +15,7 @@ public class ChangeOrderLineItemPriceConsumer(ISender mediator, ILogger<ChangeOr
     {
         var msg = context.Message;
         var result = await mediator.Send(new ChangeOrderLinePriceCommand(
-            new MenuItemRefId(msg.Id),
-            new Money(msg.Currency, msg.Amount)));
+            new MenuItemRefId(msg.Id), msg.Currency, msg.Amount), context.CancellationToken);
         if (!result.IsSuccess)
         {
             if (result.Error!.Type is ErrorEnum.Conflict or ErrorEnum.NotFound)

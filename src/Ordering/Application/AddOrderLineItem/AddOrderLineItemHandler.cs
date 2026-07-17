@@ -17,7 +17,7 @@ public class AddOrderLineItemHandler(
     public async Task<Result<OrderId, Error>> Handle(AddOrderLineItemCommand request,
         CancellationToken cancellationToken)
     {
-        var orderLineId = new OrderLineId(Guid.NewGuid());
+        var orderLineId = new OrderLineId();
 
         var order = await repository.GetByIdAsync(request.Id, cancellationToken);
         if (order is null)

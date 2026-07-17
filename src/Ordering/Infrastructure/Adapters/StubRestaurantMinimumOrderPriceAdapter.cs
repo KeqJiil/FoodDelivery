@@ -9,6 +9,6 @@ public sealed class StubRestaurantMinimumOrderPriceAdapter : IRestaurantMinimumO
 {
     public Task<Money?> GetMinimumPriceForOrderAsync(RestaurantRefId id, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<Money?>(new Money(Currency.Usd, 0m));
+        return Task.FromResult<Money?>(Money.Create(Currency.Usd, 0m).Ok);
     }
 }

@@ -17,7 +17,6 @@ using Restaurants.Domain.Ids;
 using Restaurants.Domain.ValueObjects;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
-using SharedKernel.Domain.ValueObjects;
 
 namespace Api.Controllers.Restaurants;
 
@@ -43,11 +42,8 @@ public class RestaurantsController : ControllerBase
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] CreateRestaurantRequest request)
     {
-        var name = new Name(request.Name);
-        var desc = new Description(request.Description);
-        var money = new Money(request.Currency, request.Amount);
-        var schedule = new Schedule(request.Schedules);
-        var result = await _mediator.Send(new CreateRestaurantCommand(name, desc, money, schedule));
+        var result = await _mediator.Send(new CreateRestaurantCommand(request.Name, request.Description,
+            request.Currency, request.Amount, request.Schedules));
 
         return !result.IsSuccess ? MapError(result.Error!) : CreatedAtAction(nameof(Get), new { id = result.Ok }, null);
     }
@@ -55,7 +51,7 @@ public class RestaurantsController : ControllerBase
     [HttpPut("{id:guid}/name")]
     public async Task<IActionResult> ChangeName([FromRoute] Guid id, [FromBody] ChangeNameRequest request)
     {
-        var result = await _mediator.Send(new ChangeRestaurantNameCommand(new RestaurantId(id), new Name(request.Name)));
+        var result = await _mediator.Send(new ChangeRestaurantNameCommand(new RestaurantId(id), request.Name));
 
         return result.IsSuccess ? NoContent() : MapError(result.Error!);
     }
@@ -63,7 +59,7 @@ public class RestaurantsController : ControllerBase
     [HttpPut("{id:guid}/description")]
     public async Task<IActionResult> ChangeDescription([FromRoute] Guid id, [FromBody] ChangeDescriptionRequest request)
     {
-        var result = await _mediator.Send(new ChangeRestaurantDescriptionCommand(new RestaurantId(id), new Description(request.Description)));
+        var result = await _mediator.Send(new ChangeRestaurantDescriptionCommand(new RestaurantId(id), request.Description));
 
         return result.IsSuccess ? NoContent() : MapError(result.Error!);
     }
@@ -71,7 +67,7 @@ public class RestaurantsController : ControllerBase
     [HttpPut("{id:guid}/schedule")]
     public async Task<IActionResult> ChangeSchedule([FromRoute] Guid id, [FromBody] ChangeScheduleRequest request)
     {
-        var result = await _mediator.Send(new ChangeRestaurantScheduleCommand(new RestaurantId(id), new Schedule(request.Schedules)));
+        var result = await _mediator.Send(new ChangeRestaurantScheduleCommand(new RestaurantId(id), request.Schedules));
 
         return result.IsSuccess ? NoContent() : MapError(result.Error!);
     }
@@ -79,7 +75,7 @@ public class RestaurantsController : ControllerBase
     [HttpPut("{id:guid}/minimal-order-price")]
     public async Task<IActionResult> SetMinimalOrderPrice([FromRoute] Guid id, [FromBody] MoneyRequest request)
     {
-        var result = await _mediator.Send(new SetMinimalOrderPriceCommand(new RestaurantId(id), new Money(request.Currency, request.Amount)));
+        var result = await _mediator.Send(new SetMinimalOrderPriceCommand(new RestaurantId(id), request.Currency, request.Amount));
 
         return result.IsSuccess ? NoContent() : MapError(result.Error!);
     }
@@ -103,10 +99,8 @@ public class RestaurantsController : ControllerBase
     [HttpPost("{id:guid}/menu-items")]
     public async Task<IActionResult> AddMenuItem([FromRoute] Guid id, [FromBody] AddMenuItemRequest request)
     {
-        var name = new Name(request.Name);
-        var desc = new Description(request.Description);
-        var money = new Money(request.Currency, request.Amount);
-        var result = await _mediator.Send(new AddMenuItemCommand(new RestaurantId(id), name, desc, money));
+        var result = await _mediator.Send(new AddMenuItemCommand(new RestaurantId(id), request.Name,
+            request.Description, request.Currency, request.Amount));
 
         return result.IsSuccess ? Ok(result.Ok) : MapError(result.Error!);
     }
@@ -122,7 +116,7 @@ public class RestaurantsController : ControllerBase
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/name")]
     public async Task<IActionResult> ChangeMenuItemName([FromRoute] Guid id, [FromRoute] Guid menuItemId, [FromBody] ChangeNameRequest request)
     {
-        var result = await _mediator.Send(new ChangeMenuItemNameCommand(new RestaurantId(id), new MenuItemId(menuItemId), new Name(request.Name)));
+        var result = await _mediator.Send(new ChangeMenuItemNameCommand(new RestaurantId(id), new MenuItemId(menuItemId), request.Name));
 
         return result.IsSuccess ? NoContent() : MapError(result.Error!);
     }
@@ -130,7 +124,7 @@ public class RestaurantsController : ControllerBase
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/description")]
     public async Task<IActionResult> ChangeMenuItemDescription([FromRoute] Guid id, [FromRoute] Guid menuItemId, [FromBody] ChangeDescriptionRequest request)
     {
-        var result = await _mediator.Send(new ChangeMenuItemDescriptionCommand(new RestaurantId(id), new MenuItemId(menuItemId), new Description(request.Description)));
+        var result = await _mediator.Send(new ChangeMenuItemDescriptionCommand(new RestaurantId(id), new MenuItemId(menuItemId), request.Description));
 
         return result.IsSuccess ? NoContent() : MapError(result.Error!);
     }
@@ -138,7 +132,7 @@ public class RestaurantsController : ControllerBase
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/price")]
     public async Task<IActionResult> ChangeMenuItemPrice([FromRoute] Guid id, [FromRoute] Guid menuItemId, [FromBody] MoneyRequest request)
     {
-        var result = await _mediator.Send(new ChangeMenuItemPriceCommand(new RestaurantId(id), new MenuItemId(menuItemId), new Money(request.Currency, request.Amount)));
+        var result = await _mediator.Send(new ChangeMenuItemPriceCommand(new RestaurantId(id), new MenuItemId(menuItemId), request.Currency, request.Amount));
 
         return result.IsSuccess ? NoContent() : MapError(result.Error!);
     }

@@ -2,8 +2,10 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
 using Restaurants.Domain.Ids;
+using Restaurants.Domain.ValueObjects;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
+using SharedKernel.Domain.ValueObjects;
 
 namespace Restaurants.Application.AddMenuItem;
 
@@ -16,6 +18,13 @@ public class AddMenuItemHandler(
     public async Task<Result<MenuItemId, Error>> Handle(AddMenuItemCommand request,
         CancellationToken cancellationToken)
     {
+        var nameResult = Name.Create(request.Name);
+        var descriptionResult = Description.Create(request.Description);
+        var moneyResult = Money.Create(request.Currency, request.Amount);
+
+        var checkResult = Result.Check(nameResult, descriptionResult, moneyResult);
+        if (!checkResult.IsSuccess) return Result<MenuItemId, Error>.Fail(checkResult.Error!);
+
         var restaurant = await repository.GetById(request.RestaurantId, cancellationToken);
         if (restaurant is null)
         {
@@ -23,8 +32,8 @@ public class AddMenuItemHandler(
             return Result<MenuItemId, Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
-        var menuId = new MenuItemId(Guid.NewGuid());
-        var result = restaurant.AddMenuItem(menuId, request.Name, request.Description, request.Price);
+        var menuId = new MenuItemId();
+        var result = restaurant.AddMenuItem(menuId, nameResult.Ok!, descriptionResult.Ok!, moneyResult.Ok!);
         if (!result.IsSuccess)
         {
             logger.LogWarning("Failed to add menu item to restaurant {RestaurantId}: {Error}", request.RestaurantId,

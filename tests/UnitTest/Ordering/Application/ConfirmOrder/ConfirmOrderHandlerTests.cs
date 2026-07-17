@@ -40,7 +40,7 @@ public class ConfirmOrderHandlerTests
     public async Task Handle_ShouldFail_WhenStatusCannotChange()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
         var command = new ConfirmOrderCommand(order.Id);
         _repository.Setup(r => r.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);
@@ -57,9 +57,9 @@ public class ConfirmOrderHandlerTests
     public async Task Handle_ShouldConfirmOrder_AndPersist_WhenValid()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-        order.Place(new Money(Currency.Usd, 1m));
+        order.Place(Money.Create(Currency.Usd, 1m).Ok!);
         var command = new ConfirmOrderCommand(order.Id);
         _repository.Setup(r => r.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);
 

@@ -1,9 +1,10 @@
 using MediatR;
 using Restaurants.Domain.Ids;
 using SharedKernel.Domain;
+using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
-using SharedKernel.Domain.ValueObjects;
 
 namespace Restaurants.Application.SetMinimalOrderPrice;
 
-public record SetMinimalOrderPriceCommand(RestaurantId Id, Money Price) : IRequest<Result<Error>>;
+public record SetMinimalOrderPriceCommand(RestaurantId Id, Currency Currency, decimal Amount)
+    : IRequest<Result<Error>>;

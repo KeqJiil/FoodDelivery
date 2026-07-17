@@ -57,14 +57,14 @@ public class AddOrderLineItemHandlerTests
     public async Task Handle_ShouldFail_WhenOrderRejectsLine()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-        order.Place(new Money(Currency.Usd, 1m));
+        order.Place(Money.Create(Currency.Usd, 1m).Ok!);
         var menuItemRefId = new MenuItemRefId(Guid.NewGuid());
         var command = new AddOrderLineItemCommand(order.Id, menuItemRefId);
         _repository.Setup(r => r.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);
         _menuPriceAdapter.Setup(a => a.GetMenuItemPriceByIdAsync(menuItemRefId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Money(Currency.Usd, 5m));
+            .ReturnsAsync(Money.Create(Currency.Usd, 5m).Ok!);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -81,7 +81,7 @@ public class AddOrderLineItemHandlerTests
         var command = new AddOrderLineItemCommand(order.Id, menuItemRefId);
         _repository.Setup(r => r.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);
         _menuPriceAdapter.Setup(a => a.GetMenuItemPriceByIdAsync(menuItemRefId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Money(Currency.Usd, 5m));
+            .ReturnsAsync(Money.Create(Currency.Usd, 5m).Ok!);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 

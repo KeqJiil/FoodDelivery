@@ -22,9 +22,9 @@ public class OrderTests
     public void Place_ShouldTransitionToPending_AndRaiseOrderPlaced_WhenPolicyAllows()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-        var result = order.Place(new Money(Currency.Usd, 1m));
+        var result = order.Place(Money.Create(Currency.Usd, 1m).Ok!);
 
         order.Status.Should().Be(OrderStatus.Pending);
         result.IsSuccess.Should().BeTrue();
@@ -34,9 +34,9 @@ public class OrderTests
     public void Place_ShouldFail_WhenPolicyRejects()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-        var result = order.Place(new Money(Currency.Usd, 15m));
+        var result = order.Place(Money.Create(Currency.Usd, 15m).Ok!);
 
         order.Status.Should().Be(OrderStatus.Draft);
         result.IsSuccess.Should().BeFalse();
@@ -46,9 +46,9 @@ public class OrderTests
     public void Confirm_ShouldTransitionToConfirmed_AndRaiseOrderConfirmed_WhenPending()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-        order.Place(new Money(Currency.Usd, 1m));
+        order.Place(Money.Create(Currency.Usd, 1m).Ok!);
 
         order.Status.Should().Be(OrderStatus.Pending);
 
@@ -60,7 +60,7 @@ public class OrderTests
     public void Confirm_ShouldFail_WhenStatusIsNotPending()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
         var result = order.Confirm();
 
@@ -72,7 +72,7 @@ public class OrderTests
     public void Cancel_ShouldTransitionToCancelled_AndRaiseOrderCancelled_WhenAllowed()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
         var result = order.Cancel();
 
@@ -84,9 +84,9 @@ public class OrderTests
     public void Cancel_ShouldFail_WhenStatusDisallowsTransition()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-        order.Place(new Money(Currency.Usd, 1m));
+        order.Place(Money.Create(Currency.Usd, 1m).Ok!);
         order.Confirm();
         var result = order.Cancel();
 
@@ -99,7 +99,7 @@ public class OrderTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var before = order.OrderLines.Count;
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
         var after = order.OrderLines.Count;
 
@@ -112,9 +112,9 @@ public class OrderTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var menuItemId = new MenuItemRefId(Guid.NewGuid());
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), menuItemId);
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!, menuItemId);
         var before = order.OrderLines.Count;
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), menuItemId);
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!, menuItemId);
         var after = order.OrderLines.Count;
 
         before.Should().Be(after);
@@ -128,8 +128,8 @@ public class OrderTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var menuId = new MenuItemRefId(Guid.NewGuid());
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), menuId, 250);
-        var result = order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), menuId, 6);
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!, menuId, 250);
+        var result = order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!, menuId, 6);
 
         result.IsSuccess.Should().BeFalse();
         order.OrderLines[0].Quantity.Should().Be(250);
@@ -139,11 +139,11 @@ public class OrderTests
     public void AddOrderLineItem_ShouldFail_WhenStatusIsNotDraft()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-        order.Place(new Money(Currency.Usd, 1m));
+        order.Place(Money.Create(Currency.Usd, 1m).Ok!);
 
-        var result = order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m),
+        var result = order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
 
         result.IsSuccess.Should().BeFalse();
@@ -154,7 +154,7 @@ public class OrderTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var orderLineId = new OrderLineId(Guid.NewGuid());
-        order.AddOrderLineItem(orderLineId, new Money(Currency.Usd, 10m), new MenuItemRefId(Guid.NewGuid()));
+        order.AddOrderLineItem(orderLineId, Money.Create(Currency.Usd, 10m).Ok!, new MenuItemRefId(Guid.NewGuid()));
         var before = order.OrderLines.Count;
         var result = order.RemoveOrderLineItem(orderLineId);
         var after = order.OrderLines.Count;
@@ -169,7 +169,7 @@ public class OrderTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var orderLineId = new OrderLineId(Guid.NewGuid());
-        order.AddOrderLineItem(orderLineId, new Money(Currency.Usd, 10m), new MenuItemRefId(Guid.NewGuid()), 2);
+        order.AddOrderLineItem(orderLineId, Money.Create(Currency.Usd, 10m).Ok!, new MenuItemRefId(Guid.NewGuid()), 2);
 
         var result = order.RemoveOrderLineItem(orderLineId);
 
@@ -191,8 +191,8 @@ public class OrderTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var orderLineId = new OrderLineId(Guid.NewGuid());
-        order.AddOrderLineItem(orderLineId, new Money(Currency.Usd, 10m), new MenuItemRefId(Guid.NewGuid()));
-        order.Place(new Money(Currency.Usd, 1m));
+        order.AddOrderLineItem(orderLineId, Money.Create(Currency.Usd, 10m).Ok!, new MenuItemRefId(Guid.NewGuid()));
+        order.Place(Money.Create(Currency.Usd, 1m).Ok!);
         var before = order.OrderLines.Count;
         var result = order.RemoveOrderLineItem(orderLineId);
         var after = order.OrderLines.Count;
@@ -206,8 +206,8 @@ public class OrderTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var menuId = new MenuItemRefId(Guid.NewGuid());
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), menuId, 2);
-        var result = order.ChangeOrderLinePrice(menuId, new Money(Currency.Usd, 20m));
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!, menuId, 2);
+        var result = order.ChangeOrderLinePrice(menuId, Money.Create(Currency.Usd, 20m).Ok!);
 
         result.IsSuccess.Should().BeTrue();
         order.OrderLines[0].Price.Amount.Should().Be(20m);
@@ -218,7 +218,7 @@ public class OrderTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var menuId = new MenuItemRefId(Guid.NewGuid());
-        var result = order.ChangeOrderLinePrice(menuId, new Money(Currency.Usd, 20m));
+        var result = order.ChangeOrderLinePrice(menuId, Money.Create(Currency.Usd, 20m).Ok!);
 
         result.IsSuccess.Should().BeFalse();
     }
@@ -228,10 +228,10 @@ public class OrderTests
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var menuId = new MenuItemRefId(Guid.NewGuid());
-        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, 10m), menuId);
-        order.Place(new Money(Currency.Usd, 1m));
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!, menuId);
+        order.Place(Money.Create(Currency.Usd, 1m).Ok!);
 
-        var result = order.ChangeOrderLinePrice(menuId, new Money(Currency.Usd, 20m));
+        var result = order.ChangeOrderLinePrice(menuId, Money.Create(Currency.Usd, 20m).Ok!);
 
         result.IsSuccess.Should().BeFalse();
         order.OrderLines[0].Price.Amount.Should().Be(10m);
@@ -254,7 +254,7 @@ public class OrderTests
         var sum = 0m;
         foreach (var price in prices)
         {
-            order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), new Money(Currency.Usd, price),
+            order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, price).Ok!,
                 new MenuItemRefId(Guid.NewGuid()));
             sum += price;
         }

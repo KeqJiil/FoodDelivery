@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Ordering.Domain.Ids;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
+using SharedKernel.Domain.ValueObjects;
 using Ordering.Application.Abstractions;
 using Ordering.Domain.Aggregates;
 
@@ -17,13 +18,16 @@ public class ChangeOrderLinePriceHandler(
     public async Task<Result<Error>> Handle(ChangeOrderLinePriceCommand request,
         CancellationToken cancellationToken)
     {
+        var moneyResult = Money.Create(request.Currency, request.Amount);
+        if (!moneyResult.IsSuccess) return Result<Error>.Fail(moneyResult.Error!);
+
         var orders =
             await repository.GetByMenuItemIdAsync(request.MenuItemRefId, cancellationToken);
         if (orders.Count == 0) return Result<Error>.Success();
 
         foreach (var order in orders)
         {
-            var result = order.ChangeOrderLinePrice(request.MenuItemRefId, request.NewPrice);
+            var result = order.ChangeOrderLinePrice(request.MenuItemRefId, moneyResult.Ok!);
             if (!result.IsSuccess)
                 logger.LogWarning("Failed to update price for order {OrderId}: {Error}", order.Id, result.Error);
         }
