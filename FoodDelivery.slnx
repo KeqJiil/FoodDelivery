@@ -12,6 +12,9 @@
   <Folder Name="/tests/UnitTest/Ordering/">
     <Project Path="tests/UnitTest/Ordering/Ordering.UnitTest.csproj" />
   </Folder>
+  <Folder Name="/tests/UnitTest/Restaurants/">
+    <Project Path="tests/UnitTest/Restaurants/Restaurants.UnitTest.csproj" />
+  </Folder>
   <Folder Name="/tests/UnitTest/SharedKernel/">
     <Project Path="tests/UnitTest/SharedKernel/SharedKernel.UnitTest.csproj" />
   </Folder>
