@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 
 namespace Restaurants.Application.SetMinimalOrderPrice;
@@ -19,7 +18,7 @@ public class SetMinimalOrderPriceHandler(
         if (restaurant is null)
         {
             logger.LogWarning("Set minimal order price failed: restaurant {RestaurantId} not found", request.Id);
-            return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Restaurant not found"));
+            return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
         var result = restaurant.SetMinimalOrderPrice(request.Price);
@@ -27,7 +26,7 @@ public class SetMinimalOrderPriceHandler(
         {
             logger.LogWarning("Failed to set minimal order price of restaurant {RestaurantId}: {Error}", request.Id,
                 result.Error);
-            return Result<Error>.Fail(result.Error ?? new Error(ErrorEnum.Unexpected, "Unexpected error"));
+            return Result<Error>.Fail(result.Error ?? Error.Unexpected());
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

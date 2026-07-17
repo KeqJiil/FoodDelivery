@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
 using Restaurants.Domain.Ids;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 
 namespace Restaurants.Application.AddMenuItem;
@@ -21,7 +20,7 @@ public class AddMenuItemHandler(
         if (restaurant is null)
         {
             logger.LogWarning("Add menu item failed: restaurant {RestaurantId} not found", request.RestaurantId);
-            return Result<MenuItemId, Error>.Fail(new Error(ErrorEnum.NotFound, "Restaurant not found"));
+            return Result<MenuItemId, Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
         var menuId = new MenuItemId(Guid.NewGuid());
@@ -30,7 +29,7 @@ public class AddMenuItemHandler(
         {
             logger.LogWarning("Failed to add menu item to restaurant {RestaurantId}: {Error}", request.RestaurantId,
                 result.Error);
-            return Result<MenuItemId, Error>.Fail(result.Error ?? new Error(ErrorEnum.Unexpected, "Unexpected error"));
+            return Result<MenuItemId, Error>.Fail(result.Error ?? Error.Unexpected());
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

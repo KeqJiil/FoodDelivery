@@ -45,7 +45,7 @@ public class ChangeOrderLineItemPriceConsumerTests
     {
         var menuId = Guid.NewGuid();
         _sender.Setup(s => s.Send(It.IsAny<ChangeOrderLinePriceCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Some conflict")));
+            .ReturnsAsync(Result<Error>.Fail(Error.Conflict("Some conflict")));
         var context =
             Mock.Of<ConsumeContext<MenuItemPriceChangedIntegration>>(c =>
                 c.Message == new MenuItemPriceChangedIntegration(menuId, 10m, Currency.Usd));

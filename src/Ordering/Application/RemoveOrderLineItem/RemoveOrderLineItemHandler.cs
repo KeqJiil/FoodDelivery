@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 using Ordering.Application.Abstractions;
 using Ordering.Domain.Ids;
@@ -21,7 +20,7 @@ public class RemoveOrderLineItemHandler(
         if (order is null)
         {
             logger.LogWarning("Remove order line failed: order {OrderId} not found", request.Id);
-            return Result<OrderId, Error>.Fail(new Error(ErrorEnum.NotFound, "Order not found"));
+            return Result<OrderId, Error>.Fail(Error.NotFound("Order not found"));
         }
 
         var result = order.RemoveOrderLineItem(request.OrderLineId);
@@ -29,7 +28,7 @@ public class RemoveOrderLineItemHandler(
         {
             logger.LogWarning("Failed to remove order line {OrderLineId} from order {OrderId}: {Error}",
                 request.OrderLineId, request.Id, result.Error);
-            return Result<OrderId, Error>.Fail(result.Error ?? new Error(ErrorEnum.Unexpected, "Unexpected Error"));
+            return Result<OrderId, Error>.Fail(result.Error ?? Error.Unexpected());
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

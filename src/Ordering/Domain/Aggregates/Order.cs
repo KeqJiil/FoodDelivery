@@ -1,5 +1,4 @@
 ﻿using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 using SharedKernel.Domain.ValueObjects;
 using Ordering.Domain.Entities;
@@ -43,7 +42,7 @@ public class Order : AggregateRoot<OrderId>
     {
         var policyResult = OrderCanBePlacedPolicy.CanBePlaced(this, minimalPrice);
         if (!policyResult.IsSuccess)
-            return Result<Error>.Fail(policyResult.Error ?? new Error(ErrorEnum.Unexpected, "Unexpected Error"));
+            return Result<Error>.Fail(policyResult.Error ?? Error.Unexpected());
 
         Status = OrderStatus.Pending;
         AddEvent(new OrderPlaced(Id));
@@ -53,7 +52,7 @@ public class Order : AggregateRoot<OrderId>
     public Result<Error> Confirm()
     {
         if (!OrderStatusChangePolicy.CanChangeStatusTo(Status, OrderStatus.Confirmed))
-            return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Status can't be changed"));
+            return Result<Error>.Fail(Error.Conflict("Status can't be changed"));
         Status = OrderStatus.Confirmed;
 
         AddEvent(new OrderConfirmed(Id));
@@ -63,7 +62,7 @@ public class Order : AggregateRoot<OrderId>
     public Result<Error> Cancel()
     {
         if (!OrderStatusChangePolicy.CanChangeStatusTo(Status, OrderStatus.Cancelled))
-            return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Can't change order status"));
+            return Result<Error>.Fail(Error.Conflict("Can't change order status"));
         Status = OrderStatus.Cancelled;
 
         AddEvent(new OrderCancelled(Id));
@@ -74,7 +73,7 @@ public class Order : AggregateRoot<OrderId>
         byte quantity = 1)
     {
         if (Status is not OrderStatus.Draft)
-            return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Status can't be changed"));
+            return Result<Error>.Fail(Error.Conflict("Status can't be changed"));
         var orderLine = FindOrderLineByMenuItem(menuItemRefId);
 
         if (orderLine is null)
@@ -85,7 +84,7 @@ public class Order : AggregateRoot<OrderId>
         }
 
         if (orderLine.Quantity >= 255 || orderLine.Quantity + quantity >= 255)
-            return Result<Error>.Fail(new Error(ErrorEnum.Validation, "Quantity can't be greater than 255"));
+            return Result<Error>.Fail(Error.Validation("Quantity can't be greater than 255"));
 
         orderLine.IncreaseQuantity(quantity);
         return Result<Error>.Success();
@@ -94,7 +93,7 @@ public class Order : AggregateRoot<OrderId>
     public Result<Error> RemoveOrderLineItem(OrderLineId orderLineId)
     {
         if (Status is not OrderStatus.Draft)
-            return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Status can't be changed"));
+            return Result<Error>.Fail(Error.Conflict("Status can't be changed"));
 
         var orderLine = FindOrderLineOrThrow(orderLineId);
         if (orderLine is null) return Result<Error>.Success();
@@ -112,10 +111,10 @@ public class Order : AggregateRoot<OrderId>
     public Result<Error> ChangeOrderLinePrice(MenuItemRefId menuItemRefId, Money newPrice)
     {
         if (Status is not OrderStatus.Draft)
-            return Result<Error>.Fail(new Error(ErrorEnum.Conflict, "Price can't be changed"));
+            return Result<Error>.Fail(Error.Conflict("Price can't be changed"));
 
         var orderLine = FindOrderLineByMenuItem(menuItemRefId);
-        if (orderLine is null) return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Order line not found"));
+        if (orderLine is null) return Result<Error>.Fail(Error.NotFound("Order line not found"));
 
         orderLine.ChangePrice(newPrice);
         return Result<Error>.Success();

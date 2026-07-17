@@ -48,7 +48,7 @@ public class MenuItem
     public Result<Error> ChangePrice(Money price)
     {
         if (price.Currency != Price.Currency)
-            return Result<Error>.Fail(new Error(ErrorEnum.Validation, "Wrong Currency"));
+            return Result<Error>.Fail(Error.Validation("Wrong Currency"));
         Price = price;
         return Result<Error>.Success();
     }

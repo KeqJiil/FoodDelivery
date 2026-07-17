@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 
 namespace Restaurants.Application.ChangeRestaurantDescription;
@@ -20,7 +19,7 @@ public class ChangeRestaurantDescriptionHandler(
         if (restaurant is null)
         {
             logger.LogWarning("Change description failed: restaurant {RestaurantId} not found", request.Id);
-            return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Restaurant not found"));
+            return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
         var result = restaurant.ChangeDescription(request.NewDescription);
@@ -28,7 +27,7 @@ public class ChangeRestaurantDescriptionHandler(
         {
             logger.LogWarning("Failed to change description of restaurant {RestaurantId}: {Error}", request.Id,
                 result.Error);
-            return Result<Error>.Fail(result.Error ?? new Error(ErrorEnum.Unexpected, "Unexpected error"));
+            return Result<Error>.Fail(result.Error ?? Error.Unexpected());
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

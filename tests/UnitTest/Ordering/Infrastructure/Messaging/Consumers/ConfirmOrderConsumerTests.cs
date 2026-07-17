@@ -3,7 +3,6 @@ using MassTransit;
 using MediatR;
 using Moq;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 using Ordering.Application.ConfirmOrder;
 using Ordering.Domain.Ids;
@@ -44,7 +43,7 @@ public class ConfirmOrderConsumerTests
     {
         var orderId = Guid.NewGuid();
         _sender.Setup(s => s.Send(It.IsAny<ConfirmOrderCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<OrderId, Error>.Fail(new Error(ErrorEnum.Conflict, "Some conflict")));
+            .ReturnsAsync(Result<OrderId, Error>.Fail(Error.Conflict("Some conflict")));
 
         var context = Mock.Of<ConsumeContext<ConfirmOrder>>(c => c.Message == new ConfirmOrder(orderId));
 
@@ -58,7 +57,7 @@ public class ConfirmOrderConsumerTests
     {
         var orderId = Guid.NewGuid();
         _sender.Setup(s => s.Send(It.IsAny<ConfirmOrderCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<OrderId, Error>.Fail(new Error(ErrorEnum.Unexpected, "Unexpected error")));
+            .ReturnsAsync(Result<OrderId, Error>.Fail(Error.Unexpected()));
 
         var context = Mock.Of<ConsumeContext<ConfirmOrder>>(c => c.Message == new ConfirmOrder(orderId));
 

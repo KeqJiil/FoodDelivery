@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 
 namespace Restaurants.Application.DeactivateRestaurant;
@@ -19,7 +18,7 @@ public class DeactivateRestaurantHandler(
         if (restaurant is null)
         {
             logger.LogWarning("Deactivate failed: restaurant {RestaurantId} not found", request.Id);
-            return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Restaurant not found"));
+            return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
         restaurant.Deactivate();

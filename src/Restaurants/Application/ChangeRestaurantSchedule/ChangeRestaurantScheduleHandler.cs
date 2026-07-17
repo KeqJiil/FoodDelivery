@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 
 namespace Restaurants.Application.ChangeRestaurantSchedule;
@@ -20,7 +19,7 @@ public class ChangeRestaurantScheduleHandler(
         if (restaurant is null)
         {
             logger.LogWarning("Change schedule failed: restaurant {RestaurantId} not found", request.Id);
-            return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Restaurant not found"));
+            return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
         var result = restaurant.ChangeSchedule(request.NewSchedule);
@@ -28,7 +27,7 @@ public class ChangeRestaurantScheduleHandler(
         {
             logger.LogWarning("Failed to change schedule of restaurant {RestaurantId}: {Error}", request.Id,
                 result.Error);
-            return Result<Error>.Fail(result.Error ?? new Error(ErrorEnum.Unexpected, "Unexpected error"));
+            return Result<Error>.Fail(result.Error ?? Error.Unexpected());
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

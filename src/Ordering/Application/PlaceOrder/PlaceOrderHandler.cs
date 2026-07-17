@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Ordering.Domain.Aggregates;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 using Ordering.Application.Abstractions;
 using Ordering.Domain.Ids;
@@ -22,7 +21,7 @@ public class PlaceOrderHandler(
         if (order is null)
         {
             logger.LogWarning("Place order failed: order {OrderId} not found", request.OrderId);
-            return Result<OrderId, Error>.Fail(new Error(ErrorEnum.NotFound, "Order not found"));
+            return Result<OrderId, Error>.Fail(Error.NotFound("Order not found"));
         }
 
         var minimumPrice =
@@ -31,14 +30,14 @@ public class PlaceOrderHandler(
         if (minimumPrice is null)
         {
             logger.LogWarning("Place order failed: restaurant {RestaurantRefId} not found", order.RestaurantRefId);
-            return Result<OrderId, Error>.Fail(new Error(ErrorEnum.NotFound, "Restaurant not found"));
+            return Result<OrderId, Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
         var result = order.Place(minimumPrice);
         if (!result.IsSuccess)
         {
             logger.LogWarning("Failed to place order {OrderId}: {Error}", order.Id, result.Error);
-            return Result<OrderId, Error>.Fail(result.Error ?? new Error(ErrorEnum.Unexpected, "Unexpected error"));
+            return Result<OrderId, Error>.Fail(result.Error ?? Error.Unexpected());
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

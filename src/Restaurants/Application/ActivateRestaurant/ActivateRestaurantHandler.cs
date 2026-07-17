@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 
 namespace Restaurants.Application.ActivateRestaurant;
@@ -19,7 +18,7 @@ public class ActivateRestaurantHandler(
         if (restaurant is null)
         {
             logger.LogWarning("Activate failed: restaurant {RestaurantId} not found", request.Id);
-            return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Restaurant not found"));
+            return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
         restaurant.Activate();

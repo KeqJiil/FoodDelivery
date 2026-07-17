@@ -6,7 +6,6 @@ using Ordering.Application.CancelOrder;
 using Ordering.Domain.Ids;
 using Ordering.Infrastructure.Messaging.Consumers;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 
@@ -46,7 +45,7 @@ public class CancelOrderConsumerTests
     {
         var orderId = Guid.NewGuid();
         _sender.Setup(s => s.Send(It.IsAny<CancelOrderCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<OrderId, Error>.Fail(new Error(ErrorEnum.Conflict, "Some conflict")));
+            .ReturnsAsync(Result<OrderId, Error>.Fail(Error.Conflict("Some conflict")));
 
         var context =
             Mock.Of<ConsumeContext<CancelOrder>>(c =>
@@ -62,7 +61,7 @@ public class CancelOrderConsumerTests
     {
         var orderId = Guid.NewGuid();
         _sender.Setup(s => s.Send(It.IsAny<CancelOrderCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<OrderId, Error>.Fail(new Error(ErrorEnum.Unexpected, "Unexpected error")));
+            .ReturnsAsync(Result<OrderId, Error>.Fail(Error.Unexpected()));
 
         var context =
             Mock.Of<ConsumeContext<CancelOrder>>(c =>

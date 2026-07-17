@@ -4,7 +4,6 @@ using Restaurants.Domain.Events;
 using Restaurants.Domain.Ids;
 using Restaurants.Domain.ValueObjects;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 using SharedKernel.Domain.ValueObjects;
 
@@ -69,7 +68,7 @@ public class Restaurant : AggregateRoot<RestaurantId>
     public Result<Error> AddMenuItem(MenuItemId id, Name name, Description description, Money price)
     {
         if (price.Currency != MinimalOrderPrice.Currency)
-            return Result<Error>.Fail(new Error(ErrorEnum.Validation, "Different currency"));
+            return Result<Error>.Fail(Error.Validation("Different currency"));
 
         var entity = MenuItem.Create(id, name, description, price);
         _menuItems.Add(entity);
@@ -82,18 +81,18 @@ public class Restaurant : AggregateRoot<RestaurantId>
         var result = _menuItems.RemoveAll(x => x.Id == id);
 
         return result == 0
-            ? Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Item not found"))
+            ? Result<Error>.Fail(Error.NotFound("Item not found"))
             : Result<Error>.Success();
     }
 
     public Result<Error> ChangeMenuItemPrice(MenuItemId id, Money price)
     {
         var menuItem = _menuItems.FirstOrDefault(x => x.Id == id);
-        if (menuItem == null) return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Item not found"));
+        if (menuItem == null) return Result<Error>.Fail(Error.NotFound("Item not found"));
 
         var result = menuItem.ChangePrice(price);
         if (!result.IsSuccess)
-            return Result<Error>.Fail(result.Error ?? new Error(ErrorEnum.Unexpected, "Unexpected error"));
+            return Result<Error>.Fail(result.Error ?? Error.Unexpected());
 
         AddEvent(new MenuItemPriceChanged(Id));
 
@@ -103,7 +102,7 @@ public class Restaurant : AggregateRoot<RestaurantId>
     public Result<Error> ChangeMenuItemName(MenuItemId id, Name name)
     {
         var menuItem = _menuItems.FirstOrDefault(x => x.Id == id);
-        if (menuItem == null) return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Item not found"));
+        if (menuItem == null) return Result<Error>.Fail(Error.NotFound("Item not found"));
 
         menuItem.ChangeName(name);
         return Result<Error>.Success();
@@ -112,7 +111,7 @@ public class Restaurant : AggregateRoot<RestaurantId>
     public Result<Error> ChangeMenuItemDescription(MenuItemId id, Description description)
     {
         var menuItem = _menuItems.FirstOrDefault(x => x.Id == id);
-        if (menuItem == null) return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Item not found"));
+        if (menuItem == null) return Result<Error>.Fail(Error.NotFound("Item not found"));
 
         menuItem.ChangeDescription(description);
         return Result<Error>.Success();
@@ -121,7 +120,7 @@ public class Restaurant : AggregateRoot<RestaurantId>
     public Result<Error> SetMinimalOrderPrice(Money price)
     {
         if (MinimalOrderPrice.Currency != price.Currency)
-            return Result<Error>.Fail(new Error(ErrorEnum.Validation, "Wrong currency"));
+            return Result<Error>.Fail(Error.Validation("Wrong currency"));
 
         MinimalOrderPrice = price;
 

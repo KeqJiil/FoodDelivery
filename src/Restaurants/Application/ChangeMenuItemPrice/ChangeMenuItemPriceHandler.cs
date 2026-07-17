@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Abstractions;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 
 namespace Restaurants.Application.ChangeMenuItemPrice;
@@ -20,7 +19,7 @@ public class ChangeMenuItemPriceHandler(
         {
             logger.LogWarning("Change menu item price failed: restaurant {RestaurantId} not found",
                 request.RestaurantId);
-            return Result<Error>.Fail(new Error(ErrorEnum.NotFound, "Restaurant not found"));
+            return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
         var result = restaurant.ChangeMenuItemPrice(request.MenuItemId, request.NewPrice);
@@ -28,7 +27,7 @@ public class ChangeMenuItemPriceHandler(
         {
             logger.LogWarning("Failed to change price of menu item {MenuItemId} in restaurant {RestaurantId}: {Error}",
                 request.MenuItemId, request.RestaurantId, result.Error);
-            return Result<Error>.Fail(result.Error ?? new Error(ErrorEnum.Unexpected, "Unexpected error"));
+            return Result<Error>.Fail(result.Error ?? Error.Unexpected());
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

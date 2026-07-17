@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using SharedKernel.Domain;
-using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 using Ordering.Application.Abstractions;
 using Ordering.Domain.Ids;
@@ -17,14 +16,14 @@ public class CancelOrderHandler(IOrderRepository repository, IUnitOfWork unitOfW
         if (order is null)
         {
             logger.LogWarning("Cancel failed: order {OrderId} not found", request.Id);
-            return Result<OrderId, Error>.Fail(new Error(ErrorEnum.NotFound, "Order not found"));
+            return Result<OrderId, Error>.Fail(Error.NotFound("Order not found"));
         }
 
         var result = order.Cancel();
         if (!result.IsSuccess)
         {
             logger.LogWarning("Failed to cancel order {OrderId}: {Error}", order.Id, result.Error);
-            return Result<OrderId, Error>.Fail(result.Error ?? new Error(ErrorEnum.Unexpected, "Unexpected error"));
+            return Result<OrderId, Error>.Fail(result.Error ?? Error.Unexpected());
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
