@@ -1,21 +1,22 @@
 <Solution>
-  <Folder Name="/src/">
-    <File Path="src/appsettings.json" />
-    <File Path="src/Dockerfile" />
-    <Project Path="src/Api/Api.csproj" />
-    <Project Path="src/Ordering/Ordering.csproj" />
-    <Project Path="src/Restaurants/Restaurants.csproj" />
-    <Project Path="src/SharedKernel/SharedKernel.csproj" />
-  </Folder>
-  <Folder Name="/tests/" />
-  <Folder Name="/tests/UnitTest/" />
-  <Folder Name="/tests/UnitTest/Ordering/">
-    <Project Path="tests/UnitTest/Ordering/Ordering.UnitTest.csproj" />
-  </Folder>
-  <Folder Name="/tests/UnitTest/Restaurants/">
-    <Project Path="tests/UnitTest/Restaurants/Restaurants.UnitTest.csproj" />
-  </Folder>
-  <Folder Name="/tests/UnitTest/SharedKernel/">
-    <Project Path="tests/UnitTest/SharedKernel/SharedKernel.UnitTest.csproj" />
-  </Folder>
+    <Folder Name="/src/">
+        <File Path="src/appsettings.json"/>
+        <File Path="src/Dockerfile"/>
+        <Project Path="src/Api/Api.csproj"/>
+        <Project Path="src/Ordering/Ordering.csproj"/>
+        <Project Path="src/Restaurants/Restaurants.csproj"/>
+        <Project Path="src/SharedKernel/SharedKernel.csproj"/>
+        <Project Path="src/OrderRequests/OrderRequests.csproj"/>
+    </Folder>
+    <Folder Name="/tests/"/>
+    <Folder Name="/tests/UnitTest/"/>
+    <Folder Name="/tests/UnitTest/Ordering/">
+        <Project Path="tests/UnitTest/Ordering/Ordering.UnitTest.csproj"/>
+    </Folder>
+    <Folder Name="/tests/UnitTest/Restaurants/">
+        <Project Path="tests/UnitTest/Restaurants/Restaurants.UnitTest.csproj"/>
+    </Folder>
+    <Folder Name="/tests/UnitTest/SharedKernel/">
+        <Project Path="tests/UnitTest/SharedKernel/SharedKernel.UnitTest.csproj"/>
+    </Folder>
 </Solution>
