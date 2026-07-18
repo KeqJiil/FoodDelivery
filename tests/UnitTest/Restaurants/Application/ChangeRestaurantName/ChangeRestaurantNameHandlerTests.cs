@@ -49,7 +49,7 @@ public class ChangeRestaurantNameHandlerTests
     public async Task Handle_ShouldFail_WhenRestaurantNotFound()
     {
         var id = new RestaurantId();
-        _repository.Setup(r => r.GetById(id, It.IsAny<CancellationToken>())).ReturnsAsync((Domain.Aggregates.Restaurant?)null);
+        _repository.Setup(r => r.GetById(id, It.IsAny<CancellationToken>())).ReturnsAsync((Restaurants.Domain.Aggregates.Restaurant?)null);
 
         var result = await _handler.Handle(new ChangeRestaurantNameCommand(id, "New Name"), CancellationToken.None);
 

@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Restaurants.Application.Abstractions;
 using Restaurants.Application.GetRestaurantById;
+using Restaurants.Domain.Entities;
 using Restaurants.Domain.Ids;
+using SharedKernel.Domain.ValueObjects;
 
 namespace Restaurants.Infrastructure.Persistence.Readers;
 
@@ -19,5 +21,12 @@ public class RestaurantReader(RestaurantsDbContext context) : IRestaurantReader
             r.Schedule.OpeningWindows,
             r.MenuItems.Select(m => new MenuItemDto(m.Id.Id, m.Name.Data, m.Description.Data, m.Price)).ToList()
         )).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<Money?> GetMenuItemPriceByIdAsync(Guid menuItemId, CancellationToken cancellationToken = default)
+    {
+        var id = new MenuItemId(menuItemId);
+        return await context.Set<MenuItem>().AsNoTracking().Where(m => m.Id == id).Select(m => m.Price)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }

@@ -24,4 +24,8 @@
     <ProjectReference Include="..\..\..\src\Restaurants\Restaurants.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Domain\Entities\" />
+  </ItemGroup>
+
 </Project>
