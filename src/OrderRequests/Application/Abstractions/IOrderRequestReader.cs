@@ -4,5 +4,5 @@ namespace OrderRequests.Application.Abstractions;
 
 public interface IOrderRequestReader
 {
-    public Task<GetOrderRequestByIdRequestDto?> GetByIdAsync(Guid id);
+    public Task<OrderRequestDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
 }

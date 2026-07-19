@@ -2,7 +2,7 @@
 
 namespace OrderRequests.Application.GetOrderRequestById;
 
-public record class GetOrderRequestByIdRequestDto(
+public record class OrderRequestDto(
     Guid OrderRequestId,
     Guid RestaurantId,
     Guid OrderId,
