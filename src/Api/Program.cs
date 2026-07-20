@@ -1,6 +1,7 @@
 using Api.Modules;
 using MassTransit;
 using Ordering.Infrastructure.Persistence;
+using OrderRequests.Infrastructure.Persistence;
 using Restaurants.Infrastructure.Persistence;
 using Serilog;
 using SharedKernel.Infrastructure.Interceptors;
@@ -14,11 +15,13 @@ builder.Services.AddScoped<DomainEventPublishInterceptor>();
 
 builder.Services.AddOrderingModule(builder.Configuration);
 builder.Services.AddRestaurantsModule(builder.Configuration);
+builder.Services.AddOrderRequestsModule(builder.Configuration);
 
 builder.Services.AddMassTransit(x =>
 {
     x.AddOrderingMessaging();
     x.AddRestaurantsMessaging();
+    x.AddOrderRequestsMessaging();
 
     x.AddConfigureEndpointsCallback((context, _, cfg) =>
     {
@@ -41,7 +44,9 @@ builder.Services.AddMassTransit(x =>
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(OrderingDbContext).Assembly,
-    typeof(RestaurantsDbContext).Assembly));
+    typeof(RestaurantsDbContext).Assembly,
+    typeof(OrderRequestsDbContext).Assembly
+));
 
 builder.Host.UseSerilog((context, services, configuration) =>
 {
@@ -59,6 +64,7 @@ if (app.Environment.IsDevelopment())
 
     await app.MigrateOrderingDatabaseAsync(builder.Configuration);
     await app.MigrateRestaurantsDatabaseAsync(builder.Configuration);
+    await app.MigrateOrderRequestsDatabaseAsync(builder.Configuration);
 }
 
 app.UseHttpsRedirection();

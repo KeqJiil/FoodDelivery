@@ -4,7 +4,7 @@ public abstract record TypedId
 {
    public Guid Id { get; private init; }
 
-   protected TypedId() : this(Guid.NewGuid())
+   protected TypedId() : this(Guid.CreateVersion7())
    {
    }
 

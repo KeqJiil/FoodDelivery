@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OrderRequests.Domain.Aggregates;
+using OrderRequests.Domain.Enums;
 using OrderRequests.Domain.Ids;
 
 namespace OrderRequests.Infrastructure.Persistence.Configurations;
@@ -10,6 +11,9 @@ public class OrderRequestConfiguration : IEntityTypeConfiguration<OrderRequest>
     public void Configure(EntityTypeBuilder<OrderRequest> builder)
     {
         builder.ToTable("order_requests").HasKey(o => o.Id);
+
+        builder.HasIndex(c => new { c.OrderRefId, c.RestaurantRefId }).IsUnique().HasFilter("status = 'Pending'")
+            .HasDatabaseName("idx_order_restaurant_id");
 
         builder.Property(o => o.Id).HasColumnName("id").HasConversion(o => o.Id, o => new OrderRequestId(o));
         builder.Property(o => o.OrderRefId).HasColumnName("order_id").HasConversion(o => o.Id, o => new OrderRefId(o));
