@@ -7,16 +7,23 @@
         <Project Path="src/Restaurants/Restaurants.csproj"/>
         <Project Path="src/SharedKernel/SharedKernel.csproj"/>
         <Project Path="src/OrderRequests/OrderRequests.csproj"/>
+        <Project Path="src/Payments/Payments.csproj"/>
     </Folder>
     <Folder Name="/tests/"/>
     <Folder Name="/tests/UnitTest/"/>
     <Folder Name="/tests/UnitTest/Ordering/">
         <Project Path="tests/UnitTest/Ordering/Ordering.UnitTest.csproj"/>
     </Folder>
+    <Folder Name="/tests/UnitTest/OrderRequests/">
+        <Project Path="tests/UnitTest/OrderRequests/OrderRequests.UnitTest.csproj"/>
+    </Folder>
     <Folder Name="/tests/UnitTest/Restaurants/">
         <Project Path="tests/UnitTest/Restaurants/Restaurants.UnitTest.csproj"/>
     </Folder>
     <Folder Name="/tests/UnitTest/SharedKernel/">
         <Project Path="tests/UnitTest/SharedKernel/SharedKernel.UnitTest.csproj"/>
+    </Folder>
+    <Folder Name="/tests/UnitTest/Payments/">
+        <Project Path="tests/UnitTest/Payments/Payments.UnitTest.csproj"/>
     </Folder>
 </Solution>

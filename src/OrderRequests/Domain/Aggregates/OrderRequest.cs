@@ -48,7 +48,7 @@ public class OrderRequest : AggregateRoot<OrderRequestId>
             return Result<Error>.Fail(Error.Conflict($"Cannot approve an order request that is already {Status}"));
 
         Status = OrderRequestStatus.Approved;
-        AddEvent(new OrderApproved(Id));
+        AddEvent(new OrderApproved(Id, OrderRefId));
         return Result<Error>.Success();
     }
 }
