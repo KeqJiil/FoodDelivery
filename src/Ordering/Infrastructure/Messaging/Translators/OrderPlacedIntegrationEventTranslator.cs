@@ -8,6 +8,6 @@ public class OrderPlacedIntegrationEventTranslator : IIntegrationEventTranslator
 {
     public IntegrationEvent? Translate(OrderPlaced domainEvent)
     {
-        throw new NotImplementedException();
+        return new OrderPlacedIntegration(domainEvent.AggregateId.Id, domainEvent.RestaurantRefId.Id);
     }
 }

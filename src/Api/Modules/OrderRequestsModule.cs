@@ -1,6 +1,8 @@
 ﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using OrderRequests.Application.Abstractions;
+using OrderRequests.Domain.Events;
+using OrderRequests.Infrastructure.Messaging.Translators;
 using OrderRequests.Infrastructure.Persistence;
 using OrderRequests.Infrastructure.Persistence.Readers;
 using OrderRequests.Infrastructure.Persistence.Repositories;
@@ -16,6 +18,7 @@ public static class OrderRequestsModule
         services.AddScoped<IOrderRequestReader, OrderRequestReader>();
         services.AddScoped<IOrderRequestRepository, OrderRequestRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IIntegrationEventTranslator<OrderApproved>, OrderApprovedIntegrationEventTranslator>();
 
         services.AddDbContext<OrderRequestsDbContext>((sp, options) =>
         {

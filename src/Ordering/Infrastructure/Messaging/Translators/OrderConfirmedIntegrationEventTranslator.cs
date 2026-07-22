@@ -8,6 +8,7 @@ public class OrderConfirmedIntegrationEventTranslator : IIntegrationEventTransla
 {
     public IntegrationEvent? Translate(OrderConfirmed domainEvent)
     {
-        throw new NotImplementedException();
+        return new OrderConfirmedIntegration(domainEvent.AggregateId.Id, domainEvent.Amount.Amount,
+            domainEvent.Amount.Currency);
     }
 }

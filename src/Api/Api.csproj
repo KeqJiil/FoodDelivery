@@ -22,6 +22,7 @@
         <ProjectReference Include="..\SharedKernel\SharedKernel.csproj"/>
         <ProjectReference Include="..\Restaurants\Restaurants.csproj"/>
         <ProjectReference Include="..\OrderRequests\OrderRequests.csproj"/>
+        <ProjectReference Include="..\Payments\Payments.csproj"/>
     </ItemGroup>
 
 </Project>
