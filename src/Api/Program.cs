@@ -1,3 +1,4 @@
+using Api.ExceptionHandlers;
 using Api.Modules;
 using MassTransit;
 using Ordering.Infrastructure.Persistence;
@@ -11,6 +12,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddExceptionHandler<BasicExceptionHandler>();
+builder.Services.AddProblemDetails();
+builder.Services.AddCors(options =>
+    options.AddPolicy("AllowAll", policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
 builder.Services.AddScoped<DomainEventPublishInterceptor>();
 
@@ -72,6 +77,8 @@ if (app.Environment.IsDevelopment())
     await app.MigratePaymentsDatabaseAsync(builder.Configuration);
 }
 
+app.UseCors("AllowAll");
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.MapControllers();
 

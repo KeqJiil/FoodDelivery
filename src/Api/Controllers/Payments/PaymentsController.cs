@@ -16,9 +16,9 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpGet("{id:Guid}")]
-    public async Task<IActionResult> GetPayment([FromRoute] Guid id)
+    public async Task<IActionResult> GetPayment([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetPaymentByIdQuery(id));
+        var result = await _mediator.Send(new GetPaymentByIdQuery(id), cancellationToken);
         return result is null ? NotFound() : Ok(result);
     }
 }

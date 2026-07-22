@@ -7,14 +7,12 @@ using Ordering.Application.GetOrderById;
 using Ordering.Application.PlaceOrder;
 using Ordering.Application.RemoveOrderLineItem;
 using Ordering.Domain.Ids;
-using SharedKernel.Domain.Enums;
-using SharedKernel.Domain.Errors;
 
-namespace Api.Controllers.Ordering ;
+namespace Api.Controllers.Ordering;
 
 [ApiController]
 [Route("v1/[controller]")]
-public class OrderingController : ControllerBase
+public class OrderingController : MyBasicController
 {
     private readonly ISender _mediator;
 
@@ -24,70 +22,62 @@ public class OrderingController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById([FromRoute] Guid id)
+    public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetOrderByIdQuery(id));
-        if (result is null) return NotFound();
+        var result = await _mediator.Send(new GetOrderByIdQuery(id), cancellationToken);
 
-        return Ok(result);
+        return result is not null ? Ok(result) : NotFound();
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
+    public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new CreateOrderCommand(new RestaurantRefId(request.RestaurantId)));
+        var result = await _mediator.Send(new CreateOrderCommand(new RestaurantRefId(request.RestaurantId)), cancellationToken);
 
-        if (!result.IsSuccess) return MapError(result.Error!);
+        if (!result.IsSuccess) return GetProblem(result.Error!);
 
         return CreatedAtAction(nameof(GetById), new { id = result.Ok!.Id }, result.Ok);
     }
 
     [HttpPost("{id:guid}/cancel")]
-    public async Task<IActionResult> CancelOrder([FromRoute] Guid id)
+    public async Task<IActionResult> CancelOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new CancelOrderCommand(new OrderId(id)));
+        var result = await _mediator.Send(new CancelOrderCommand(new OrderId(id)), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
     [HttpPost("{id:guid}/place")]
-    public async Task<IActionResult> PlaceOrder([FromRoute] Guid id)
+    public async Task<IActionResult> PlaceOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new PlaceOrderCommand(new OrderId(id)));
+        var result = await _mediator.Send(new PlaceOrderCommand(new OrderId(id)), cancellationToken);
 
-        return result.IsSuccess ? Ok(result.Ok) : MapError(result.Error!);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
     [HttpPost("{id:guid}/add-items")]
-    public async Task<IActionResult> AddOrderLineItem([FromRoute] Guid id, [FromBody] AddOrderLineRequest request)
+    public async Task<IActionResult> AddOrderLineItem([FromRoute] Guid id, [FromBody] AddOrderLineRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new AddOrderLineItemCommand(new OrderId(id), new MenuItemRefId(request.MenuId)));
+        var result =
+            await _mediator.Send(new AddOrderLineItemCommand(new OrderId(id), new MenuItemRefId(request.MenuId)), cancellationToken);
 
-        return result.IsSuccess ? Ok(result.Ok) : MapError(result.Error!);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetById), new { id = result.Ok }, null)
+            : GetProblem(result.Error!);
     }
 
     [HttpDelete("{id:guid}/remove")]
-    public async Task<IActionResult> RemoveOrderLineItem([FromRoute] Guid id, [FromBody] RemoveOrderLineRequest request)
+    public async Task<IActionResult> RemoveOrderLineItem([FromRoute] Guid id, [FromBody] RemoveOrderLineRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new RemoveOrderLineItemCommand(new OrderId(id), new OrderLineId(request.OrderLineId)));
+        var result =
+            await _mediator.Send(new RemoveOrderLineItemCommand(new OrderId(id), new OrderLineId(request.OrderLineId)), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
-    }
-
-    private ObjectResult MapError(Error error)
-    {
-        return error.Type switch
-        {
-            ErrorEnum.NotFound => NotFound(error.Message),
-            ErrorEnum.Validation => BadRequest(error.Message),
-            ErrorEnum.Conflict => Conflict(error.Message),
-            ErrorEnum.NotAllowed => StatusCode(StatusCodes.Status403Forbidden, error.Message),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, error.Message)
-        };
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 }
 
 public sealed record CreateOrderRequest(Guid RestaurantId);
 
 public sealed record AddOrderLineRequest(Guid MenuId);
+
 public sealed record RemoveOrderLineRequest(Guid OrderLineId);

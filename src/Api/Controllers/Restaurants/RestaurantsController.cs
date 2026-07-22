@@ -16,13 +16,12 @@ using Restaurants.Application.SetMinimalOrderPrice;
 using Restaurants.Domain.Ids;
 using Restaurants.Domain.ValueObjects;
 using SharedKernel.Domain.Enums;
-using SharedKernel.Domain.Errors;
 
 namespace Api.Controllers.Restaurants;
 
 [ApiController]
 [Route("v1/[controller]")]
-public class RestaurantsController : ControllerBase
+public class RestaurantsController : MyBasicController
 {
     private readonly ISender _mediator;
 
@@ -32,127 +31,137 @@ public class RestaurantsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get([FromRoute] Guid id)
+    public async Task<IActionResult> Get([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetRestaurantByIdQuery(id));
+        var result = await _mediator.Send(new GetRestaurantByIdQuery(id), cancellationToken);
 
         return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpPost("create")]
-    public async Task<IActionResult> Create([FromBody] CreateRestaurantRequest request)
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateRestaurantRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateRestaurantCommand(request.Name, request.Description,
-            request.Currency, request.Amount, request.Schedules));
+            request.Currency, request.Amount, request.Schedules), cancellationToken);
 
-        return !result.IsSuccess ? MapError(result.Error!) : CreatedAtAction(nameof(Get), new { id = result.Ok }, null);
+        return !result.IsSuccess
+            ? GetProblem(result.Error!)
+            : CreatedAtAction(nameof(Get), new { id = result.Ok }, null);
     }
 
-    [HttpPut("{id:guid}/name")]
-    public async Task<IActionResult> ChangeName([FromRoute] Guid id, [FromBody] ChangeNameRequest request)
+    [HttpPatch("{id:guid}/name")]
+    public async Task<IActionResult> ChangeName([FromRoute] Guid id, [FromBody] ChangeNameRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new ChangeRestaurantNameCommand(new RestaurantId(id), request.Name));
+        var result = await _mediator.Send(new ChangeRestaurantNameCommand(new RestaurantId(id), request.Name), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
-    [HttpPut("{id:guid}/description")]
-    public async Task<IActionResult> ChangeDescription([FromRoute] Guid id, [FromBody] ChangeDescriptionRequest request)
+    [HttpPatch("{id:guid}/description")]
+    public async Task<IActionResult> ChangeDescription([FromRoute] Guid id, [FromBody] ChangeDescriptionRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new ChangeRestaurantDescriptionCommand(new RestaurantId(id), request.Description));
+        var result =
+            await _mediator.Send(new ChangeRestaurantDescriptionCommand(new RestaurantId(id), request.Description), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
-    [HttpPut("{id:guid}/schedule")]
-    public async Task<IActionResult> ChangeSchedule([FromRoute] Guid id, [FromBody] ChangeScheduleRequest request)
+    [HttpPatch("{id:guid}/schedule")]
+    public async Task<IActionResult> ChangeSchedule([FromRoute] Guid id, [FromBody] ChangeScheduleRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new ChangeRestaurantScheduleCommand(new RestaurantId(id), request.Schedules));
+        var result = await _mediator.Send(new ChangeRestaurantScheduleCommand(new RestaurantId(id), request.Schedules), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
-    [HttpPut("{id:guid}/minimal-order-price")]
-    public async Task<IActionResult> SetMinimalOrderPrice([FromRoute] Guid id, [FromBody] MoneyRequest request)
+    [HttpPatch("{id:guid}/minimal-order-price")]
+    public async Task<IActionResult> SetMinimalOrderPrice([FromRoute] Guid id, [FromBody] MoneyRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new SetMinimalOrderPriceCommand(new RestaurantId(id), request.Currency, request.Amount));
+        var result =
+            await _mediator.Send(
+                new SetMinimalOrderPriceCommand(new RestaurantId(id), request.Currency, request.Amount), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
     [HttpPost("{id:guid}/activate")]
-    public async Task<IActionResult> Activate([FromRoute] Guid id)
+    public async Task<IActionResult> Activate([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new ActivateRestaurantCommand(new RestaurantId(id)));
+        var result = await _mediator.Send(new ActivateRestaurantCommand(new RestaurantId(id)), cancellationToken);
 
-        return !result.IsSuccess ? MapError(result.Error!) : CreatedAtAction(nameof(Get), new { id }, null);
+        return !result.IsSuccess ? GetProblem(result.Error!) : NoContent();
     }
 
     [HttpPost("{id:guid}/deactivate")]
-    public async Task<IActionResult> Deactivate([FromRoute] Guid id)
+    public async Task<IActionResult> Deactivate([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new DeactivateRestaurantCommand(new RestaurantId(id)));
+        var result = await _mediator.Send(new DeactivateRestaurantCommand(new RestaurantId(id)), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
     [HttpPost("{id:guid}/menu-items")]
-    public async Task<IActionResult> AddMenuItem([FromRoute] Guid id, [FromBody] AddMenuItemRequest request)
+    public async Task<IActionResult> AddMenuItem([FromRoute] Guid id, [FromBody] AddMenuItemRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new AddMenuItemCommand(new RestaurantId(id), request.Name,
-            request.Description, request.Currency, request.Amount));
+            request.Description, request.Currency, request.Amount), cancellationToken);
 
-        return result.IsSuccess ? Ok(result.Ok) : MapError(result.Error!);
+        return result.IsSuccess ? CreatedAtAction(nameof(Get), new { id }, null) : GetProblem(result.Error!);
     }
 
     [HttpDelete("{id:guid}/menu-items/{menuItemId:guid}")]
-    public async Task<IActionResult> RemoveMenuItem([FromRoute] Guid id, [FromRoute] Guid menuItemId)
+    public async Task<IActionResult> RemoveMenuItem([FromRoute] Guid id, [FromRoute] Guid menuItemId, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new RemoveMenuItemCommand(new RestaurantId(id), new MenuItemId(menuItemId)));
+        var result = await _mediator.Send(new RemoveMenuItemCommand(new RestaurantId(id), new MenuItemId(menuItemId)), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/name")]
-    public async Task<IActionResult> ChangeMenuItemName([FromRoute] Guid id, [FromRoute] Guid menuItemId, [FromBody] ChangeNameRequest request)
+    public async Task<IActionResult> ChangeMenuItemName([FromRoute] Guid id, [FromRoute] Guid menuItemId,
+        [FromBody] ChangeNameRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new ChangeMenuItemNameCommand(new RestaurantId(id), new MenuItemId(menuItemId), request.Name));
+        var result =
+            await _mediator.Send(new ChangeMenuItemNameCommand(new RestaurantId(id), new MenuItemId(menuItemId),
+                request.Name), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/description")]
-    public async Task<IActionResult> ChangeMenuItemDescription([FromRoute] Guid id, [FromRoute] Guid menuItemId, [FromBody] ChangeDescriptionRequest request)
+    public async Task<IActionResult> ChangeMenuItemDescription([FromRoute] Guid id, [FromRoute] Guid menuItemId,
+        [FromBody] ChangeDescriptionRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new ChangeMenuItemDescriptionCommand(new RestaurantId(id), new MenuItemId(menuItemId), request.Description));
+        var result = await _mediator.Send(new ChangeMenuItemDescriptionCommand(new RestaurantId(id),
+            new MenuItemId(menuItemId), request.Description), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/price")]
-    public async Task<IActionResult> ChangeMenuItemPrice([FromRoute] Guid id, [FromRoute] Guid menuItemId, [FromBody] MoneyRequest request)
+    public async Task<IActionResult> ChangeMenuItemPrice([FromRoute] Guid id, [FromRoute] Guid menuItemId,
+        [FromBody] MoneyRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new ChangeMenuItemPriceCommand(new RestaurantId(id), new MenuItemId(menuItemId), request.Currency, request.Amount));
+        var result = await _mediator.Send(new ChangeMenuItemPriceCommand(new RestaurantId(id),
+            new MenuItemId(menuItemId), request.Currency, request.Amount), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
-    }
-
-    private ObjectResult MapError(Error error)
-    {
-        return error.Type switch
-        {
-            ErrorEnum.NotFound => NotFound(error.Message),
-            ErrorEnum.Validation => BadRequest(error.Message),
-            ErrorEnum.Conflict => Conflict(error.Message),
-            ErrorEnum.NotAllowed => StatusCode(StatusCodes.Status403Forbidden, error.Message),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, error.Message)
-        };
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 }
 
-public sealed record CreateRestaurantRequest(string Name, string Description, decimal Amount, Currency Currency, List<OpeningWindow> Schedules);
+public sealed record CreateRestaurantRequest(
+    string Name,
+    string Description,
+    decimal Amount,
+    Currency Currency,
+    List<OpeningWindow> Schedules);
+
 public sealed record ChangeNameRequest(string Name);
+
 public sealed record ChangeDescriptionRequest(string Description);
+
 public sealed record ChangeScheduleRequest(List<OpeningWindow> Schedules);
+
 public sealed record MoneyRequest(Currency Currency, decimal Amount);
+
 public sealed record AddMenuItemRequest(string Name, string Description, Currency Currency, decimal Amount);

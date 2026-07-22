@@ -6,14 +6,12 @@ using OrderRequests.Application.GetOrdersByRestaurantId;
 using OrderRequests.Application.RejectOrder;
 using OrderRequests.Domain.Enums;
 using OrderRequests.Domain.Ids;
-using SharedKernel.Domain.Enums;
-using SharedKernel.Domain.Errors;
 
 namespace Api.Controllers.OrderRequests;
 
 [ApiController]
 [Route("v1/[controller]")]
-public class OrderRequestsController : ControllerBase
+public class OrderRequestsController : MyBasicController
 {
     private readonly ISender _mediator;
 
@@ -23,43 +21,31 @@ public class OrderRequestsController : ControllerBase
     }
 
     [HttpGet("restaurant/{id:Guid}")]
-    public async Task<IActionResult> GetOrdersByRestaurantId([FromRoute] Guid id, [FromQuery] ByRestaurantIdBody body)
+    public async Task<IActionResult> GetOrdersByRestaurantId([FromRoute] Guid id, [FromQuery] ByRestaurantIdBody body, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetOrdersByRestaurantIdQuery(id, body.Cursor, body.Limit, body.Status));
-        return result.Any() ? Ok(result) : NotFound();
+        var result = await _mediator.Send(new GetOrdersByRestaurantIdQuery(id, body.Cursor, body.Limit, body.Status), cancellationToken);
+        return result.Any() ? Ok(result) : Ok();
     }
 
     [HttpGet("{id:Guid}")]
-    public async Task<IActionResult> GetOrder([FromRoute] Guid id)
+    public async Task<IActionResult> GetOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetOrderRequestByIdQuery(id));
+        var result = await _mediator.Send(new GetOrderRequestByIdQuery(id), cancellationToken);
         return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpPost("reject/{id:Guid}")]
-    public async Task<IActionResult> RejectOrder([FromRoute] Guid id)
+    [HttpPost("{id:Guid}/reject")]
+    public async Task<IActionResult> RejectOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new RejectOrderCommand(new OrderRequestId(id)));
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
+        var result = await _mediator.Send(new RejectOrderCommand(new OrderRequestId(id)), cancellationToken);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
-    [HttpPost("approve/{id:Guid}")]
-    public async Task<IActionResult> ApproveOrder([FromRoute] Guid id)
+    [HttpPost("{id:Guid}/approve")]
+    public async Task<IActionResult> ApproveOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new AcceptOrderCommand(new OrderRequestId(id)));
-        return result.IsSuccess ? NoContent() : MapError(result.Error!);
-    }
-
-    private ObjectResult MapError(Error error)
-    {
-        return error.Type switch
-        {
-            ErrorEnum.NotFound => NotFound(error.Message),
-            ErrorEnum.Validation => BadRequest(error.Message),
-            ErrorEnum.Conflict => Conflict(error.Message),
-            ErrorEnum.NotAllowed => StatusCode(StatusCodes.Status403Forbidden, error.Message),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, error.Message)
-        };
+        var result = await _mediator.Send(new AcceptOrderCommand(new OrderRequestId(id)), cancellationToken);
+        return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 }
 
