@@ -4,7 +4,6 @@ using OrderRequests.Application.AcceptOrder;
 using OrderRequests.Application.GetOrderRequestById;
 using OrderRequests.Application.GetOrdersByRestaurantId;
 using OrderRequests.Application.RejectOrder;
-using OrderRequests.Domain.Enums;
 using OrderRequests.Domain.Ids;
 
 namespace Api.Controllers.OrderRequests;
@@ -21,9 +20,11 @@ public class OrderRequestsController : MyBasicController
     }
 
     [HttpGet("restaurant/{id:Guid}")]
-    public async Task<IActionResult> GetOrdersByRestaurantId([FromRoute] Guid id, [FromQuery] ByRestaurantIdBody body, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetOrdersByRestaurantId([FromRoute] Guid id, [FromQuery] ByRestaurantIdBody body,
+        CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetOrdersByRestaurantIdQuery(id, body.Cursor, body.Limit, body.Status), cancellationToken);
+        var result = await _mediator.Send(new GetOrdersByRestaurantIdQuery(id, body.Cursor, body.Limit, body.Status),
+            cancellationToken);
         return result.Any() ? Ok(result) : Ok();
     }
 
@@ -48,5 +49,3 @@ public class OrderRequestsController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 }
-
-public record ByRestaurantIdBody(byte Limit, OrderRequestStatus? Status, Guid? Cursor);

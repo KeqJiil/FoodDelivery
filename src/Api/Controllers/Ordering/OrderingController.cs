@@ -30,9 +30,11 @@ public class OrderingController : MyBasicController
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request,
+        CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new CreateOrderCommand(new RestaurantRefId(request.RestaurantId)), cancellationToken);
+        var result = await _mediator.Send(new CreateOrderCommand(new RestaurantRefId(request.RestaurantId)),
+            cancellationToken);
 
         if (!result.IsSuccess) return GetProblem(result.Error!);
 
@@ -56,28 +58,26 @@ public class OrderingController : MyBasicController
     }
 
     [HttpPost("{id:guid}/add-items")]
-    public async Task<IActionResult> AddOrderLineItem([FromRoute] Guid id, [FromBody] AddOrderLineRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> AddOrderLineItem([FromRoute] Guid id, [FromBody] AddOrderLineRequest request,
+        CancellationToken cancellationToken)
     {
         var result =
-            await _mediator.Send(new AddOrderLineItemCommand(new OrderId(id), new MenuItemRefId(request.MenuId)), cancellationToken);
+            await _mediator.Send(new AddOrderLineItemCommand(new OrderId(id), new MenuItemRefId(request.MenuId)),
+                cancellationToken);
 
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetById), new { id = result.Ok }, null)
             : GetProblem(result.Error!);
     }
 
-    [HttpDelete("{id:guid}/remove")]
-    public async Task<IActionResult> RemoveOrderLineItem([FromRoute] Guid id, [FromBody] RemoveOrderLineRequest request, CancellationToken cancellationToken)
+    [HttpDelete("{id:guid}/remove/{orderLineId:guid}")]
+    public async Task<IActionResult> RemoveOrderLineItem([FromRoute] Guid id, [FromRoute] Guid orderLineId,
+        CancellationToken cancellationToken)
     {
         var result =
-            await _mediator.Send(new RemoveOrderLineItemCommand(new OrderId(id), new OrderLineId(request.OrderLineId)), cancellationToken);
+            await _mediator.Send(new RemoveOrderLineItemCommand(new OrderId(id), new OrderLineId(orderLineId)),
+                cancellationToken);
 
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 }
-
-public sealed record CreateOrderRequest(Guid RestaurantId);
-
-public sealed record AddOrderLineRequest(Guid MenuId);
-
-public sealed record RemoveOrderLineRequest(Guid OrderLineId);
