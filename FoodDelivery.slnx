@@ -8,6 +8,7 @@
         <Project Path="src/SharedKernel/SharedKernel.csproj"/>
         <Project Path="src/OrderRequests/OrderRequests.csproj"/>
         <Project Path="src/Payments/Payments.csproj"/>
+        <Project Path="src/Deliveries/Deliveries.csproj"/>
     </Folder>
     <Folder Name="/tests/"/>
     <Folder Name="/tests/UnitTest/"/>
@@ -25,5 +26,8 @@
     </Folder>
     <Folder Name="/tests/UnitTest/Payments/">
         <Project Path="tests/UnitTest/Payments/Payments.UnitTest.csproj"/>
+    </Folder>
+    <Folder Name="/tests/UnitTest/Deliveries/">
+        <Project Path="tests/UnitTest/Deliveries/Deliveries.UnitTest.csproj"/>
     </Folder>
 </Solution>
