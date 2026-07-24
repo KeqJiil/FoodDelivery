@@ -5,6 +5,7 @@ using SharedKernel.Domain.Enums;
 using Ordering.Application.ChangeOrderLinePrice;
 using Ordering.Domain.Ids;
 using SharedKernel.Infrastructure.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.NonsagaEvents;
 
 namespace Ordering.Infrastructure.Messaging.Consumers;
 
@@ -15,22 +16,22 @@ public class ChangeOrderLineItemPriceConsumer(ISender mediator, ILogger<ChangeOr
     {
         var msg = context.Message;
         var result = await mediator.Send(new ChangeOrderLinePriceCommand(
-            new MenuItemRefId(msg.Id), msg.Currency, msg.Amount), context.CancellationToken);
+            new MenuItemRefId(msg.MenuId), msg.Currency, msg.Amount), context.CancellationToken);
         if (!result.IsSuccess)
         {
             if (result.Error!.Type is ErrorEnum.Conflict or ErrorEnum.NotFound)
             {
                 logger.LogWarning("Ignored MenuItemPriceChanged for menu item {MenuItemId}: {Error}",
-                    msg.Id, result.Error.Message);
+                    msg.MenuId, result.Error.Message);
                 return;
             }
 
             logger.LogError("Failed to change order line price for menu item {MenuItemId}: {Error}",
-                msg.Id, result.Error.Message);
+                msg.MenuId, result.Error.Message);
             throw new InvalidOperationException(
-                $"Failed to change order line price with menu id {msg.Id}, Error: {result.Error.Message}");
+                $"Failed to change order line price with menu id {msg.MenuId}, Error: {result.Error.Message}");
         }
 
-        logger.LogInformation("Consumed MenuItemPriceChanged for menu item {MenuItemId}", msg.Id);
+        logger.LogInformation("Consumed MenuItemPriceChanged for menu item {MenuItemId}", msg.MenuId);
     }
 }

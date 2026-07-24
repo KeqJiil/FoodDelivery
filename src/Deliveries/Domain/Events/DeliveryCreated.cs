@@ -3,4 +3,4 @@ using SharedKernel.Domain;
 
 namespace Deliveries.Domain.Events;
 
-public class DeliveryCreated(DeliveryId id) : DomainEvent<DeliveryId>(id);
+public record DeliveryCreated(DeliveryId Id) : DomainEvent<DeliveryId>(Id);

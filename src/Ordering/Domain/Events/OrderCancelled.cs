@@ -3,6 +3,4 @@ using Ordering.Domain.Ids;
 
 namespace Ordering.Domain.Events;
 
-public class OrderCancelled(OrderId id) : DomainEvent<OrderId>(id)
-{
-}
+public record OrderCancelled(OrderId Id) : DomainEvent<OrderId>(Id);

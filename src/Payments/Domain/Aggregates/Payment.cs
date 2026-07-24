@@ -40,7 +40,7 @@ public class Payment : AggregateRoot<PaymentId>
             return Result<Error>.Fail(Error.Conflict($"Cannot succeed a payment that is already {Status}"));
 
         Status = PaymentStatus.Succeeded;
-        AddEvent(new PaymentSucceeded(Id, OrderRefId, Amount));
+        AddEvent(new PaymentSucceeded(Id, OrderRefId));
         return Result<Error>.Success();
     }
 

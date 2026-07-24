@@ -3,4 +3,4 @@ using SharedKernel.Domain;
 
 namespace Payments.Domain.Events;
 
-public class PaymentCreated(PaymentId id) : DomainEvent<PaymentId>(id);
+public record PaymentCreated(PaymentId Id) : DomainEvent<PaymentId>(Id);

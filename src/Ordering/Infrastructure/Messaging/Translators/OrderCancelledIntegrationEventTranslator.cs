@@ -1,5 +1,7 @@
 using Ordering.Domain.Events;
 using SharedKernel.Infrastructure.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.NonsagaEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.SagaEvents;
 using SharedKernel.Infrastructure.Interceptors;
 
 namespace Ordering.Infrastructure.Messaging.Translators;
@@ -8,6 +10,6 @@ public class OrderCancelledIntegrationEventTranslator : IIntegrationEventTransla
 {
     public IntegrationEvent? Translate(OrderCancelled domainEvent)
     {
-        throw new NotImplementedException();
+        return new OrderCancelledIntegration(domainEvent.AggregateId.Id);
     }
 }

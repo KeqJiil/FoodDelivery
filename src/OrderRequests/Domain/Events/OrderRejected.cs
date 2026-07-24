@@ -3,4 +3,4 @@ using SharedKernel.Domain;
 
 namespace OrderRequests.Domain.Events;
 
-public class OrderRejected(OrderRequestId Id) : DomainEvent<OrderRequestId>(Id);
+public record OrderRejected(OrderRequestId Id) : DomainEvent<OrderRequestId>(Id);

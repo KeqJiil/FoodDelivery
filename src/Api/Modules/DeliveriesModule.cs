@@ -1,6 +1,4 @@
 using Deliveries.Application.Abstractions;
-using Deliveries.Domain.Events;
-using Deliveries.Infrastructure.Messaging.Translators;
 using Deliveries.Infrastructure.Persistence;
 using Deliveries.Infrastructure.Persistence.Readers;
 using Deliveries.Infrastructure.Persistence.Repositories;
@@ -18,8 +16,6 @@ public static class DeliveriesModule
         services.AddScoped<IDeliveryReader, DeliveryReader>();
         services.AddScoped<IDeliveryRepository, DeliveryRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped<IIntegrationEventTranslator<DeliveryCompleted>, DeliveryCompletedIntegrationEventTranslator>();
-        services.AddScoped<IIntegrationEventTranslator<DeliveryFailed>, DeliveryFailedIntegrationEventTranslator>();
 
         services.AddDbContext<DeliveriesDbContext>((sp, options) =>
         {

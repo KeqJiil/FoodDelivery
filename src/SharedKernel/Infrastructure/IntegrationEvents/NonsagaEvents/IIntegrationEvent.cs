@@ -1,4 +1,4 @@
-﻿namespace SharedKernel.Infrastructure.IntegrationEvents;
+﻿namespace SharedKernel.Infrastructure.IntegrationEvents.NonsagaEvents;
 
 public abstract record IntegrationEvent
 {

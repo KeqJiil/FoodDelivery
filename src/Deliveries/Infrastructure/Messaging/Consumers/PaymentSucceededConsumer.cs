@@ -4,6 +4,7 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using SharedKernel.Infrastructure.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.SagaEvents;
 
 namespace Deliveries.Infrastructure.Messaging.Consumers;
 

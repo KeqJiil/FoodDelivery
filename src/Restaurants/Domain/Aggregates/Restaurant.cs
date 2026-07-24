@@ -94,7 +94,7 @@ public class Restaurant : AggregateRoot<RestaurantId>
         if (!result.IsSuccess)
             return Result<Error>.Fail(result.Error ?? Error.Unexpected());
 
-        AddEvent(new MenuItemPriceChanged(Id));
+        AddEvent(new MenuItemPriceChanged(Id, id, price));
 
         return Result<Error>.Success();
     }

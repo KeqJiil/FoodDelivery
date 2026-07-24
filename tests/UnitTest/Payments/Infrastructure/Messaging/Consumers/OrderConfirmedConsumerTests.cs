@@ -8,7 +8,7 @@ using Payments.Infrastructure.Messaging.Consumers;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
-using SharedKernel.Infrastructure.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 
 namespace Payments.UnitTest.Infrastructure.Messaging.Consumers;
 
@@ -30,8 +30,8 @@ public class OrderConfirmedConsumerTests
         var orderId = Guid.NewGuid();
         _sender.Setup(s => s.Send(It.IsAny<CreatePaymentCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<PaymentId, Error>.Success(new PaymentId(Guid.NewGuid())));
-        var context = Mock.Of<ConsumeContext<OrderConfirmedIntegration>>(c =>
-            c.Message == new OrderConfirmedIntegration(orderId, 42m, Currency.Usd));
+        var context = Mock.Of<ConsumeContext<CreatePayment>>(c =>
+            c.Message == new CreatePayment(orderId, 42m, Currency.Usd));
 
         await _consumer.Consume(context);
 
@@ -46,8 +46,8 @@ public class OrderConfirmedConsumerTests
     {
         _sender.Setup(s => s.Send(It.IsAny<CreatePaymentCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<PaymentId, Error>.Success(new PaymentId(Guid.NewGuid())));
-        var context = Mock.Of<ConsumeContext<OrderConfirmedIntegration>>(c =>
-            c.Message == new OrderConfirmedIntegration(Guid.NewGuid(), 42m, Currency.Usd));
+        var context = Mock.Of<ConsumeContext<CreatePayment>>(c =>
+            c.Message == new CreatePayment(Guid.NewGuid(), 42m, Currency.Usd));
 
         var act = () => _consumer.Consume(context);
 
@@ -59,8 +59,8 @@ public class OrderConfirmedConsumerTests
     {
         _sender.Setup(s => s.Send(It.IsAny<CreatePaymentCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<PaymentId, Error>.Fail(Error.NotFound("Order not found")));
-        var context = Mock.Of<ConsumeContext<OrderConfirmedIntegration>>(c =>
-            c.Message == new OrderConfirmedIntegration(Guid.NewGuid(), 42m, Currency.Usd));
+        var context = Mock.Of<ConsumeContext<CreatePayment>>(c =>
+            c.Message == new CreatePayment(Guid.NewGuid(), 42m, Currency.Usd));
 
         var act = () => _consumer.Consume(context);
 

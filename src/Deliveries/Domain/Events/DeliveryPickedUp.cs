@@ -3,4 +3,4 @@ using SharedKernel.Domain;
 
 namespace Deliveries.Domain.Events;
 
-public class DeliveryPickedUp(DeliveryId id) : DomainEvent<DeliveryId>(id);
+public record DeliveryPickedUp(DeliveryId id) : DomainEvent<DeliveryId>(id);

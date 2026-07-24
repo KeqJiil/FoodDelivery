@@ -2,13 +2,12 @@ using FluentAssertions;
 using MassTransit;
 using MediatR;
 using Moq;
-using Ordering.Domain.Ids;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 using Ordering.Application.ChangeOrderLinePrice;
 using Ordering.Infrastructure.Messaging.Consumers;
-using SharedKernel.Infrastructure.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.NonsagaEvents;
 
 namespace Ordering.UnitTest.Infrastructure.Messaging.Consumers;
 

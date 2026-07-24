@@ -4,14 +4,14 @@ using Microsoft.Extensions.Logging;
 using OrderRequests.Application.CreateOrder;
 using OrderRequests.Domain.Ids;
 using SharedKernel.Domain.Errors;
-using SharedKernel.Infrastructure.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 
 namespace OrderRequests.Infrastructure.Messaging.Consumers;
 
 public class OrderRequestedConsumer(ISender mediator, ILogger<OrderRequestedConsumer> logger)
-    : IConsumer<OrderPlacedIntegration>
+    : IConsumer<CreateRequest>
 {
-    public async Task Consume(ConsumeContext<OrderPlacedIntegration> context)
+    public async Task Consume(ConsumeContext<CreateRequest> context)
     {
         var msg = context.Message;
         var result =

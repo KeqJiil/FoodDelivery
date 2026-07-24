@@ -7,7 +7,7 @@ using OrderRequests.Domain.Ids;
 using OrderRequests.Infrastructure.Messaging.Consumers;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
-using SharedKernel.Infrastructure.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 
 namespace OrderRequests.UnitTest.Infrastructure.Messaging.Consumers;
 
@@ -30,8 +30,8 @@ public class OrderRequestedConsumerTests
         var restaurantId = Guid.NewGuid();
         _sender.Setup(s => s.Send(It.IsAny<CreateOrderCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrderRequestId, Error>.Success(new OrderRequestId(Guid.NewGuid())));
-        var context = Mock.Of<ConsumeContext<OrderPlacedIntegration>>(c =>
-            c.Message == new OrderPlacedIntegration(orderId, restaurantId));
+        var context = Mock.Of<ConsumeContext<CreateRequest>>(c =>
+            c.Message == new CreateRequest(orderId, restaurantId));
 
         await _consumer.Consume(context);
 
@@ -46,8 +46,8 @@ public class OrderRequestedConsumerTests
     {
         _sender.Setup(s => s.Send(It.IsAny<CreateOrderCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrderRequestId, Error>.Success(new OrderRequestId(Guid.NewGuid())));
-        var context = Mock.Of<ConsumeContext<OrderPlacedIntegration>>(c =>
-            c.Message == new OrderPlacedIntegration(Guid.NewGuid(), Guid.NewGuid()));
+        var context = Mock.Of<ConsumeContext<CreateRequest>>(c =>
+            c.Message == new CreateRequest(Guid.NewGuid(), Guid.NewGuid()));
 
         var act = () => _consumer.Consume(context);
 
@@ -59,8 +59,8 @@ public class OrderRequestedConsumerTests
     {
         _sender.Setup(s => s.Send(It.IsAny<CreateOrderCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrderRequestId, Error>.Fail(Error.Conflict("Duplicate order request")));
-        var context = Mock.Of<ConsumeContext<OrderPlacedIntegration>>(c =>
-            c.Message == new OrderPlacedIntegration(Guid.NewGuid(), Guid.NewGuid()));
+        var context = Mock.Of<ConsumeContext<CreateRequest>>(c =>
+            c.Message == new CreateRequest(Guid.NewGuid(), Guid.NewGuid()));
 
         var act = () => _consumer.Consume(context);
 

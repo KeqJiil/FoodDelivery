@@ -1,4 +1,5 @@
 using SharedKernel.Infrastructure.IntegrationEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.NonsagaEvents;
 
 namespace SharedKernel.Infrastructure.Interceptors;
 
