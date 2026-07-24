@@ -9,6 +9,7 @@
         <Project Path="src/OrderRequests/OrderRequests.csproj"/>
         <Project Path="src/Payments/Payments.csproj"/>
         <Project Path="src/Deliveries/Deliveries.csproj"/>
+        <Project Path="src/Saga/Saga.csproj"/>
     </Folder>
     <Folder Name="/tests/"/>
     <Folder Name="/tests/UnitTest/"/>
