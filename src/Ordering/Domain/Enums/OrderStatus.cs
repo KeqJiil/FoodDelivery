@@ -5,5 +5,7 @@ public enum OrderStatus
     Draft,
     Pending,
     Confirmed,
-    Cancelled
+    Processing,
+    Cancelled,
+    Failed
 }

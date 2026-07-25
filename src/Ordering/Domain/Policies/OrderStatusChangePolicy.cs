@@ -10,7 +10,9 @@ public class OrderStatusChangePolicy
         return currentStatus switch
         {
             OrderStatus.Draft when newStatus is OrderStatus.Pending or OrderStatus.Cancelled => true,
-            OrderStatus.Pending when newStatus is OrderStatus.Cancelled or OrderStatus.Confirmed => true,
+            OrderStatus.Pending when newStatus is OrderStatus.Cancelled or OrderStatus.Processing or OrderStatus.Failed
+                => true,
+            OrderStatus.Processing when newStatus is OrderStatus.Confirmed or OrderStatus.Failed => true,
             _ => false
         };
     }

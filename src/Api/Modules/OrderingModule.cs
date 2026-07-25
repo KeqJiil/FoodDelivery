@@ -23,6 +23,10 @@ public static class OrderingModule
         services.AddScoped<IIntegrationEventTranslator<OrderPlaced>, OrderPlacedIntegrationEventTranslator>();
         services.AddScoped<IIntegrationEventTranslator<OrderConfirmed>, OrderConfirmedIntegrationEventTranslator>();
         services.AddScoped<IIntegrationEventTranslator<OrderCancelled>, OrderCancelledIntegrationEventTranslator>();
+        services.AddScoped<IIntegrationEventTranslator<OrderFailed>, OrderFailedIntegrationTranslator>();
+        services
+            .AddScoped<IIntegrationEventTranslator<OrderStartedProcessing>,
+                OrderStartedProcessingIntegrationTranslator>();
 
         services.AddDbContext<OrderingDbContext>((sp, options) =>
         {

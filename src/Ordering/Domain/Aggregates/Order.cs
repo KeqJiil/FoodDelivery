@@ -49,6 +49,24 @@ public class Order : AggregateRoot<OrderId>
         return Result<Error>.Success();
     }
 
+    public Result<Error> StartProcessing()
+    {
+        if (!OrderStatusChangePolicy.CanChangeStatusTo(Status, OrderStatus.Processing))
+            return Result<Error>.Fail(Error.Conflict("Status can't be changed"));
+        Status = OrderStatus.Processing;
+        AddEvent(new OrderStartedProcessing(Id));
+        return Result<Error>.Success();
+    }
+
+    public Result<Error> Fail()
+    {
+        if (!OrderStatusChangePolicy.CanChangeStatusTo(Status, OrderStatus.Failed))
+            return Result<Error>.Fail(Error.Conflict("Status can't be changed"));
+        Status = OrderStatus.Failed;
+        AddEvent(new OrderFailed(Id));
+        return Result<Error>.Success();
+    }
+
     public Result<Error> Confirm()
     {
         if (!OrderStatusChangePolicy.CanChangeStatusTo(Status, OrderStatus.Confirmed))
