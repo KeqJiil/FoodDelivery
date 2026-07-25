@@ -4,5 +4,6 @@ public enum OrderRequestStatus
 {
     Pending,
     Approved,
-    Rejected
+    Rejected,
+    Cancelled
 }

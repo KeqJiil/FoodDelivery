@@ -51,4 +51,14 @@ public class OrderRequest : AggregateRoot<OrderRequestId>
         AddEvent(new OrderApproved(Id, OrderRefId));
         return Result<Error>.Success();
     }
+
+    public Result<Error> Cancel()
+    {
+        if (Status is OrderRequestStatus.Rejected or OrderRequestStatus.Cancelled)
+            return Result<Error>.Fail(Error.Conflict($"Cannot cancel an order request that is already {Status}"));
+
+        Status = OrderRequestStatus.Cancelled;
+        AddEvent(new OrderCancelled(Id));
+        return Result<Error>.Success();
+    }
 }
