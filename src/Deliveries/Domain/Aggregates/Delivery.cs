@@ -27,7 +27,7 @@ public class Delivery : AggregateRoot<DeliveryId>
     public static Delivery Create(DeliveryId id, OrderRefId orderRefId)
     {
         var delivery = new Delivery(id, orderRefId);
-        delivery.AddEvent(new DeliveryCreated(id));
+        delivery.AddEvent(new DeliveryCreated(id, orderRefId));
         return delivery;
     }
 

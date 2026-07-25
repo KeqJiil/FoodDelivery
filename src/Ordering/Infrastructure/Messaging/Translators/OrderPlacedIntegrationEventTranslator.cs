@@ -10,6 +10,6 @@ public class OrderPlacedIntegrationEventTranslator : IIntegrationEventTranslator
 {
     public IntegrationEvent? Translate(OrderPlaced domainEvent)
     {
-        return new OrderPlacedIntegration(domainEvent.AggregateId.Id);
+        return new OrderPlacedIntegration(domainEvent.AggregateId.Id, domainEvent.RestaurantRefId.Id);
     }
 }

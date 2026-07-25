@@ -2,4 +2,4 @@
 
 namespace SharedKernel.Infrastructure.IntegrationEvents.SagaEvents;
 
-public sealed record OrderPlacedIntegration(Guid OrderId) : IntegrationEvent;
+public sealed record OrderPlacedIntegration(Guid OrderId, Guid RestaurantId) : IntegrationEvent;
