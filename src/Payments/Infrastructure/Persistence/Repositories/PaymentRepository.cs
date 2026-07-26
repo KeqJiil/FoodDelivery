@@ -12,6 +12,11 @@ public class PaymentRepository(PaymentsDbContext ctx) : IPaymentRepository
         return await ctx.Payments.Where(x => x.Id == id).FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<Payment?> GetByOrderIdAsync(OrderRefId id, CancellationToken cancellationToken = default)
+    {
+        return await ctx.Payments.Where(x => x.OrderRefId == id).FirstOrDefaultAsync(cancellationToken);
+    }
+
     public void Add(Payment payment)
     {
         ctx.Add(payment);

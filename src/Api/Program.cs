@@ -6,6 +6,7 @@ using Ordering.Infrastructure.Persistence;
 using OrderRequests.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence;
 using Restaurants.Infrastructure.Persistence;
+using Saga.Application;
 using Serilog;
 using SharedKernel.Infrastructure.Interceptors;
 
@@ -42,6 +43,8 @@ builder.Services.AddMassTransit(x =>
         cfg.UseInMemoryOutbox(context);
     });
 
+    x.AddDelayedMessageScheduler();
+
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host(builder.Configuration["RabbitMq:Host"], "/", h =>
@@ -49,7 +52,14 @@ builder.Services.AddMassTransit(x =>
             h.Username(builder.Configuration["RabbitMq:Username"] ?? "guest");
             h.Password(builder.Configuration["RabbitMq:Password"] ?? "guest");
         });
+        cfg.UseDelayedMessageScheduler();
         cfg.ConfigureEndpoints(context);
+    });
+
+    x.AddSagaStateMachine<OrderSaga, OrderState>().EntityFrameworkRepository(r =>
+    {
+        r.ConcurrencyMode = ConcurrencyMode.Optimistic;
+        r.UsePostgres();
     });
 });
 

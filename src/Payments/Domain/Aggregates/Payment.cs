@@ -54,4 +54,13 @@ public class Payment : AggregateRoot<PaymentId>
         AddEvent(new PaymentFailed(Id, OrderRefId, reason));
         return Result<Error>.Success();
     }
+
+    public Result<Error> Cancel()
+    {
+        if (Status is PaymentStatus.Succeeded or PaymentStatus.Cancelled)
+            return Result<Error>.Fail(Error.Conflict($"Cannot cancel a payment that is already {Status}"));
+        Status = PaymentStatus.Cancelled;
+        AddEvent(new PaymentCancelled(Id, OrderRefId));
+        return Result<Error>.Success();
+    }
 }
