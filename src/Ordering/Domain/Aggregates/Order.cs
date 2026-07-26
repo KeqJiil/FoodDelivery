@@ -45,7 +45,7 @@ public class Order : AggregateRoot<OrderId>
             return Result<Error>.Fail(policyResult.Error ?? Error.Unexpected());
 
         Status = OrderStatus.Pending;
-        AddEvent(new OrderPlaced(Id, RestaurantRefId));
+        AddEvent(new OrderPlaced(Id, RestaurantRefId, TotalPrice!));
         return Result<Error>.Success();
     }
 
@@ -54,7 +54,7 @@ public class Order : AggregateRoot<OrderId>
         if (!OrderStatusChangePolicy.CanChangeStatusTo(Status, OrderStatus.Processing))
             return Result<Error>.Fail(Error.Conflict("Status can't be changed"));
         Status = OrderStatus.Processing;
-        AddEvent(new OrderStartedProcessing(Id, TotalPrice!));
+        AddEvent(new OrderStartedProcessing(Id));
         return Result<Error>.Success();
     }
 
