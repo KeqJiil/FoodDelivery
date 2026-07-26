@@ -10,7 +10,6 @@ public class OrderConfirmedIntegrationEventTranslator : IIntegrationEventTransla
 {
     public IntegrationEvent? Translate(OrderConfirmed domainEvent)
     {
-        return new OrderConfirmedIntegration(domainEvent.AggregateId.Id, domainEvent.Money.Amount,
-            domainEvent.Money.Currency);
+        return new OrderConfirmedIntegration(domainEvent.AggregateId.Id);
     }
 }

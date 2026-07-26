@@ -43,14 +43,15 @@ public class OrderTests
     }
 
     [Fact]
-    public void Confirm_ShouldTransitionToConfirmed_AndRaiseOrderConfirmed_WhenPending()
+    public void Confirm_ShouldTransitionToConfirmed_AndRaiseOrderConfirmed_WhenProcessing()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
         order.Place(Money.Create(Currency.Usd, 1m).Ok!);
+        order.StartProcessing();
 
-        order.Status.Should().Be(OrderStatus.Pending);
+        order.Status.Should().Be(OrderStatus.Processing);
 
         order.Confirm();
         order.Status.Should().Be(OrderStatus.Confirmed);
@@ -87,6 +88,7 @@ public class OrderTests
         order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
         order.Place(Money.Create(Currency.Usd, 1m).Ok!);
+        order.StartProcessing();
         order.Confirm();
         var result = order.Cancel();
 

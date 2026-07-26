@@ -58,12 +58,25 @@ public class OrderConfirmedConsumerTests
     public async Task Consume_ShouldThrow_WhenCommandFails()
     {
         _sender.Setup(s => s.Send(It.IsAny<CreatePaymentCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<PaymentId, Error>.Fail(Error.NotFound("Order not found")));
+            .ReturnsAsync(Result<PaymentId, Error>.Fail(Error.Unexpected()));
         var context = Mock.Of<ConsumeContext<CreatePayment>>(c =>
             c.Message == new CreatePayment(Guid.NewGuid(), 42m, Currency.Usd));
 
         var act = () => _consumer.Consume(context);
 
         await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task Consume_ShouldNotThrow_WhenCommandFailsWithConflict()
+    {
+        _sender.Setup(s => s.Send(It.IsAny<CreatePaymentCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<PaymentId, Error>.Fail(Error.Conflict("Payment already exists")));
+        var context = Mock.Of<ConsumeContext<CreatePayment>>(c =>
+            c.Message == new CreatePayment(Guid.NewGuid(), 42m, Currency.Usd));
+
+        var act = () => _consumer.Consume(context);
+
+        await act.Should().NotThrowAsync();
     }
 }

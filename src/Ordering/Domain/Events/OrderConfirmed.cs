@@ -4,4 +4,4 @@ using Ordering.Domain.Ids;
 
 namespace Ordering.Domain.Events;
 
-public record OrderConfirmed(OrderId Id, Money Money) : DomainEvent<OrderId>(Id);
+public record OrderConfirmed(OrderId Id) : DomainEvent<OrderId>(Id);

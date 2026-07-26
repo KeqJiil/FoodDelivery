@@ -58,12 +58,25 @@ public class OrderRequestedConsumerTests
     public async Task Consume_ShouldThrow_WhenCommandFails()
     {
         _sender.Setup(s => s.Send(It.IsAny<CreateOrderCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<OrderRequestId, Error>.Fail(Error.Conflict("Duplicate order request")));
+            .ReturnsAsync(Result<OrderRequestId, Error>.Fail(Error.Unexpected()));
         var context = Mock.Of<ConsumeContext<CreateRequest>>(c =>
             c.Message == new CreateRequest(Guid.NewGuid(), Guid.NewGuid()));
 
         var act = () => _consumer.Consume(context);
 
         await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task Consume_ShouldNotThrow_WhenCommandFailsWithConflict()
+    {
+        _sender.Setup(s => s.Send(It.IsAny<CreateOrderCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<OrderRequestId, Error>.Fail(Error.Conflict("Duplicate order request")));
+        var context = Mock.Of<ConsumeContext<CreateRequest>>(c =>
+            c.Message == new CreateRequest(Guid.NewGuid(), Guid.NewGuid()));
+
+        var act = () => _consumer.Consume(context);
+
+        await act.Should().NotThrowAsync();
     }
 }

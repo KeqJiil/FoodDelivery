@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using OrderRequests.Application.CreateOrder;
 using OrderRequests.Domain.Ids;
+using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
 using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 
@@ -20,6 +21,12 @@ public class OrderRequestedConsumer(ISender mediator, ILogger<OrderRequestedCons
         if (!result.IsSuccess)
         {
             var error = result.Error ?? Error.Unexpected();
+            if (error.Type is ErrorEnum.Conflict or ErrorEnum.NotFound)
+            {
+                logger.LogWarning("Ignored CreateRequest for order {OrderId}: {Error}", msg.OrderId, error.Message);
+                return;
+            }
+
             logger.LogError("Failed to create order request {OrderId}: {Error}", msg.OrderId, error.Message);
             throw new InvalidOperationException($"Could not process Order Request Creation: {error.Message}");
         }

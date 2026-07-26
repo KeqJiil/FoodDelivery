@@ -60,6 +60,7 @@ public class ConfirmOrderHandlerTests
         order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
         order.Place(Money.Create(Currency.Usd, 1m).Ok!);
+        order.StartProcessing();
         var command = new ConfirmOrderCommand(order.Id);
         _repository.Setup(r => r.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);
 

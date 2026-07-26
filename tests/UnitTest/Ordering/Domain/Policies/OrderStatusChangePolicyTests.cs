@@ -10,7 +10,10 @@ public class OrderStatusChangePolicyTests
     [InlineData(OrderStatus.Draft, OrderStatus.Pending)]
     [InlineData(OrderStatus.Draft, OrderStatus.Cancelled)]
     [InlineData(OrderStatus.Pending, OrderStatus.Cancelled)]
-    [InlineData(OrderStatus.Pending, OrderStatus.Confirmed)]
+    [InlineData(OrderStatus.Pending, OrderStatus.Processing)]
+    [InlineData(OrderStatus.Pending, OrderStatus.Failed)]
+    [InlineData(OrderStatus.Processing, OrderStatus.Confirmed)]
+    [InlineData(OrderStatus.Processing, OrderStatus.Failed)]
     public void CanChangeStatusTo_ShouldReturnTrue_ForAllowedTransitions(OrderStatus current, OrderStatus next)
     {
         var result = OrderStatusChangePolicy.CanChangeStatusTo(current, next);
@@ -19,10 +22,13 @@ public class OrderStatusChangePolicyTests
 
     [Theory]
     [InlineData(OrderStatus.Draft, OrderStatus.Confirmed)]
+    [InlineData(OrderStatus.Pending, OrderStatus.Confirmed)]
     [InlineData(OrderStatus.Confirmed, OrderStatus.Pending)]
     [InlineData(OrderStatus.Confirmed, OrderStatus.Cancelled)]
+    [InlineData(OrderStatus.Confirmed, OrderStatus.Failed)]
     [InlineData(OrderStatus.Cancelled, OrderStatus.Pending)]
     [InlineData(OrderStatus.Cancelled, OrderStatus.Confirmed)]
+    [InlineData(OrderStatus.Failed, OrderStatus.Cancelled)]
     public void CanChangeStatusTo_ShouldReturnFalse_ForDisallowedTransitions(OrderStatus current, OrderStatus next)
     {
         var result = OrderStatusChangePolicy.CanChangeStatusTo(current, next);

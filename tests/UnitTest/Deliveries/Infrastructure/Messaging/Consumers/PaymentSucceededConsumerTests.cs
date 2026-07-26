@@ -57,12 +57,25 @@ public class PaymentSucceededConsumerTests
     public async Task Consume_ShouldThrow_WhenCommandFails()
     {
         _sender.Setup(s => s.Send(It.IsAny<CreateDeliveryCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<DeliveryId, Error>.Fail(Error.Conflict("Delivery already exists")));
+            .ReturnsAsync(Result<DeliveryId, Error>.Fail(Error.Unexpected()));
         var context = Mock.Of<ConsumeContext<PaymentSucceededIntegration>>(c =>
             c.Message == new PaymentSucceededIntegration(Guid.NewGuid()));
 
         var act = () => _consumer.Consume(context);
 
         await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task Consume_ShouldNotThrow_WhenCommandFailsWithConflict()
+    {
+        _sender.Setup(s => s.Send(It.IsAny<CreateDeliveryCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<DeliveryId, Error>.Fail(Error.Conflict("Delivery already exists")));
+        var context = Mock.Of<ConsumeContext<PaymentSucceededIntegration>>(c =>
+            c.Message == new PaymentSucceededIntegration(Guid.NewGuid()));
+
+        var act = () => _consumer.Consume(context);
+
+        await act.Should().NotThrowAsync();
     }
 }

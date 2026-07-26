@@ -3,7 +3,7 @@ using Deliveries.Domain.Ids;
 using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using SharedKernel.Infrastructure.IntegrationEvents;
+using SharedKernel.Domain.Enums;
 using SharedKernel.Infrastructure.IntegrationEvents.SagaEvents;
 
 namespace Deliveries.Infrastructure.Messaging.Consumers;
@@ -18,6 +18,12 @@ public class PaymentSucceededConsumer(ISender mediator, ILogger<PaymentSucceeded
         if (!result.IsSuccess)
         {
             var error = result.Error!;
+            if (error.Type is ErrorEnum.Conflict or ErrorEnum.NotFound)
+            {
+                logger.LogWarning("Ignored PaymentSucceeded for order {OrderId}: {Error}", msg.OrderId, error.Message);
+                return;
+            }
+
             logger.LogError("Failed to create delivery for order {OrderId}: {Error}", msg.OrderId, error.Message);
             throw new InvalidOperationException($"Could not create delivery for order {msg.OrderId}: {error.Message}");
         }

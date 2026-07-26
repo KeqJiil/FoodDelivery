@@ -9,6 +9,7 @@ public class OrderStartedProcessingIntegrationTranslator : IIntegrationEventTran
 {
     public IntegrationEvent? Translate(OrderStartedProcessing domainEvent)
     {
-        return new OrderStartedProcessingIntegration(domainEvent.Id.Id);
+        return new OrderStartedProcessingIntegration(domainEvent.Id.Id, domainEvent.Price.Amount,
+            domainEvent.Price.Currency);
     }
 }

@@ -16,6 +16,12 @@ public class OrderFailConsumer(ISender mediatr, ILogger<OrderFailConsumer> logge
         var result = await mediatr.Send(new OrderFailCommand(msg.OrderId), context.CancellationToken);
         if (!result.IsSuccess)
         {
+            if (result.Error!.Type is ErrorEnum.Conflict or ErrorEnum.NotFound)
+            {
+                logger.LogWarning("Ignored OrderFail for {OrderId}: {Error}", msg.OrderId, result.Error.Message);
+                return;
+            }
+
             logger.LogError("Failed to change status on order {OrderId} : {Error}",
                 msg.OrderId, result.Error!.Message);
             throw new InvalidOperationException(

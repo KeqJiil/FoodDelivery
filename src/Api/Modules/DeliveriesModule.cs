@@ -1,11 +1,12 @@
 using Deliveries.Application.Abstractions;
+using Deliveries.Domain.Events;
+using Deliveries.Infrastructure.Messaging.Translators;
 using Deliveries.Infrastructure.Persistence;
 using Deliveries.Infrastructure.Persistence.Readers;
 using Deliveries.Infrastructure.Persistence.Repositories;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel.Infrastructure.Interceptors;
-using UnitOfWork = Deliveries.Infrastructure.Persistence.UnitOfWork;
 
 namespace Api.Modules;
 
@@ -16,6 +17,7 @@ public static class DeliveriesModule
         services.AddScoped<IDeliveryReader, DeliveryReader>();
         services.AddScoped<IDeliveryRepository, DeliveryRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IIntegrationEventTranslator<DeliveryCreated>, DeliveryPlacedTranslator>();
 
         services.AddDbContext<DeliveriesDbContext>((sp, options) =>
         {
