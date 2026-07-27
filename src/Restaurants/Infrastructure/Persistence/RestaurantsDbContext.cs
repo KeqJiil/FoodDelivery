@@ -14,6 +14,8 @@ public class RestaurantsDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("restaurants");
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RestaurantsDbContext).Assembly);
 
         modelBuilder.AddInboxStateEntity();

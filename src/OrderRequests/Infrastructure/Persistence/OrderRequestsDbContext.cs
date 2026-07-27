@@ -14,6 +14,8 @@ public class OrderRequestsDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("order_requests");
+        
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OrderRequestsDbContext).Assembly);
 
         modelBuilder.AddInboxStateEntity();
