@@ -2,11 +2,13 @@ using Api.ExceptionHandlers;
 using Api.Modules;
 using Deliveries.Infrastructure.Persistence;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Ordering.Infrastructure.Persistence;
 using OrderRequests.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence;
 using Restaurants.Infrastructure.Persistence;
 using Saga.Application;
+using Saga.Infrastructure.Persistence;
 using Serilog;
 using SharedKernel.Infrastructure.Interceptors;
 
@@ -26,6 +28,7 @@ builder.Services.AddRestaurantsModule(builder.Configuration);
 builder.Services.AddOrderRequestsModule(builder.Configuration);
 builder.Services.AddPaymentsModule(builder.Configuration);
 builder.Services.AddDeliveriesModule(builder.Configuration);
+builder.Services.AddSagaModule(builder.Configuration);
 
 builder.Services.AddMassTransit(x =>
 {
@@ -59,7 +62,7 @@ builder.Services.AddMassTransit(x =>
     x.AddSagaStateMachine<OrderSaga, OrderState>().EntityFrameworkRepository(r =>
     {
         r.ConcurrencyMode = ConcurrencyMode.Optimistic;
-        r.UsePostgres();
+        r.ExistingDbContext<SagaDbContext>();
     });
 });
 
@@ -90,6 +93,7 @@ if (app.Environment.IsDevelopment())
     await app.MigrateOrderRequestsDatabaseAsync(builder.Configuration);
     await app.MigratePaymentsDatabaseAsync(builder.Configuration);
     await app.MigrateDeliveriesDatabaseAsync(builder.Configuration);
+    await app.MigrateSagaDatabaseAsync(builder.Configuration);
 }
 
 app.UseCors("AllowAll");

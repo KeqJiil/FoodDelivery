@@ -14,6 +14,8 @@ public class PaymentsDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("payments");
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PaymentsDbContext).Assembly);
 
         modelBuilder.AddInboxStateEntity();

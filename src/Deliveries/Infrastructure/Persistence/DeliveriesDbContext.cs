@@ -14,6 +14,8 @@ public class DeliveriesDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("deliveries");
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DeliveriesDbContext).Assembly);
 
         modelBuilder.AddInboxStateEntity();

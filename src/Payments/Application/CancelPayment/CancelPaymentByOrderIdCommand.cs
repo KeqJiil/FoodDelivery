@@ -1,5 +1,4 @@
-﻿using System.Windows.Input;
-using MediatR;
+﻿using MediatR;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Errors;
 
