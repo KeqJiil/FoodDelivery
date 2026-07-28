@@ -62,8 +62,10 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
                 .TransitionTo(CompensatingRequest),
             When(ApprovalTimeout.Received)
                 .Then(x => x.Saga.FailedAt = DateTime.UtcNow)
+                .Unschedule(ApprovalTimeout)
                 .Send(x => new CancelOrderRequest(x.Message.OrderId))
-                .TransitionTo(CompensatingRequest));
+                .TransitionTo(CompensatingRequest),
+            Ignore(OrderPlaced));
 
         During(AwaitingProcessing,
             When(OrderStartedProcessing)
@@ -71,7 +73,9 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
                 .Schedule(PaymentTimeout, x => new PaymentTimeoutExpired(x.Message.OrderId))
                 .TransitionTo(AwaitingPayment),
             Ignore(OrderCancelled),
-            Ignore(ApprovalTimeout.Received));
+            Ignore(ApprovalTimeout.Received),
+            Ignore(OrderApproved),
+            Ignore(OrderRejected));
 
         During(AwaitingPayment,
             When(PaymentSucceeded)
@@ -85,10 +89,12 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
                 .TransitionTo(CompensatingRequest),
             When(PaymentTimeout.Received)
                 .Then(ctx => ctx.Saga.FailedAt = DateTime.UtcNow)
+                .Unschedule(PaymentTimeout)
                 .Send(x => new CancelPayment(x.Message.OrderId))
                 .TransitionTo(CompensatingPayment),
             Ignore(OrderCancelled),
-            Ignore(ApprovalTimeout.Received));
+            Ignore(ApprovalTimeout.Received),
+            Ignore(OrderStartedProcessing));
 
         During(AwaitingConfirmation,
             When(OrderConfirmed)
@@ -96,7 +102,9 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
                 .TransitionTo(AwaitingDelivery),
             Ignore(OrderCancelled),
             Ignore(ApprovalTimeout.Received),
-            Ignore(PaymentTimeout.Received));
+            Ignore(PaymentTimeout.Received),
+            Ignore(PaymentSucceeded),
+            Ignore(PaymentFailed));
 
 
         During(AwaitingDelivery,
@@ -105,7 +113,8 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
                 .Finalize(),
             Ignore(OrderCancelled),
             Ignore(ApprovalTimeout.Received),
-            Ignore(PaymentTimeout.Received));
+            Ignore(PaymentTimeout.Received),
+            Ignore(OrderConfirmed));
 
         // Compensating
 
@@ -115,8 +124,12 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
                 .TransitionTo(CompensatingRequest),
             When(PaymentSucceeded)
                 .Send(x => new ConfirmOrder(x.Message.OrderId))
+                .Then(x => x.Saga.FailedAt = null)
                 .TransitionTo(AwaitingConfirmation),
-            Ignore(ApprovalTimeout.Received));
+            Ignore(OrderApproved),
+            Ignore(OrderRejected),
+            Ignore(ApprovalTimeout.Received),
+            Ignore(PaymentFailed));
 
         During(CompensatingRequest,
             When(OrderRequestCancelled)
@@ -130,9 +143,18 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
                 .TransitionTo(Failed)
                 .Finalize(),
             Ignore(ApprovalTimeout.Received),
-            Ignore(PaymentTimeout.Received));
+            Ignore(PaymentTimeout.Received),
+            Ignore(OrderCancelled),
+            Ignore(OrderRequestCancelled));
 
         SetCompletedWhenFinalized();
+
+        // Every event this saga listens to can legitimately arrive while the instance is in a
+        // state that has no business reaction to it — a duplicate from at-least-once delivery, a
+        // stale message that lost a race, or a message for a step the instance has already moved
+        // past. None of that should crash the consumer and drive the message to the error queue;
+        // it should be dropped. See OrderSagaFullMatrixTests for the exhaustive state x event proof.
+        OnUnhandledEvent(x => x.Ignore());
     }
 
     public State AwaitingApproval { get; private set; }

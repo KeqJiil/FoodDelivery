@@ -1,9 +1,11 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Payments.Application.Abstractions;
 using Payments.Domain.Events;
 using Payments.Infrastructure.Adapters;
+using Payments.Infrastructure.Messaging.Consumers;
 using Payments.Infrastructure.Messaging.Translators;
+using SharedKernel.Infrastructure.Messaging;
 using Payments.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence.Readers;
 using Payments.Infrastructure.Persistence.Repositories;
@@ -34,7 +36,10 @@ public static class PaymentsModule
 
     public static IBusRegistrationConfigurator AddPaymentsMessaging(this IBusRegistrationConfigurator busConfigurator)
     {
-        busConfigurator.AddConsumers(typeof(PaymentsDbContext).Assembly);
+        busConfigurator.AddConsumer<OrderConfirmedConsumer>()
+            .Endpoint(e => e.Name = Queues.CreatePayment);
+        busConfigurator.AddConsumer<CancelPaymentConsumer>()
+            .Endpoint(e => e.Name = Queues.CancelPayment);
         busConfigurator.AddEntityFrameworkOutbox<PaymentsDbContext>(o =>
             {
                 o.UsePostgres();

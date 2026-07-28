@@ -2,7 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using OrderRequests.Application.Abstractions;
 using OrderRequests.Domain.Events;
+using OrderRequests.Infrastructure.Messaging.Consumers;
 using OrderRequests.Infrastructure.Messaging.Translators;
+using SharedKernel.Infrastructure.Messaging;
 using OrderRequests.Infrastructure.Persistence;
 using OrderRequests.Infrastructure.Persistence.Readers;
 using OrderRequests.Infrastructure.Persistence.Repositories;
@@ -33,7 +35,10 @@ public static class OrderRequestsModule
     public static IBusRegistrationConfigurator AddOrderRequestsMessaging(
         this IBusRegistrationConfigurator busConfigurator)
     {
-        busConfigurator.AddConsumers(typeof(OrderRequestsDbContext).Assembly);
+        busConfigurator.AddConsumer<OrderRequestedConsumer>()
+            .Endpoint(e => e.Name = Queues.CreateRequest);
+        busConfigurator.AddConsumer<OrderCancelConsumer>()
+            .Endpoint(e => e.Name = Queues.CancelOrderRequest);
         busConfigurator.AddEntityFrameworkOutbox<OrderRequestsDbContext>(o =>
             {
                 o.UsePostgres();

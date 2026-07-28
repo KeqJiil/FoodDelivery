@@ -31,4 +31,10 @@
     <Folder Name="/tests/UnitTest/Deliveries/">
         <Project Path="tests/UnitTest/Deliveries/Deliveries.UnitTest.csproj"/>
     </Folder>
+    <Folder Name="/tests/UnitTest/Saga/">
+        <Project Path="tests/UnitTest/Saga/Saga.UnitTest.csproj"/>
+    </Folder>
+    <Folder Name="/tests/UnitTest/Api/">
+        <Project Path="tests/UnitTest/Api/Api.UnitTest.csproj"/>
+    </Folder>
 </Solution>

@@ -1,6 +1,8 @@
-using Deliveries.Application.Abstractions;
+﻿using Deliveries.Application.Abstractions;
 using Deliveries.Domain.Events;
+using Deliveries.Infrastructure.Messaging.Consumers;
 using Deliveries.Infrastructure.Messaging.Translators;
+using SharedKernel.Infrastructure.Messaging;
 using Deliveries.Infrastructure.Persistence;
 using Deliveries.Infrastructure.Persistence.Readers;
 using Deliveries.Infrastructure.Persistence.Repositories;
@@ -31,7 +33,8 @@ public static class DeliveriesModule
     public static IBusRegistrationConfigurator AddDeliveriesMessaging(
         this IBusRegistrationConfigurator busConfigurator)
     {
-        busConfigurator.AddConsumers(typeof(DeliveriesDbContext).Assembly);
+        busConfigurator.AddConsumer<CreateDeliveryConsumer>()
+            .Endpoint(e => e.Name = Queues.CreateDelivery);
         busConfigurator.AddEntityFrameworkOutbox<DeliveriesDbContext>(o =>
             {
                 o.UsePostgres();

@@ -11,6 +11,7 @@ using Saga.Application;
 using Saga.Infrastructure.Persistence;
 using Serilog;
 using SharedKernel.Infrastructure.Interceptors;
+using SharedKernel.Infrastructure.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,8 @@ builder.Services.AddOrderRequestsModule(builder.Configuration);
 builder.Services.AddPaymentsModule(builder.Configuration);
 builder.Services.AddDeliveriesModule(builder.Configuration);
 builder.Services.AddSagaModule(builder.Configuration);
+
+Queues.RegisterEndpointConventions();
 
 builder.Services.AddMassTransit(x =>
 {
