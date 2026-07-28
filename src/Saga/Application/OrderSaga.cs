@@ -148,12 +148,7 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
             Ignore(OrderRequestCancelled));
 
         SetCompletedWhenFinalized();
-
-        // Every event this saga listens to can legitimately arrive while the instance is in a
-        // state that has no business reaction to it — a duplicate from at-least-once delivery, a
-        // stale message that lost a race, or a message for a step the instance has already moved
-        // past. None of that should crash the consumer and drive the message to the error queue;
-        // it should be dropped. See OrderSagaFullMatrixTests for the exhaustive state x event proof.
+        
         OnUnhandledEvent(x => x.Ignore());
     }
 
