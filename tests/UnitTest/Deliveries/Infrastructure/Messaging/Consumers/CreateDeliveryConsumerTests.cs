@@ -8,20 +8,20 @@ using Moq;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
-using SharedKernel.Infrastructure.IntegrationEvents.SagaEvents;
+using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 
 namespace Deliveries.UnitTest.Infrastructure.Messaging.Consumers;
 
-public class PaymentSucceededConsumerTests
+public class CreateDeliveryConsumerTests
 {
     private readonly Mock<ISender> _sender = new();
 
-    private readonly PaymentSucceededConsumer _consumer;
+    private readonly CreateDeliveryConsumer _consumer;
 
-    public PaymentSucceededConsumerTests()
+    public CreateDeliveryConsumerTests()
     {
-        _consumer = new PaymentSucceededConsumer(_sender.Object,
-            Mock.Of<Microsoft.Extensions.Logging.ILogger<PaymentSucceededConsumer>>());
+        _consumer = new CreateDeliveryConsumer(_sender.Object,
+            Mock.Of<Microsoft.Extensions.Logging.ILogger<CreateDeliveryConsumer>>());
     }
 
     [Fact]
@@ -30,8 +30,8 @@ public class PaymentSucceededConsumerTests
         var orderId = Guid.NewGuid();
         _sender.Setup(s => s.Send(It.IsAny<CreateDeliveryCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<DeliveryId, Error>.Success(new DeliveryId(Guid.NewGuid())));
-        var context = Mock.Of<ConsumeContext<PaymentSucceededIntegration>>(c =>
-            c.Message == new PaymentSucceededIntegration(orderId));
+        var context = Mock.Of<ConsumeContext<CreateDelivery>>(c =>
+            c.Message == new CreateDelivery(orderId));
 
         await _consumer.Consume(context);
 
@@ -45,8 +45,8 @@ public class PaymentSucceededConsumerTests
     {
         _sender.Setup(s => s.Send(It.IsAny<CreateDeliveryCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<DeliveryId, Error>.Success(new DeliveryId(Guid.NewGuid())));
-        var context = Mock.Of<ConsumeContext<PaymentSucceededIntegration>>(c =>
-            c.Message == new PaymentSucceededIntegration(Guid.NewGuid()));
+        var context = Mock.Of<ConsumeContext<CreateDelivery>>(c =>
+            c.Message == new CreateDelivery(Guid.NewGuid()));
 
         var act = () => _consumer.Consume(context);
 
@@ -58,8 +58,8 @@ public class PaymentSucceededConsumerTests
     {
         _sender.Setup(s => s.Send(It.IsAny<CreateDeliveryCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<DeliveryId, Error>.Fail(Error.Unexpected()));
-        var context = Mock.Of<ConsumeContext<PaymentSucceededIntegration>>(c =>
-            c.Message == new PaymentSucceededIntegration(Guid.NewGuid()));
+        var context = Mock.Of<ConsumeContext<CreateDelivery>>(c =>
+            c.Message == new CreateDelivery(Guid.NewGuid()));
 
         var act = () => _consumer.Consume(context);
 
@@ -71,8 +71,8 @@ public class PaymentSucceededConsumerTests
     {
         _sender.Setup(s => s.Send(It.IsAny<CreateDeliveryCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<DeliveryId, Error>.Fail(Error.Conflict("Delivery already exists")));
-        var context = Mock.Of<ConsumeContext<PaymentSucceededIntegration>>(c =>
-            c.Message == new PaymentSucceededIntegration(Guid.NewGuid()));
+        var context = Mock.Of<ConsumeContext<CreateDelivery>>(c =>
+            c.Message == new CreateDelivery(Guid.NewGuid()));
 
         var act = () => _consumer.Consume(context);
 

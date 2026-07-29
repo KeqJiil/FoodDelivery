@@ -21,11 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Payments\Payments.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Infrastructure\Adapters\" />
+    <ProjectReference Include="..\..\..\src\Saga\Saga.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,9 +1,11 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Ordering.Application.Abstractions;
 using Ordering.Domain.Events;
 using Ordering.Infrastructure.Adapters;
+using Ordering.Infrastructure.Messaging.Consumers;
 using Ordering.Infrastructure.Messaging.Translators;
+using SharedKernel.Infrastructure.Messaging;
 using Ordering.Infrastructure.Persistence;
 using Ordering.Infrastructure.Persistence.Readers;
 using Ordering.Infrastructure.Persistence.Repositories;
@@ -39,7 +41,14 @@ public static class OrderingModule
 
     public static IBusRegistrationConfigurator AddOrderingMessaging(this IBusRegistrationConfigurator busConfigurator)
     {
-        busConfigurator.AddConsumers(typeof(OrderingDbContext).Assembly);
+        busConfigurator.AddConsumer<OrderProcessConsumer>()
+            .Endpoint(e => e.Name = Queues.OrderProcess);
+        busConfigurator.AddConsumer<OrderFailConsumer>()
+            .Endpoint(e => e.Name = Queues.OrderFail);
+        busConfigurator.AddConsumer<ConfirmOrderConsumer>()
+            .Endpoint(e => e.Name = Queues.ConfirmOrder);
+        busConfigurator.AddConsumer<ChangeOrderLineItemPriceConsumer>()
+            .Endpoint(e => e.Name = Queues.MenuItemPriceChanged);
         busConfigurator.AddEntityFrameworkOutbox<OrderingDbContext>(o =>
         {
             o.UsePostgres();

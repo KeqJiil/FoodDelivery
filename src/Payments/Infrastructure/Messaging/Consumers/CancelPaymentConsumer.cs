@@ -12,7 +12,7 @@ public class CancelPaymentConsumer(ILogger<CancelPaymentConsumer> logger, ISende
     public async Task Consume(ConsumeContext<CancelPayment> context)
     {
         var msg = context.Message;
-        var result = await mediatr.Send(new CancelPaymentByOrderIdCommand(msg.OrderId));
+        var result = await mediatr.Send(new CancelPaymentByOrderIdCommand(msg.OrderId), context.CancellationToken);
         if (!result.IsSuccess)
         {
             if (result.Error.Type is ErrorEnum.Conflict or ErrorEnum.NotFound)

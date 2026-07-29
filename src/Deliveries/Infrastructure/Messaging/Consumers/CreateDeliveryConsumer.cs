@@ -4,14 +4,15 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using SharedKernel.Domain.Enums;
+using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 using SharedKernel.Infrastructure.IntegrationEvents.SagaEvents;
 
 namespace Deliveries.Infrastructure.Messaging.Consumers;
 
-public class PaymentSucceededConsumer(ISender mediator, ILogger<PaymentSucceededConsumer> logger)
-    : IConsumer<PaymentSucceededIntegration>
+public class CreateDeliveryConsumer(ISender mediator, ILogger<CreateDeliveryConsumer> logger)
+    : IConsumer<CreateDelivery>
 {
-    public async Task Consume(ConsumeContext<PaymentSucceededIntegration> context)
+    public async Task Consume(ConsumeContext<CreateDelivery> context)
     {
         var msg = context.Message;
         var result = await mediator.Send(new CreateDeliveryCommand(new OrderRefId(msg.OrderId)));
@@ -20,7 +21,7 @@ public class PaymentSucceededConsumer(ISender mediator, ILogger<PaymentSucceeded
             var error = result.Error!;
             if (error.Type is ErrorEnum.Conflict or ErrorEnum.NotFound)
             {
-                logger.LogWarning("Ignored PaymentSucceeded for order {OrderId}: {Error}", msg.OrderId, error.Message);
+                logger.LogWarning("Ignored CreateDelivery for order {OrderId}: {Error}", msg.OrderId, error.Message);
                 return;
             }
 
