@@ -23,7 +23,7 @@ public static class DeliveriesModule
 
         services.AddDbContext<DeliveriesDbContext>((sp, options) =>
         {
-            options.UseNpgsql(config.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(config.GetConnectionString("DefaultConnection"));
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
 
@@ -48,7 +48,7 @@ public static class DeliveriesModule
     public static async Task MigrateDeliveriesDatabaseAsync(this WebApplication app, IConfiguration configuration)
     {
         var options = new DbContextOptionsBuilder<DeliveriesDbContext>()
-            .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
             .Options;
         await using var context = new DeliveriesDbContext(options);
         await context.Database.MigrateAsync();

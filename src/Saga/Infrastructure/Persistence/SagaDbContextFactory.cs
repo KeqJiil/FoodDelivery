@@ -13,7 +13,7 @@ public class SagaDbContextFactory : IDesignTimeDbContextFactory<SagaDbContext>
                 "No connection string found.");
 
         var optionsBuilder = new DbContextOptionsBuilder<SagaDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseSqlServer(connectionString);
 
         return new SagaDbContext(optionsBuilder.Options);
     }

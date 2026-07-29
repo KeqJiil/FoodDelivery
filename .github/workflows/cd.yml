@@ -1,0 +1,8 @@
+﻿Name: CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs: 
+  

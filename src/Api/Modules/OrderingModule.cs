@@ -32,7 +32,7 @@ public static class OrderingModule
 
         services.AddDbContext<OrderingDbContext>((sp, options) =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
 
@@ -61,7 +61,7 @@ public static class OrderingModule
     public static async Task MigrateOrderingDatabaseAsync(this WebApplication app, IConfiguration configuration)
     {
         var options = new DbContextOptionsBuilder<OrderingDbContext>()
-            .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
             .Options;
         await using var context = new OrderingDbContext(options);
         await context.Database.MigrateAsync();

@@ -13,7 +13,7 @@ public sealed class RestaurantsDbContextFactory : IDesignTimeDbContextFactory<Re
                 "No connection string found.");
 
         var optionsBuilder = new DbContextOptionsBuilder<RestaurantsDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseSqlServer(connectionString);
 
         return new RestaurantsDbContext(optionsBuilder.Options);
     }

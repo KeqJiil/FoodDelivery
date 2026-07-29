@@ -14,7 +14,7 @@ public sealed class OrderRequestDbContextFactory : IDesignTimeDbContextFactory<O
 
         var optionBuilder = new DbContextOptionsBuilder<OrderRequestsDbContext>();
 
-        optionBuilder.UseNpgsql(connectionStr);
+        optionBuilder.UseSqlServer(connectionStr);
 
         return new OrderRequestsDbContext(optionBuilder.Options);
     }

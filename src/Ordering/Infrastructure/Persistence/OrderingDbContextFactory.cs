@@ -13,7 +13,7 @@ public sealed class OrderingDbContextFactory : IDesignTimeDbContextFactory<Order
                 "No connection string found.");
 
         var optionsBuilder = new DbContextOptionsBuilder<OrderingDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseSqlServer(connectionString);
 
         return new OrderingDbContext(optionsBuilder.Options);
     }

@@ -1,27 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-        <ProjectReference Include="..\SharedKernel\SharedKernel.csproj"/>
+        <ProjectReference Include="..\SharedKernel\SharedKernel.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="MassTransit" Version="8.5.10"/>
-        <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.5.10"/>
-        <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.10"/>
-        <PackageReference Include="MediatR" Version="12.5.0"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10"/>
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10"/>
+        <PackageReference Include="MassTransit" Version="8.5.10" />
+        <PackageReference Include="MassTransit.Azure.ServiceBus.Core" Version="8.5.10" />
+        <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.5.10" />
+        <PackageReference Include="MediatR" Version="12.5.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Application\ActivateRestaurant\"/>
-        <Folder Include="Application\AddMenuItem\"/>
-        <Folder Include="Application\ChangeMenuItemPrice\"/>
-        <Folder Include="Application\CreateRestaurant\"/>
-        <Folder Include="Application\DeactivateRestaurant\"/>
-        <Folder Include="Application\GetRestaurantById\"/>
-        <Folder Include="Application\RemoveMenuItem\"/>
+        <Folder Include="Application\ActivateRestaurant\" />
+        <Folder Include="Application\AddMenuItem\" />
+        <Folder Include="Application\ChangeMenuItemPrice\" />
+        <Folder Include="Application\CreateRestaurant\" />
+        <Folder Include="Application\DeactivateRestaurant\" />
+        <Folder Include="Application\GetRestaurantById\" />
+        <Folder Include="Application\RemoveMenuItem\" />
     </ItemGroup>
 
     <PropertyGroup>

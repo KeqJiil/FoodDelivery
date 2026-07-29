@@ -21,7 +21,7 @@ public static class RestaurantsModule
 
         services.AddDbContext<RestaurantsDbContext>((sp, options) =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
 
@@ -43,7 +43,7 @@ public static class RestaurantsModule
     public static async Task MigrateRestaurantsDatabaseAsync(this WebApplication app, IConfiguration configuration)
     {
         var options = new DbContextOptionsBuilder<RestaurantsDbContext>()
-            .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
             .Options;
         await using var context = new RestaurantsDbContext(options);
         await context.Database.MigrateAsync();

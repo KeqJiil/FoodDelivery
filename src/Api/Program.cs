@@ -51,14 +51,11 @@ builder.Services.AddMassTransit(x =>
 
     x.AddDelayedMessageScheduler();
 
-    x.UsingRabbitMq((context, cfg) =>
+    x.UsingAzureServiceBus((context, cfg) =>
     {
-        cfg.Host(builder.Configuration["RabbitMq:Host"], "/", h =>
-        {
-            h.Username(builder.Configuration["RabbitMq:Username"] ?? "guest");
-            h.Password(builder.Configuration["RabbitMq:Password"] ?? "guest");
-        });
-        cfg.UseDelayedMessageScheduler();
+        cfg.Host(builder.Configuration.GetConnectionString("AzureServiceBus"));
+        cfg.RequiresSession = true;
+        cfg.UseServiceBusMessageScheduler();
         cfg.ConfigureEndpoints(context);
     });
 

@@ -27,7 +27,7 @@ public static class PaymentsModule
 
         services.AddDbContext<PaymentsDbContext>((sp, options) =>
         {
-            options.UseNpgsql(config.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(config.GetConnectionString("DefaultConnection"));
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
 
@@ -53,7 +53,7 @@ public static class PaymentsModule
     public static async Task MigratePaymentsDatabaseAsync(this WebApplication app, IConfiguration configuration)
     {
         var options = new DbContextOptionsBuilder<PaymentsDbContext>()
-            .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
             .Options;
         await using var context = new PaymentsDbContext(options);
         await context.Database.MigrateAsync();
