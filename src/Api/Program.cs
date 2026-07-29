@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Api.ExceptionHandlers;
 using Api.Modules;
 using Deliveries.Infrastructure.Persistence;
@@ -15,7 +16,8 @@ using SharedKernel.Infrastructure.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
 builder.Services.AddExceptionHandler<BasicExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -23,6 +25,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
 builder.Services.AddScoped<DomainEventPublishInterceptor>();
+
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<OrderingDbContext>("ordering-db")
+    .AddDbContextCheck<RestaurantsDbContext>("restaurants-db")
+    .AddDbContextCheck<OrderRequestsDbContext>("order-requests-db")
+    .AddDbContextCheck<PaymentsDbContext>("payments-db")
+    .AddDbContextCheck<DeliveriesDbContext>("deliveries-db")
+    .AddDbContextCheck<SagaDbContext>("saga-db");
 
 builder.Services.AddOrderingModule(builder.Configuration);
 builder.Services.AddRestaurantsModule(builder.Configuration);
@@ -41,6 +51,8 @@ builder.Services.AddMassTransit(x =>
     x.AddPaymentsMessaging();
     x.AddDeliveriesMessaging();
 
+    x.AddHealthChecks();
+
     x.AddConfigureEndpointsCallback((context, _, cfg) =>
     {
         cfg.UseDelayedRedelivery(r =>
@@ -51,12 +63,24 @@ builder.Services.AddMassTransit(x =>
 
     x.AddDelayedMessageScheduler();
 
-    x.UsingAzureServiceBus((context, cfg) =>
-    {
-        cfg.Host(builder.Configuration.GetConnectionString("AzureServiceBus"));
-        cfg.UseServiceBusMessageScheduler();
-        cfg.ConfigureEndpoints(context);
-    });
+    if (builder.Environment.IsDevelopment())
+        x.UsingRabbitMq((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration["RabbitMq:Host"], "/", h =>
+            {
+                h.Username(builder.Configuration["RabbitMq:Username"] ?? "guest");
+                h.Password(builder.Configuration["RabbitMq:Password"] ?? "guest");
+            });
+            cfg.UseDelayedMessageScheduler();
+            cfg.ConfigureEndpoints(context);
+        });
+    else
+        x.UsingAzureServiceBus((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration.GetConnectionString("AzureServiceBus"));
+            cfg.UseServiceBusMessageScheduler();
+            cfg.ConfigureEndpoints(context);
+        });
 
     x.AddSagaStateMachine<OrderSaga, OrderState>().EntityFrameworkRepository(r =>
     {
@@ -86,6 +110,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapSwaggerUI(setupAction: options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
 
     await app.MigrateOrderingDatabaseAsync(builder.Configuration);
     await app.MigrateRestaurantsDatabaseAsync(builder.Configuration);

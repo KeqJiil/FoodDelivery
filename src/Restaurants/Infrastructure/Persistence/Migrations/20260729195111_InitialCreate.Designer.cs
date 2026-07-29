@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Ordering.Infrastructure.Persistence;
+using Restaurants.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Ordering.Infrastructure.Persistence.Migrations
+namespace Restaurants.Infrastructure.Persistence.Migrations
 {
-    [DbContext(typeof(OrderingDbContext))]
-    [Migration("20260729161325_InitialCreate")]
+    [DbContext(typeof(RestaurantsDbContext))]
+    [Migration("20260729195111_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace Ordering.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasDefaultSchema("ordering")
+                .HasDefaultSchema("restaurants")
                 .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -70,7 +70,7 @@ namespace Ordering.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Delivered");
 
-                    b.ToTable("InboxState", "ordering");
+                    b.ToTable("InboxState", "restaurants");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
@@ -163,7 +163,7 @@ namespace Ordering.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[InboxMessageId] IS NOT NULL AND [InboxConsumerId] IS NOT NULL");
 
-                    b.ToTable("OutboxMessage", "ordering");
+                    b.ToTable("OutboxMessage", "restaurants");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxState", b =>
@@ -193,24 +193,14 @@ namespace Ordering.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Created");
 
-                    b.ToTable("OutboxState", "ordering");
+                    b.ToTable("OutboxState", "restaurants");
                 });
 
-            modelBuilder.Entity("Ordering.Domain.Aggregates.Order", b =>
+            modelBuilder.Entity("Restaurants.Domain.Aggregates.Restaurant", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<Guid>("RestaurantRefId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("restaurant_ref_id");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -225,22 +215,14 @@ namespace Ordering.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("orders", "ordering");
+                    b.ToTable("restaurants", "restaurants");
                 });
 
-            modelBuilder.Entity("Ordering.Domain.Entities.OrderLine", b =>
+            modelBuilder.Entity("Restaurants.Domain.Entities.MenuItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    b.Property<Guid>("MenuItemRefId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("menu_item_ref_id");
-
-                    b.Property<byte>("Quantity")
-                        .HasColumnType("tinyint")
-                        .HasColumnName("quantity");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -248,17 +230,14 @@ namespace Ordering.Infrastructure.Persistence.Migrations
                         .HasColumnType("rowversion")
                         .HasColumnName("row_version");
 
-                    b.Property<Guid?>("order_id")
+                    b.Property<Guid?>("restaurant_id")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MenuItemRefId")
-                        .HasDatabaseName("menu_ref_index");
+                    b.HasIndex("restaurant_id");
 
-                    b.HasIndex("order_id");
-
-                    b.ToTable("order_lines", "ordering");
+                    b.ToTable("menu_items", "restaurants");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
@@ -273,15 +252,30 @@ namespace Ordering.Infrastructure.Persistence.Migrations
                         .HasPrincipalKey("MessageId", "ConsumerId");
                 });
 
-            modelBuilder.Entity("Ordering.Domain.Entities.OrderLine", b =>
+            modelBuilder.Entity("Restaurants.Domain.Aggregates.Restaurant", b =>
                 {
-                    b.HasOne("Ordering.Domain.Aggregates.Order", null)
-                        .WithMany("OrderLines")
-                        .HasForeignKey("order_id");
-
-                    b.OwnsOne("SharedKernel.Domain.ValueObjects.Money", "Price", b1 =>
+                    b.OwnsOne("Restaurants.Domain.ValueObjects.Description", "Description", b1 =>
                         {
-                            b1.Property<Guid>("OrderLineId")
+                            b1.Property<Guid>("RestaurantId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Data")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("description");
+
+                            b1.HasKey("RestaurantId");
+
+                            b1.ToTable("restaurants", "restaurants");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RestaurantId");
+                        });
+
+                    b.OwnsOne("SharedKernel.Domain.ValueObjects.Money", "MinimalOrderPrice", b1 =>
+                        {
+                            b1.Property<Guid>("RestaurantId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal>("Amount")
@@ -294,21 +288,172 @@ namespace Ordering.Infrastructure.Persistence.Migrations
                                 .HasColumnType("nvarchar(max)")
                                 .HasColumnName("currency");
 
-                            b1.HasKey("OrderLineId");
+                            b1.HasKey("RestaurantId");
 
-                            b1.ToTable("order_lines", "ordering");
+                            b1.ToTable("restaurants", "restaurants");
 
                             b1.WithOwner()
-                                .HasForeignKey("OrderLineId");
+                                .HasForeignKey("RestaurantId");
                         });
+
+                    b.OwnsOne("Restaurants.Domain.ValueObjects.Name", "Name", b1 =>
+                        {
+                            b1.Property<Guid>("RestaurantId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Data")
+                                .IsRequired()
+                                .HasMaxLength(30)
+                                .HasColumnType("nvarchar(30)")
+                                .HasColumnName("name");
+
+                            b1.HasKey("RestaurantId");
+
+                            b1.ToTable("restaurants", "restaurants");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RestaurantId");
+                        });
+
+                    b.OwnsOne("Restaurants.Domain.ValueObjects.Schedule", "Schedule", b1 =>
+                        {
+                            b1.Property<Guid>("RestaurantId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.HasKey("RestaurantId");
+
+                            b1.ToTable("restaurants", "restaurants");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RestaurantId");
+
+                            b1.OwnsMany("Restaurants.Domain.ValueObjects.OpeningWindow", "OpeningWindows", b2 =>
+                                {
+                                    b2.Property<Guid>("ScheduleRestaurantId")
+                                        .HasColumnType("uniqueidentifier");
+
+                                    b2.Property<int>("Id")
+                                        .ValueGeneratedOnAdd()
+                                        .HasColumnType("int");
+
+                                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b2.Property<int>("Id"));
+
+                                    b2.Property<int>("CloseDay")
+                                        .HasColumnType("int");
+
+                                    b2.Property<TimeOnly>("CloseTime")
+                                        .HasColumnType("time");
+
+                                    b2.Property<int>("OpenDay")
+                                        .HasColumnType("int");
+
+                                    b2.Property<TimeOnly>("OpenTime")
+                                        .HasColumnType("time");
+
+                                    b2.HasKey("ScheduleRestaurantId", "Id");
+
+                                    b2.ToTable("OpeningWindow", "restaurants");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("ScheduleRestaurantId");
+                                });
+
+                            b1.Navigation("OpeningWindows");
+                        });
+
+                    b.Navigation("Description")
+                        .IsRequired();
+
+                    b.Navigation("MinimalOrderPrice")
+                        .IsRequired();
+
+                    b.Navigation("Name")
+                        .IsRequired();
+
+                    b.Navigation("Schedule")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Restaurants.Domain.Entities.MenuItem", b =>
+                {
+                    b.HasOne("Restaurants.Domain.Aggregates.Restaurant", null)
+                        .WithMany("MenuItems")
+                        .HasForeignKey("restaurant_id");
+
+                    b.OwnsOne("Restaurants.Domain.ValueObjects.Description", "Description", b1 =>
+                        {
+                            b1.Property<Guid>("MenuItemId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Data")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("description");
+
+                            b1.HasKey("MenuItemId");
+
+                            b1.ToTable("menu_items", "restaurants");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MenuItemId");
+                        });
+
+                    b.OwnsOne("Restaurants.Domain.ValueObjects.Name", "Name", b1 =>
+                        {
+                            b1.Property<Guid>("MenuItemId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Data")
+                                .IsRequired()
+                                .HasMaxLength(30)
+                                .HasColumnType("nvarchar(30)")
+                                .HasColumnName("name");
+
+                            b1.HasKey("MenuItemId");
+
+                            b1.ToTable("menu_items", "restaurants");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MenuItemId");
+                        });
+
+                    b.OwnsOne("SharedKernel.Domain.ValueObjects.Money", "Price", b1 =>
+                        {
+                            b1.Property<Guid>("MenuItemId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("currency");
+
+                            b1.HasKey("MenuItemId");
+
+                            b1.ToTable("menu_items", "restaurants");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MenuItemId");
+                        });
+
+                    b.Navigation("Description")
+                        .IsRequired();
+
+                    b.Navigation("Name")
+                        .IsRequired();
 
                     b.Navigation("Price")
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Ordering.Domain.Aggregates.Order", b =>
+            modelBuilder.Entity("Restaurants.Domain.Aggregates.Restaurant", b =>
                 {
-                    b.Navigation("OrderLines");
+                    b.Navigation("MenuItems");
                 });
 #pragma warning restore 612, 618
         }

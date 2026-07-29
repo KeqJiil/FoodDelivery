@@ -23,7 +23,7 @@ public static class DeliveriesModule
 
         services.AddDbContext<DeliveriesDbContext>((sp, options) =>
         {
-            options.UseSqlServer(config.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(config.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "deliveries"); });
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
 
@@ -35,10 +35,10 @@ public static class DeliveriesModule
     {
         busConfigurator.AddConsumer<CreateDeliveryConsumer>()
             .Endpoint(e => e.Name = Queues.CreateDelivery);
+        // No UseBusOutbox() here: MassTransit 8.x supports only one bus outbox per bus (see OrderingModule).
         busConfigurator.AddEntityFrameworkOutbox<DeliveriesDbContext>(o =>
             {
                 o.UseSqlServer();
-                o.UseBusOutbox();
             }
         );
 
@@ -48,7 +48,7 @@ public static class DeliveriesModule
     public static async Task MigrateDeliveriesDatabaseAsync(this WebApplication app, IConfiguration configuration)
     {
         var options = new DbContextOptionsBuilder<DeliveriesDbContext>()
-            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "deliveries"); })
             .Options;
         await using var context = new DeliveriesDbContext(options);
         await context.Database.MigrateAsync();

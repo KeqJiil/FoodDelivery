@@ -5,22 +5,22 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Payments.Infrastructure.Persistence;
+using Saga.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Payments.Infrastructure.Persistence.Migrations
+namespace Saga.Infrastructure.Persistence.Migrations
 {
-    [DbContext(typeof(PaymentsDbContext))]
-    [Migration("20260729161414_InitialCreate")]
-    partial class InitialCreate
+    [DbContext(typeof(SagaDbContext))]
+    [Migration("20260729195319_InitialSaga")]
+    partial class InitialSaga
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasDefaultSchema("payments")
+                .HasDefaultSchema("saga")
                 .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -70,7 +70,7 @@ namespace Payments.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Delivered");
 
-                    b.ToTable("InboxState", "payments");
+                    b.ToTable("InboxState", "saga");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
@@ -163,7 +163,7 @@ namespace Payments.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[InboxMessageId] IS NOT NULL AND [InboxConsumerId] IS NOT NULL");
 
-                    b.ToTable("OutboxMessage", "payments");
+                    b.ToTable("OutboxMessage", "saga");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxState", b =>
@@ -193,47 +193,57 @@ namespace Payments.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Created");
 
-                    b.ToTable("OutboxState", "payments");
+                    b.ToTable("OutboxState", "saga");
                 });
 
-            modelBuilder.Entity("Payments.Domain.Aggregates.Payment", b =>
+            modelBuilder.Entity("Saga.Application.OrderState", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<Guid>("CorrelationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<string>("FailureReason")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("failure_reason");
-
-                    b.Property<Guid>("OrderRefId")
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("order_id");
+                        .HasColumnName("correlation_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<Guid?>("ApprovalTimeoutTokenId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("approval_timeout_token_id");
+
+                    b.Property<int>("Currency")
+                        .HasColumnType("int")
+                        .HasColumnName("currency");
+
+                    b.Property<string>("CurrentState")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("current_state");
+
+                    b.Property<DateTime?>("FailedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("failed_at");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("payment_id");
+
+                    b.Property<Guid?>("PaymentTimeoutTokenId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("payment_timeout_token_id");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion")
-                        .HasColumnName("row_version");
-
-                    b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("status");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
-                    b.HasKey("Id");
+                    b.HasKey("CorrelationId");
 
-                    b.HasIndex("OrderRefId")
-                        .IsUnique()
-                        .HasDatabaseName("idx_payment_order_id");
+                    b.HasIndex("PaymentId")
+                        .IsUnique();
 
-                    b.ToTable("payments", "payments");
+                    b.ToTable("order_states", "saga");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
@@ -246,35 +256,6 @@ namespace Payments.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("InboxMessageId", "InboxConsumerId")
                         .HasPrincipalKey("MessageId", "ConsumerId");
-                });
-
-            modelBuilder.Entity("Payments.Domain.Aggregates.Payment", b =>
-                {
-                    b.OwnsOne("SharedKernel.Domain.ValueObjects.Money", "Amount", b1 =>
-                        {
-                            b1.Property<Guid>("PaymentId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("amount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)")
-                                .HasColumnName("currency");
-
-                            b1.HasKey("PaymentId");
-
-                            b1.ToTable("payments", "payments");
-
-                            b1.WithOwner()
-                                .HasForeignKey("PaymentId");
-                        });
-
-                    b.Navigation("Amount")
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

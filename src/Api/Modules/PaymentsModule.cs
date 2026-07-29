@@ -27,7 +27,7 @@ public static class PaymentsModule
 
         services.AddDbContext<PaymentsDbContext>((sp, options) =>
         {
-            options.UseSqlServer(config.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(config.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "payments"); });
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
 
@@ -40,10 +40,10 @@ public static class PaymentsModule
             .Endpoint(e => e.Name = Queues.CreatePayment);
         busConfigurator.AddConsumer<CancelPaymentConsumer>()
             .Endpoint(e => e.Name = Queues.CancelPayment);
+        // No UseBusOutbox() here: MassTransit 8.x supports only one bus outbox per bus (see OrderingModule).
         busConfigurator.AddEntityFrameworkOutbox<PaymentsDbContext>(o =>
             {
                 o.UseSqlServer();
-                o.UseBusOutbox();
             }
         );
 
@@ -53,7 +53,7 @@ public static class PaymentsModule
     public static async Task MigratePaymentsDatabaseAsync(this WebApplication app, IConfiguration configuration)
     {
         var options = new DbContextOptionsBuilder<PaymentsDbContext>()
-            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "payments"); })
             .Options;
         await using var context = new PaymentsDbContext(options);
         await context.Database.MigrateAsync();

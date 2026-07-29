@@ -32,7 +32,7 @@ public static class OrderingModule
 
         services.AddDbContext<OrderingDbContext>((sp, options) =>
         {
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "ordering"); });
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
 
@@ -49,6 +49,9 @@ public static class OrderingModule
             .Endpoint(e => e.Name = Queues.ConfirmOrder);
         busConfigurator.AddConsumer<ChangeOrderLineItemPriceConsumer>()
             .Endpoint(e => e.Name = Queues.MenuItemPriceChanged);
+        // MassTransit 8.x allows only one bus outbox per bus; Ordering is the one DbContext that keeps it.
+        // Other modules' DomainEventPublishInterceptor publishes still work, just without the transactional
+        // guarantee tying the publish to that module's own SaveChanges.
         busConfigurator.AddEntityFrameworkOutbox<OrderingDbContext>(o =>
         {
             o.UseSqlServer();
@@ -61,7 +64,7 @@ public static class OrderingModule
     public static async Task MigrateOrderingDatabaseAsync(this WebApplication app, IConfiguration configuration)
     {
         var options = new DbContextOptionsBuilder<OrderingDbContext>()
-            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "ordering"); })
             .Options;
         await using var context = new OrderingDbContext(options);
         await context.Database.MigrateAsync();

@@ -10,8 +10,8 @@ services:
     depends_on:
       mssql:
         condition: service_healthy
-      servicebus-emulator:
-        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -27,23 +27,27 @@ services:
       timeout: 5s
       retries: 10
 
-  sqledge:
-    image: mcr.microsoft.com/azure-sql-edge:latest
+  rabbitmq:
+    image: masstransit/rabbitmq:4
+    container_name: rabbit
+    restart: always
     env_file:
       - .env
-
-  servicebus-emulator:
-    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
-    env_file:
-      - .env
-    environment:
-      SQL_SERVER: sqledge
     ports:
       - "5672:5672"
+      - "15672:15672"
     volumes:
-      - ./docker/servicebus-emulator/Config.json:/ServiceBus_Emulator/ConfigFiles/Config.json
-    depends_on:
-      - sqledge
+      - rabbitmq-lib:/var/lib/rabbitmq/
+      - rabbitmq-log:/var/log/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   mssql-data:
+  rabbitmq-lib:
+    driver: local
+  rabbitmq-log:
+    driver: local

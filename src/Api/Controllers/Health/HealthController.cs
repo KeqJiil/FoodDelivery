@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Api.Controllers.Health;
 
-public class HealthController : ControllerBase
+public class HealthController(HealthCheckService healthCheckService) : ControllerBase
 {
     [HttpGet("liveness")]
     public IActionResult Liveness()
@@ -11,8 +12,12 @@ public class HealthController : ControllerBase
     }
 
     [HttpGet("readiness")]
-    public IActionResult Readiness()
+    public async Task<IActionResult> Readiness(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var report = await healthCheckService.CheckHealthAsync(cancellationToken);
+
+        return report.Status == HealthStatus.Healthy
+            ? Ok(report.Status.ToString())
+            : StatusCode(StatusCodes.Status503ServiceUnavailable, report.Status.ToString());
     }
 }
