@@ -8,46 +8,42 @@ services:
     env_file:
       - .env
     depends_on:
-      postgres:
+      mssql:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      servicebus-emulator:
+        condition: service_started
 
-  postgres:
-    image: postgres:16-alpine
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
     env_file:
       - .env
     ports:
-      - "5433:5432"
+      - "1433:1433"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mssql-data:/var/opt/mssql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1"]
       interval: 5s
       timeout: 5s
-      retries: 5
-      
-  rabbitmq:
-    image: rabbitmq:4-management-alpine
-    container_name: rabbit
-    restart: always
+      retries: 10
+
+  sqledge:
+    image: mcr.microsoft.com/azure-sql-edge:latest
     env_file:
       - .env
+
+  servicebus-emulator:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    env_file:
+      - .env
+    environment:
+      SQL_SERVER: sqledge
     ports:
       - "5672:5672"
-      - "15672:15672"
     volumes:
-      - rabbitmq-lib:/var/lib/rabbitmq/
-      - rabbitmq-log:/var/log/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - ./docker/servicebus-emulator/Config.json:/ServiceBus_Emulator/ConfigFiles/Config.json
+    depends_on:
+      - sqledge
 
 volumes:
-  postgres_data:
-  rabbitmq-lib:
-    driver: local
-  rabbitmq-log:
-    driver: local
+  mssql-data:

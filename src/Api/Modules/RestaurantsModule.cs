@@ -33,7 +33,7 @@ public static class RestaurantsModule
         busConfigurator.AddConsumers(typeof(RestaurantsDbContext).Assembly);
         busConfigurator.AddEntityFrameworkOutbox<RestaurantsDbContext>(o =>
         {
-            o.UsePostgres();
+            o.UseSqlServer();
             o.UseBusOutbox();
         });
 

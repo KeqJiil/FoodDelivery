@@ -54,7 +54,6 @@ builder.Services.AddMassTransit(x =>
     x.UsingAzureServiceBus((context, cfg) =>
     {
         cfg.Host(builder.Configuration.GetConnectionString("AzureServiceBus"));
-        cfg.RequiresSession = true;
         cfg.UseServiceBusMessageScheduler();
         cfg.ConfigureEndpoints(context);
     });

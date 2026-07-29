@@ -19,13 +19,15 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(p => p.Status).HasColumnName("status").HasConversion<string>().IsRequired();
         builder.Property(p => p.FailureReason).HasColumnName("failure_reason");
 
-        builder.Property<DateTime>("CreatedAt").HasColumnName("created_at").HasDefaultValueSql("NOW()");
+        builder.Property<DateTime>("CreatedAt").HasColumnName("created_at").HasDefaultValueSql("GETDATE()");
 
         builder.OwnsOne(p => p.Amount, a =>
         {
             a.Property(m => m.Amount).HasColumnName("amount").HasPrecision(18, 2).IsRequired();
             a.Property(m => m.Currency).HasColumnName("currency").HasConversion<string>().IsRequired();
         });
+        
+        builder.Property<byte[]>("RowVersion").IsRowVersion().HasColumnName("row_version");
 
         builder.Ignore(p => p.Events);
     }

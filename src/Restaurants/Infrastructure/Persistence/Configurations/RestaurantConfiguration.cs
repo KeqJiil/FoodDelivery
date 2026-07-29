@@ -30,6 +30,8 @@ public class RestaurantConfiguration : IEntityTypeConfiguration<Restaurant>
 
         builder.HasMany(x => x.MenuItems).WithOne().HasForeignKey("restaurant_id");
         builder.Navigation(x => x.MenuItems).HasField("_menuItems").UsePropertyAccessMode(PropertyAccessMode.Field);
+        
+        builder.Property<byte[]>("RowVersion").IsRowVersion().HasColumnName("row_version");
 
         builder.Ignore(x => x.Events);
     }

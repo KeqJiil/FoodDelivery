@@ -51,7 +51,7 @@ public static class OrderingModule
             .Endpoint(e => e.Name = Queues.MenuItemPriceChanged);
         busConfigurator.AddEntityFrameworkOutbox<OrderingDbContext>(o =>
         {
-            o.UsePostgres();
+            o.UseSqlServer();
             o.UseBusOutbox();
         });
 

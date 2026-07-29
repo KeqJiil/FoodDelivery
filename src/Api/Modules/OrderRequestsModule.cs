@@ -41,7 +41,7 @@ public static class OrderRequestsModule
             .Endpoint(e => e.Name = Queues.CancelOrderRequest);
         busConfigurator.AddEntityFrameworkOutbox<OrderRequestsDbContext>(o =>
             {
-                o.UsePostgres();
+                o.UseSqlServer();
                 o.UseBusOutbox();
             }
         );

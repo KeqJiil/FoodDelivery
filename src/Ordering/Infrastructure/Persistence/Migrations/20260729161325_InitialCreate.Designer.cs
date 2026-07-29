@@ -2,17 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Payments.Infrastructure.Persistence;
+using Ordering.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Payments.Infrastructure.Persistence.Migrations
+namespace Ordering.Infrastructure.Persistence.Migrations
 {
-    [DbContext(typeof(PaymentsDbContext))]
-    [Migration("20260721224249_InitialCreate")]
+    [DbContext(typeof(OrderingDbContext))]
+    [Migration("20260729161325_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,10 +20,11 @@ namespace Payments.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("ordering")
                 .HasAnnotation("ProductVersion", "10.0.10")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.InboxState", b =>
                 {
@@ -31,45 +32,45 @@ namespace Payments.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime?>("Consumed")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("ConsumerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("Delivered")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ExpirationTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<long?>("LastSequenceNumber")
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("LockId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("MessageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("ReceiveCount")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("Received")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("rowversion");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Delivered");
 
-                    b.ToTable("InboxState");
+                    b.ToTable("InboxState", "ordering");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
@@ -78,75 +79,75 @@ namespace Payments.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("SequenceNumber"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("SequenceNumber"));
 
                     b.Property<string>("Body")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ContentType")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<Guid?>("ConversationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("CorrelationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DestinationAddress")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTime?>("EnqueueTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ExpirationTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("FaultAddress")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Headers")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("InboxConsumerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("InboxMessageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("InitiatorId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("MessageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("MessageType")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("OutboxId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Properties")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("RequestId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ResponseAddress")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTime>("SentTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SourceAddress")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("SequenceNumber");
 
@@ -155,76 +156,109 @@ namespace Payments.Infrastructure.Persistence.Migrations
                     b.HasIndex("ExpirationTime");
 
                     b.HasIndex("OutboxId", "SequenceNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[OutboxId] IS NOT NULL");
 
                     b.HasIndex("InboxMessageId", "InboxConsumerId", "SequenceNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[InboxMessageId] IS NOT NULL AND [InboxConsumerId] IS NOT NULL");
 
-                    b.ToTable("OutboxMessage");
+                    b.ToTable("OutboxMessage", "ordering");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxState", b =>
                 {
                     b.Property<Guid>("OutboxId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("Delivered")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<long?>("LastSequenceNumber")
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("LockId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("rowversion");
 
                     b.HasKey("OutboxId");
 
                     b.HasIndex("Created");
 
-                    b.ToTable("OutboxState");
+                    b.ToTable("OutboxState", "ordering");
                 });
 
-            modelBuilder.Entity("Payments.Domain.Aggregates.Payment", b =>
+            modelBuilder.Entity("Ordering.Domain.Aggregates.Order", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("datetime2")
                         .HasColumnName("created_at")
-                        .HasDefaultValueSql("NOW()");
+                        .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<string>("FailureReason")
-                        .HasColumnType("text")
-                        .HasColumnName("failure_reason");
+                    b.Property<Guid>("RestaurantRefId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("restaurant_ref_id");
 
-                    b.Property<Guid>("OrderRefId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("order_id");
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("row_version");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("status");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderRefId")
-                        .IsUnique()
-                        .HasDatabaseName("idx_payment_order_id");
+                    b.ToTable("orders", "ordering");
+                });
 
-                    b.ToTable("payments", (string)null);
+            modelBuilder.Entity("Ordering.Domain.Entities.OrderLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("MenuItemRefId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("menu_item_ref_id");
+
+                    b.Property<byte>("Quantity")
+                        .HasColumnType("tinyint")
+                        .HasColumnName("quantity");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("row_version");
+
+                    b.Property<Guid?>("order_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MenuItemRefId")
+                        .HasDatabaseName("menu_ref_index");
+
+                    b.HasIndex("order_id");
+
+                    b.ToTable("order_lines", "ordering");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
@@ -239,33 +273,42 @@ namespace Payments.Infrastructure.Persistence.Migrations
                         .HasPrincipalKey("MessageId", "ConsumerId");
                 });
 
-            modelBuilder.Entity("Payments.Domain.Aggregates.Payment", b =>
+            modelBuilder.Entity("Ordering.Domain.Entities.OrderLine", b =>
                 {
-                    b.OwnsOne("SharedKernel.Domain.ValueObjects.Money", "Amount", b1 =>
+                    b.HasOne("Ordering.Domain.Aggregates.Order", null)
+                        .WithMany("OrderLines")
+                        .HasForeignKey("order_id");
+
+                    b.OwnsOne("SharedKernel.Domain.ValueObjects.Money", "Price", b1 =>
                         {
-                            b1.Property<Guid>("PaymentId")
-                                .HasColumnType("uuid");
+                            b1.Property<Guid>("OrderLineId")
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal>("Amount")
                                 .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasColumnType("decimal(18,2)")
                                 .HasColumnName("amount");
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
-                                .HasColumnType("text")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("currency");
 
-                            b1.HasKey("PaymentId");
+                            b1.HasKey("OrderLineId");
 
-                            b1.ToTable("payments");
+                            b1.ToTable("order_lines", "ordering");
 
                             b1.WithOwner()
-                                .HasForeignKey("PaymentId");
+                                .HasForeignKey("OrderLineId");
                         });
 
-                    b.Navigation("Amount")
+                    b.Navigation("Price")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Ordering.Domain.Aggregates.Order", b =>
+                {
+                    b.Navigation("OrderLines");
                 });
 #pragma warning restore 612, 618
         }

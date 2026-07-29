@@ -42,7 +42,7 @@ public static class PaymentsModule
             .Endpoint(e => e.Name = Queues.CancelPayment);
         busConfigurator.AddEntityFrameworkOutbox<PaymentsDbContext>(o =>
             {
-                o.UsePostgres();
+                o.UseSqlServer();
                 o.UseBusOutbox();
             }
         );

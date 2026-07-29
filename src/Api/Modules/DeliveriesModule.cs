@@ -37,7 +37,7 @@ public static class DeliveriesModule
             .Endpoint(e => e.Name = Queues.CreateDelivery);
         busConfigurator.AddEntityFrameworkOutbox<DeliveriesDbContext>(o =>
             {
-                o.UsePostgres();
+                o.UseSqlServer();
                 o.UseBusOutbox();
             }
         );
