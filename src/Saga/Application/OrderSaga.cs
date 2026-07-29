@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using SharedKernel.Domain.Enums;
 using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 using SharedKernel.Infrastructure.IntegrationEvents.SagaEvents;
 
@@ -69,7 +70,10 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
 
         During(AwaitingProcessing,
             When(OrderStartedProcessing)
-                .Send(x => new CreatePayment(x.Message.OrderId, x.Saga.Amount, x.Saga.Currency))
+                .Send(x => new CreatePayment(
+                    x.Message.OrderId,
+                    x.Saga.Amount ?? throw new InvalidOperationException($"Saga {x.Saga.CorrelationId}: Amount was not set by OrderPlaced."),
+                    x.Saga.Currency ?? throw new InvalidOperationException($"Saga {x.Saga.CorrelationId}: Currency was not set by OrderPlaced.")))
                 .Schedule(PaymentTimeout, x => new PaymentTimeoutExpired(x.Message.OrderId))
                 .TransitionTo(AwaitingPayment),
             Ignore(OrderCancelled),

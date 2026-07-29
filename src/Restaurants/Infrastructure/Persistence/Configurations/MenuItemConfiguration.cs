@@ -24,5 +24,7 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
             p.Property(x => x.Amount).HasColumnName("amount").HasPrecision(18, 2).IsRequired();
             p.Property(x => x.Currency).HasColumnName("currency").HasConversion<string>().IsRequired();
         });
+        
+        builder.Property<byte[]>("RowVersion").IsRowVersion().HasColumnName("row_version");
     }
 }

@@ -12,7 +12,7 @@ public class OrderState : SagaStateMachineInstance
     public Guid? ApprovalTimeoutTokenId { get; set; }
     public Guid? PaymentTimeoutTokenId { get; set; }
 
-    public Guid PaymentId { get; set; }
-    public decimal Amount { get; set; }
-    public Currency Currency { get; set; }
+    public Guid? PaymentId { get; set; }
+    public decimal? Amount { get; set; }
+    public Currency? Currency { get; set; }
 }

@@ -2,8 +2,8 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Restaurants.Infrastructure.Persistence;
 
 #nullable disable
@@ -17,10 +17,11 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.9")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasDefaultSchema("restaurants")
+                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.InboxState", b =>
                 {
@@ -28,45 +29,45 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime?>("Consumed")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("ConsumerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("Delivered")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ExpirationTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<long?>("LastSequenceNumber")
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("LockId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("MessageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("ReceiveCount")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("Received")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("rowversion");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Delivered");
 
-                    b.ToTable("InboxState");
+                    b.ToTable("InboxState", "restaurants");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
@@ -75,75 +76,75 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("SequenceNumber"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("SequenceNumber"));
 
                     b.Property<string>("Body")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ContentType")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<Guid?>("ConversationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("CorrelationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DestinationAddress")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTime?>("EnqueueTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ExpirationTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("FaultAddress")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Headers")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("InboxConsumerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("InboxMessageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("InitiatorId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("MessageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("MessageType")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("OutboxId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Properties")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("RequestId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ResponseAddress")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTime>("SentTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SourceAddress")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("SequenceNumber");
 
@@ -152,74 +153,88 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                     b.HasIndex("ExpirationTime");
 
                     b.HasIndex("OutboxId", "SequenceNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[OutboxId] IS NOT NULL");
 
                     b.HasIndex("InboxMessageId", "InboxConsumerId", "SequenceNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[InboxMessageId] IS NOT NULL AND [InboxConsumerId] IS NOT NULL");
 
-                    b.ToTable("OutboxMessage");
+                    b.ToTable("OutboxMessage", "restaurants");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxState", b =>
                 {
                     b.Property<Guid>("OutboxId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("Delivered")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetime2");
 
                     b.Property<long?>("LastSequenceNumber")
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("LockId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("rowversion");
 
                     b.HasKey("OutboxId");
 
                     b.HasIndex("Created");
 
-                    b.ToTable("OutboxState");
+                    b.ToTable("OutboxState", "restaurants");
                 });
 
             modelBuilder.Entity("Restaurants.Domain.Aggregates.Restaurant", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("row_version");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("status");
 
                     b.HasKey("Id");
 
-                    b.ToTable("restaurants", (string)null);
+                    b.ToTable("restaurants", "restaurants");
                 });
 
             modelBuilder.Entity("Restaurants.Domain.Entities.MenuItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("row_version");
+
                     b.Property<Guid?>("restaurant_id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("restaurant_id");
 
-                    b.ToTable("menu_items", (string)null);
+                    b.ToTable("menu_items", "restaurants");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
@@ -239,17 +254,17 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                     b.OwnsOne("Restaurants.Domain.ValueObjects.Description", "Description", b1 =>
                         {
                             b1.Property<Guid>("RestaurantId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Data")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("description");
 
                             b1.HasKey("RestaurantId");
 
-                            b1.ToTable("restaurants");
+                            b1.ToTable("restaurants", "restaurants");
 
                             b1.WithOwner()
                                 .HasForeignKey("RestaurantId");
@@ -258,21 +273,21 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                     b.OwnsOne("SharedKernel.Domain.ValueObjects.Money", "MinimalOrderPrice", b1 =>
                         {
                             b1.Property<Guid>("RestaurantId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal>("Amount")
                                 .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasColumnType("decimal(18,2)")
                                 .HasColumnName("amount");
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
-                                .HasColumnType("text")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("currency");
 
                             b1.HasKey("RestaurantId");
 
-                            b1.ToTable("restaurants");
+                            b1.ToTable("restaurants", "restaurants");
 
                             b1.WithOwner()
                                 .HasForeignKey("RestaurantId");
@@ -281,17 +296,17 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                     b.OwnsOne("Restaurants.Domain.ValueObjects.Name", "Name", b1 =>
                         {
                             b1.Property<Guid>("RestaurantId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Data")
                                 .IsRequired()
                                 .HasMaxLength(30)
-                                .HasColumnType("character varying(30)")
+                                .HasColumnType("nvarchar(30)")
                                 .HasColumnName("name");
 
                             b1.HasKey("RestaurantId");
 
-                            b1.ToTable("restaurants");
+                            b1.ToTable("restaurants", "restaurants");
 
                             b1.WithOwner()
                                 .HasForeignKey("RestaurantId");
@@ -300,11 +315,11 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                     b.OwnsOne("Restaurants.Domain.ValueObjects.Schedule", "Schedule", b1 =>
                         {
                             b1.Property<Guid>("RestaurantId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.HasKey("RestaurantId");
 
-                            b1.ToTable("restaurants");
+                            b1.ToTable("restaurants", "restaurants");
 
                             b1.WithOwner()
                                 .HasForeignKey("RestaurantId");
@@ -312,29 +327,29 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                             b1.OwnsMany("Restaurants.Domain.ValueObjects.OpeningWindow", "OpeningWindows", b2 =>
                                 {
                                     b2.Property<Guid>("ScheduleRestaurantId")
-                                        .HasColumnType("uuid");
+                                        .HasColumnType("uniqueidentifier");
 
                                     b2.Property<int>("Id")
                                         .ValueGeneratedOnAdd()
-                                        .HasColumnType("integer");
+                                        .HasColumnType("int");
 
-                                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b2.Property<int>("Id"));
+                                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b2.Property<int>("Id"));
 
                                     b2.Property<int>("CloseDay")
-                                        .HasColumnType("integer");
+                                        .HasColumnType("int");
 
                                     b2.Property<TimeOnly>("CloseTime")
-                                        .HasColumnType("time without time zone");
+                                        .HasColumnType("time");
 
                                     b2.Property<int>("OpenDay")
-                                        .HasColumnType("integer");
+                                        .HasColumnType("int");
 
                                     b2.Property<TimeOnly>("OpenTime")
-                                        .HasColumnType("time without time zone");
+                                        .HasColumnType("time");
 
                                     b2.HasKey("ScheduleRestaurantId", "Id");
 
-                                    b2.ToTable("OpeningWindow");
+                                    b2.ToTable("OpeningWindow", "restaurants");
 
                                     b2.WithOwner()
                                         .HasForeignKey("ScheduleRestaurantId");
@@ -365,17 +380,17 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                     b.OwnsOne("Restaurants.Domain.ValueObjects.Description", "Description", b1 =>
                         {
                             b1.Property<Guid>("MenuItemId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Data")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("description");
 
                             b1.HasKey("MenuItemId");
 
-                            b1.ToTable("menu_items");
+                            b1.ToTable("menu_items", "restaurants");
 
                             b1.WithOwner()
                                 .HasForeignKey("MenuItemId");
@@ -384,17 +399,17 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                     b.OwnsOne("Restaurants.Domain.ValueObjects.Name", "Name", b1 =>
                         {
                             b1.Property<Guid>("MenuItemId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Data")
                                 .IsRequired()
                                 .HasMaxLength(30)
-                                .HasColumnType("character varying(30)")
+                                .HasColumnType("nvarchar(30)")
                                 .HasColumnName("name");
 
                             b1.HasKey("MenuItemId");
 
-                            b1.ToTable("menu_items");
+                            b1.ToTable("menu_items", "restaurants");
 
                             b1.WithOwner()
                                 .HasForeignKey("MenuItemId");
@@ -403,21 +418,21 @@ namespace Restaurants.Infrastructure.Persistence.Migrations
                     b.OwnsOne("SharedKernel.Domain.ValueObjects.Money", "Price", b1 =>
                         {
                             b1.Property<Guid>("MenuItemId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal>("Amount")
                                 .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasColumnType("decimal(18,2)")
                                 .HasColumnName("amount");
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
-                                .HasColumnType("text")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("currency");
 
                             b1.HasKey("MenuItemId");
 
-                            b1.ToTable("menu_items");
+                            b1.ToTable("menu_items", "restaurants");
 
                             b1.WithOwner()
                                 .HasForeignKey("MenuItemId");

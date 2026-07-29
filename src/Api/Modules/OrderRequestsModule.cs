@@ -25,7 +25,7 @@ public static class OrderRequestsModule
 
         services.AddDbContext<OrderRequestsDbContext>((sp, options) =>
         {
-            options.UseNpgsql(config.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(config.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "order_requests"); });
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
 
@@ -39,10 +39,10 @@ public static class OrderRequestsModule
             .Endpoint(e => e.Name = Queues.CreateRequest);
         busConfigurator.AddConsumer<OrderCancelConsumer>()
             .Endpoint(e => e.Name = Queues.CancelOrderRequest);
+        // No UseBusOutbox() here: MassTransit 8.x supports only one bus outbox per bus (see OrderingModule).
         busConfigurator.AddEntityFrameworkOutbox<OrderRequestsDbContext>(o =>
             {
-                o.UsePostgres();
-                o.UseBusOutbox();
+                o.UseSqlServer();
             }
         );
 
@@ -52,7 +52,7 @@ public static class OrderRequestsModule
     public static async Task MigrateOrderRequestsDatabaseAsync(this WebApplication app, IConfiguration configuration)
     {
         var options = new DbContextOptionsBuilder<OrderRequestsDbContext>()
-            .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "order_requests"); })
             .Options;
         await using var context = new OrderRequestsDbContext(options);
         await context.Database.MigrateAsync();

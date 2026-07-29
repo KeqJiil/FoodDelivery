@@ -14,7 +14,7 @@ public sealed class PaymentsDbContextFactory : IDesignTimeDbContextFactory<Payme
 
         var optionBuilder = new DbContextOptionsBuilder<PaymentsDbContext>();
 
-        optionBuilder.UseNpgsql(connectionStr);
+        optionBuilder.UseSqlServer(connectionStr);
 
         return new PaymentsDbContext(optionBuilder.Options);
     }

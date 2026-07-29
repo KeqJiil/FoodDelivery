@@ -38,7 +38,7 @@ public class OrderingController : MyBasicController
 
         if (!result.IsSuccess) return GetProblem(result.Error!);
 
-        return CreatedAtAction(nameof(GetById), new { id = result.Ok!.Id }, result.Ok);
+        return CreatedAtAction(nameof(GetById), new { id = result.Ok!.Id }, new { id = result.Ok!.Id });
     }
 
     [HttpPost("{id:guid}/cancel")]
@@ -66,7 +66,7 @@ public class OrderingController : MyBasicController
                 cancellationToken);
 
         return result.IsSuccess
-            ? CreatedAtAction(nameof(GetById), new { id = result.Ok }, null)
+            ? CreatedAtAction(nameof(GetById), new { id = result.Ok!.Id }, new { id = result.Ok!.Id })
             : GetProblem(result.Error!);
     }
 

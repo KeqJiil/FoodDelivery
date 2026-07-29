@@ -14,7 +14,7 @@ public sealed class DeliveriesDbContextFactory : IDesignTimeDbContextFactory<Del
 
         var optionBuilder = new DbContextOptionsBuilder<DeliveriesDbContext>();
 
-        optionBuilder.UseNpgsql(connectionStr);
+        optionBuilder.UseSqlServer(connectionStr);
 
         return new DeliveriesDbContext(optionBuilder.Options);
     }

@@ -16,10 +16,12 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.RestaurantRefId).HasColumnName("restaurant_ref_id")
             .HasConversion(o => o.Id, o => new RestaurantRefId(o));
         builder.Property<DateTime>(OrderShadowProperties.CreatedAt).HasColumnName("created_at")
-            .HasDefaultValueSql("NOW()");
+            .HasDefaultValueSql("GETDATE()");
 
         builder.HasMany(o => o.OrderLines).WithOne().HasForeignKey("order_id");
         builder.Navigation(o => o.OrderLines).HasField("_orderLines").UsePropertyAccessMode(PropertyAccessMode.Field);
+        
+        builder.Property<byte[]>("RowVersion").IsRowVersion().HasColumnName("row_version");
 
         builder.Ignore(o => o.TotalPrice);
         builder.Ignore(o => o.Events);

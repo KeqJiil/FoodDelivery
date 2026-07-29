@@ -45,7 +45,7 @@ public class RestaurantsController : MyBasicController
 
         return !result.IsSuccess
             ? GetProblem(result.Error!)
-            : CreatedAtAction(nameof(Get), new { id = result.Ok }, null);
+            : CreatedAtAction(nameof(Get), new { id = result.Ok!.Id }, new { id = result.Ok!.Id });
     }
 
     [HttpPatch("{id:guid}/name")]

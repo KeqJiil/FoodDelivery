@@ -1,11 +1,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY ["FoodDelivery.slnx", "."]
 COPY ["src/Api/Api.csproj", "src/Api/"]
 COPY ["src/Ordering/Ordering.csproj", "src/Ordering/"]
 COPY ["src/Restaurants/Restaurants.csproj", "src/Restaurants/"]
 COPY ["src/SharedKernel/SharedKernel.csproj", "src/SharedKernel/"]
-RUN dotnet restore "FoodDelivery.slnx"
+COPY ["src/OrderRequests/OrderRequests.csproj", "src/OrderRequests/"]
+COPY ["src/Payments/Payments.csproj", "src/Payments/"]
+COPY ["src/Deliveries/Deliveries.csproj", "src/Deliveries/"]
+COPY ["src/Saga/Saga.csproj", "src/Saga/"]
+RUN dotnet restore "src/Api/Api.csproj"
 COPY . .
 WORKDIR /src/src/Api
 RUN dotnet build "Api.csproj" -c Release -o /app/build --no-restore

@@ -9,7 +9,7 @@ public static class SagaModule
     {
         services.AddDbContext<SagaDbContext>((sp, options) =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "saga"); });
         });
 
         return services;
@@ -18,7 +18,7 @@ public static class SagaModule
     public static async Task MigrateSagaDatabaseAsync(this WebApplication app, IConfiguration configuration)
     {
         var options = new DbContextOptionsBuilder<SagaDbContext>()
-            .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "saga"); })
             .Options;
         await using var context = new SagaDbContext(options);
         await context.Database.MigrateAsync();

@@ -21,7 +21,7 @@ public static class RestaurantsModule
 
         services.AddDbContext<RestaurantsDbContext>((sp, options) =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "restaurants"); });
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
 
@@ -31,10 +31,10 @@ public static class RestaurantsModule
     public static IBusRegistrationConfigurator AddRestaurantsMessaging(this IBusRegistrationConfigurator busConfigurator)
     {
         busConfigurator.AddConsumers(typeof(RestaurantsDbContext).Assembly);
+        // No UseBusOutbox() here: MassTransit 8.x supports only one bus outbox per bus (see OrderingModule).
         busConfigurator.AddEntityFrameworkOutbox<RestaurantsDbContext>(o =>
         {
-            o.UsePostgres();
-            o.UseBusOutbox();
+            o.UseSqlServer();
         });
 
         return busConfigurator;
@@ -43,7 +43,7 @@ public static class RestaurantsModule
     public static async Task MigrateRestaurantsDatabaseAsync(this WebApplication app, IConfiguration configuration)
     {
         var options = new DbContextOptionsBuilder<RestaurantsDbContext>()
-            .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "restaurants"); })
             .Options;
         await using var context = new RestaurantsDbContext(options);
         await context.Database.MigrateAsync();

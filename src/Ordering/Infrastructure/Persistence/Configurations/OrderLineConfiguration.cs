@@ -23,5 +23,7 @@ public class OrderLineConfiguration : IEntityTypeConfiguration<OrderLine>
             p.Property(m => m.Amount).HasColumnName("amount").HasPrecision(18, 2).IsRequired();
             p.Property(m => m.Currency).HasColumnName("currency").HasConversion<string>().IsRequired();
         });
+        
+        builder.Property<byte[]>("RowVersion").IsRowVersion().HasColumnName("row_version");
     }
 }

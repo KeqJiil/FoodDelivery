@@ -21,7 +21,9 @@ public class OrderRequestConfiguration : IEntityTypeConfiguration<OrderRequest>
             .HasConversion(o => o.Id, o => new RestaurantRefId(o));
         builder.Property(o => o.Status).HasColumnName("status").HasConversion<string>().IsRequired();
 
-        builder.Property<DateTime>("CreatedAt").HasColumnName("created_at").HasDefaultValueSql("NOW()");
+        builder.Property<DateTime>("CreatedAt").HasColumnName("created_at").HasDefaultValueSql("GETDATE()");
+        
+        builder.Property<byte[]>("RowVersion").IsRowVersion().HasColumnName("row_version");
 
         builder.Ignore(o => o.Events);
     }

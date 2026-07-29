@@ -19,7 +19,9 @@ public class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
         builder.Property(d => d.Status).HasColumnName("status").HasConversion<string>().IsRequired();
         builder.Property(d => d.FailureReason).HasColumnName("failure_reason");
 
-        builder.Property<DateTime>("CreatedAt").HasColumnName("created_at").HasDefaultValueSql("NOW()");
+        builder.Property<DateTime>("CreatedAt").HasColumnName("created_at").HasDefaultValueSql("GETDATE()");
+        
+        builder.Property<byte[]>("RowVersion").IsRowVersion().HasColumnName("row_version");
 
         builder.Ignore(d => d.Events);
     }
