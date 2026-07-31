@@ -1,13 +1,14 @@
 ﻿using MassTransit;
-using SharedKernel.Domain.Enums;
+using Microsoft.Extensions.Options;
 using SharedKernel.Infrastructure.IntegrationEvents.Incoming;
 using SharedKernel.Infrastructure.IntegrationEvents.SagaEvents;
+using SharedKernel.Options;
 
 namespace Saga.Application;
 
 public class OrderSaga : MassTransitStateMachine<OrderState>
 {
-    public OrderSaga()
+    public OrderSaga(IOptions<SagaOptions> options)
     {
         InstanceState(x => x.CurrentState);
 
@@ -26,12 +27,12 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
 
         Schedule(() => ApprovalTimeout, x => x.ApprovalTimeoutTokenId, s =>
         {
-            s.Delay = TimeSpan.FromMinutes(20);
+            s.Delay = TimeSpan.FromMinutes(options.Value.TimeoutApprovement);
             s.Received = r => r.CorrelateById(x => x.Message.OrderId);
         });
         Schedule(() => PaymentTimeout, x => x.PaymentTimeoutTokenId, s =>
         {
-            s.Delay = TimeSpan.FromMinutes(10);
+            s.Delay = TimeSpan.FromMinutes(options.Value.TimeoutPayment);
             s.Received = r => r.CorrelateById(x => x.Message.OrderId);
         });
 
@@ -72,8 +73,12 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
             When(OrderStartedProcessing)
                 .Send(x => new CreatePayment(
                     x.Message.OrderId,
-                    x.Saga.Amount ?? throw new InvalidOperationException($"Saga {x.Saga.CorrelationId}: Amount was not set by OrderPlaced."),
-                    x.Saga.Currency ?? throw new InvalidOperationException($"Saga {x.Saga.CorrelationId}: Currency was not set by OrderPlaced.")))
+                    x.Saga.Amount ??
+                    throw new InvalidOperationException(
+                        $"Saga {x.Saga.CorrelationId}: Amount was not set by OrderPlaced."),
+                    x.Saga.Currency ??
+                    throw new InvalidOperationException(
+                        $"Saga {x.Saga.CorrelationId}: Currency was not set by OrderPlaced.")))
                 .Schedule(PaymentTimeout, x => new PaymentTimeoutExpired(x.Message.OrderId))
                 .TransitionTo(AwaitingPayment),
             Ignore(OrderCancelled),
@@ -152,7 +157,7 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
             Ignore(OrderRequestCancelled));
 
         SetCompletedWhenFinalized();
-        
+
         OnUnhandledEvent(x => x.Ignore());
     }
 

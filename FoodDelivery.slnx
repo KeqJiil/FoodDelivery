@@ -37,4 +37,7 @@
     <Folder Name="/tests/UnitTest/Api/">
         <Project Path="tests/UnitTest/Api/Api.UnitTest.csproj"/>
     </Folder>
+    <Folder Name="/tests/IntegrationTest/">
+        <Project Path="tests/IntegrationTest/IntegrationTest.csproj"/>
+    </Folder>
 </Solution>

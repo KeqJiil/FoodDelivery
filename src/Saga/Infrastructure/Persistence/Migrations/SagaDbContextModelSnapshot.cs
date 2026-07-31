@@ -200,7 +200,7 @@ namespace Saga.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("correlation_id");
 
-                    b.Property<decimal>("Amount")
+                    b.Property<decimal?>("Amount")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("amount");
 
@@ -208,7 +208,7 @@ namespace Saga.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("approval_timeout_token_id");
 
-                    b.Property<int>("Currency")
+                    b.Property<int?>("Currency")
                         .HasColumnType("int")
                         .HasColumnName("currency");
 
@@ -221,7 +221,7 @@ namespace Saga.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("failed_at");
 
-                    b.Property<Guid>("PaymentId")
+                    b.Property<Guid?>("PaymentId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("payment_id");
 
@@ -238,7 +238,8 @@ namespace Saga.Infrastructure.Persistence.Migrations
                     b.HasKey("CorrelationId");
 
                     b.HasIndex("PaymentId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[payment_id] IS NOT NULL");
 
                     b.ToTable("order_states", "saga");
                 });

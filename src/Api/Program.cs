@@ -3,7 +3,6 @@ using Api.ExceptionHandlers;
 using Api.Modules;
 using Deliveries.Infrastructure.Persistence;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
 using Ordering.Infrastructure.Persistence;
 using OrderRequests.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence;
@@ -13,6 +12,7 @@ using Saga.Infrastructure.Persistence;
 using Serilog;
 using SharedKernel.Infrastructure.Interceptors;
 using SharedKernel.Infrastructure.Messaging;
+using SharedKernel.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +40,9 @@ builder.Services.AddOrderRequestsModule(builder.Configuration);
 builder.Services.AddPaymentsModule(builder.Configuration);
 builder.Services.AddDeliveriesModule(builder.Configuration);
 builder.Services.AddSagaModule(builder.Configuration);
+
+builder.Services.AddOptions<SagaOptions>().Bind(builder.Configuration.GetSection(SagaOptions.SectionName))
+    .ValidateDataAnnotations().ValidateOnStart();
 
 Queues.RegisterEndpointConventions();
 
@@ -126,3 +129,5 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program;
