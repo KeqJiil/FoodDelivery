@@ -10,7 +10,7 @@ public class GetOrdersByRestaurantIdHandler(IOrderRequestReader reader)
     public async Task<IEnumerable<OrderRequestDto>> Handle(GetOrdersByRestaurantIdQuery query,
         CancellationToken cancellationToken)
     {
-        return await reader.GetAllByRestaurantIdAsync(query.RestaurantId, query.Cursor, query.Limit,
-            query.StatusFilter, cancellationToken);
+        return await reader.GetAllByRestaurantIdAsync(query.RestaurantId, query.CursorCreatedAt, query.CursorId,
+            query.Limit, query.StatusFilter, cancellationToken);
     }
 }

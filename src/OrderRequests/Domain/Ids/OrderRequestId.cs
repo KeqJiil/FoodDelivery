@@ -2,7 +2,7 @@
 
 namespace OrderRequests.Domain.Ids;
 
-public record OrderRequestId : TypedId
+public record OrderRequestId : TypedId, IComparable<OrderRequestId>
 {
     public OrderRequestId()
     {
@@ -12,4 +12,6 @@ public record OrderRequestId : TypedId
         : base(id)
     {
     }
+
+    public int CompareTo(OrderRequestId? other) => Id.CompareTo(other?.Id ?? Guid.Empty);
 };

@@ -6,6 +6,7 @@ namespace OrderRequests.Application.GetOrdersByRestaurantId;
 
 public record GetOrdersByRestaurantIdQuery(
     Guid RestaurantId,
-    Guid? Cursor,
+    DateTime? CursorCreatedAt,
+    Guid? CursorId,
     byte Limit,
     OrderRequestStatus? StatusFilter) : IRequest<IEnumerable<OrderRequestDto>>;

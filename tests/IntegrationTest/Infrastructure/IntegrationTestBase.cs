@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace FoodDelivery.IntegrationTest.Infrastructure;
 
 [Collection("Database")]
@@ -10,5 +12,18 @@ public abstract class IntegrationTestBase(MsSqlContainerFixture fixture) : IAsyn
         await fixture.ResetDatabaseAsync();
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    protected TContext CreateContext<TContext>(string schema, Func<DbContextOptions<TContext>, TContext> createContext)
+        where TContext : DbContext
+    {
+        var options = new DbContextOptionsBuilder<TContext>()
+            .UseSqlServer(ConnectionString, sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", schema))
+            .Options;
+
+        return createContext(options);
+    }
 }
