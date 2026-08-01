@@ -24,6 +24,7 @@ public static class PaymentsModule
         services.AddScoped<IPaymentGatewayAdapter, MockPaymentGatewayAdapter>();
         services.AddScoped<IIntegrationEventTranslator<PaymentSucceeded>, PaymentSucceededIntegrationEventTranslator>();
         services.AddScoped<IIntegrationEventTranslator<PaymentFailed>, PaymentFailedIntegrationEventTranslator>();
+        services.AddScoped<IIntegrationEventTranslator<PaymentCancelled>, PaymentCancelledIntegrationTranslator>();
 
         services.AddDbContext<PaymentsDbContext>((sp, options) =>
         {
