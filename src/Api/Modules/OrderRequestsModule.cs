@@ -22,6 +22,7 @@ public static class OrderRequestsModule
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IIntegrationEventTranslator<OrderApproved>, OrderApprovedIntegrationEventTranslator>();
         services.AddScoped<IIntegrationEventTranslator<OrderCancelled>, OrderRequestCancelledIntegrationTranslator>();
+        services.AddScoped<IIntegrationEventTranslator<OrderRejected>, OrderRejectedIntegrationEventTranslator>();
 
         services.AddDbContext<OrderRequestsDbContext>((sp, options) =>
         {
