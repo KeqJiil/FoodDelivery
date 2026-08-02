@@ -12,6 +12,11 @@ public class OrderRequestRepository(OrderRequestsDbContext ctx) : IOrderRequestR
         return await ctx.OrderRequests.Where(x => x.Id == id).FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<OrderRequest?> GetByOrderRefIdAsync(OrderRefId orderRefId, CancellationToken cancellationToken = default)
+    {
+        return await ctx.OrderRequests.Where(x => x.OrderRefId == orderRefId).FirstOrDefaultAsync(cancellationToken);
+    }
+
     public void Add(OrderRequest orderRequest)
     {
         ctx.Add(orderRequest);

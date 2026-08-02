@@ -22,6 +22,7 @@ public static class OrderRequestsModule
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IIntegrationEventTranslator<OrderApproved>, OrderApprovedIntegrationEventTranslator>();
         services.AddScoped<IIntegrationEventTranslator<OrderCancelled>, OrderRequestCancelledIntegrationTranslator>();
+        services.AddScoped<IIntegrationEventTranslator<OrderRejected>, OrderRejectedIntegrationEventTranslator>();
 
         services.AddDbContext<OrderRequestsDbContext>((sp, options) =>
         {
@@ -33,16 +34,16 @@ public static class OrderRequestsModule
     }
 
     public static IBusRegistrationConfigurator AddOrderRequestsMessaging(
-        this IBusRegistrationConfigurator busConfigurator)
+        this IBusRegistrationConfigurator busConfigurator, IConfiguration configuration)
     {
         busConfigurator.AddConsumer<OrderRequestedConsumer>()
             .Endpoint(e => e.Name = Queues.CreateRequest);
         busConfigurator.AddConsumer<OrderCancelConsumer>()
             .Endpoint(e => e.Name = Queues.CancelOrderRequest);
-        // No UseBusOutbox() here: MassTransit 8.x supports only one bus outbox per bus (see OrderingModule).
         busConfigurator.AddEntityFrameworkOutbox<OrderRequestsDbContext>(o =>
             {
                 o.UseSqlServer();
+                o.QueryDelay = TimeSpan.FromMilliseconds(configuration.GetValue("Messaging:OutboxQueryDelayMs", 10000));
             }
         );
 

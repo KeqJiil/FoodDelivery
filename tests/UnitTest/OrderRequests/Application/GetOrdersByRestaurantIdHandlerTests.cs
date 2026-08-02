@@ -27,8 +27,8 @@ public class GetOrdersByRestaurantIdHandlerTests
             new OrderRequestDto(Guid.NewGuid(), restaurantId, Guid.NewGuid(), OrderRequestStatus.Pending,
                 DateTime.UtcNow)
         };
-        var query = new GetOrdersByRestaurantIdQuery(restaurantId, null, 10, null);
-        _reader.Setup(r => r.GetAllByRestaurantIdAsync(restaurantId, null, query.Limit, null,
+        var query = new GetOrdersByRestaurantIdQuery(restaurantId, null, null, 10, null);
+        _reader.Setup(r => r.GetAllByRestaurantIdAsync(restaurantId, null, null, query.Limit, null,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(dtos);
 
@@ -41,24 +41,26 @@ public class GetOrdersByRestaurantIdHandlerTests
     public async Task Handle_ShouldPassCursorAndStatusFilter_ToReader()
     {
         var restaurantId = Guid.NewGuid();
-        var cursor = Guid.NewGuid();
-        var query = new GetOrdersByRestaurantIdQuery(restaurantId, cursor, 5, OrderRequestStatus.Approved);
-        _reader.Setup(r => r.GetAllByRestaurantIdAsync(restaurantId, cursor, 5, OrderRequestStatus.Approved,
-                It.IsAny<CancellationToken>()))
+        var cursorCreatedAt = DateTime.UtcNow;
+        var cursorId = Guid.NewGuid();
+        var query = new GetOrdersByRestaurantIdQuery(restaurantId, cursorCreatedAt, cursorId, 5,
+            OrderRequestStatus.Approved);
+        _reader.Setup(r => r.GetAllByRestaurantIdAsync(restaurantId, cursorCreatedAt, cursorId, 5,
+                OrderRequestStatus.Approved, It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         await _handler.Handle(query, CancellationToken.None);
 
-        _reader.Verify(r => r.GetAllByRestaurantIdAsync(restaurantId, cursor, 5, OrderRequestStatus.Approved,
-            It.IsAny<CancellationToken>()), Times.Once);
+        _reader.Verify(r => r.GetAllByRestaurantIdAsync(restaurantId, cursorCreatedAt, cursorId, 5,
+            OrderRequestStatus.Approved, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Handle_ShouldReturnEmpty_WhenReaderFindsNothing()
     {
         var restaurantId = Guid.NewGuid();
-        var query = new GetOrdersByRestaurantIdQuery(restaurantId, null, 10, null);
-        _reader.Setup(r => r.GetAllByRestaurantIdAsync(restaurantId, null, query.Limit, null,
+        var query = new GetOrdersByRestaurantIdQuery(restaurantId, null, null, 10, null);
+        _reader.Setup(r => r.GetAllByRestaurantIdAsync(restaurantId, null, null, query.Limit, null,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 

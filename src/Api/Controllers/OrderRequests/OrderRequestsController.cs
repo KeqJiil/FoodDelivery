@@ -23,7 +23,8 @@ public class OrderRequestsController : MyBasicController
     public async Task<IActionResult> GetOrdersByRestaurantId([FromRoute] Guid id, [FromQuery] ByRestaurantIdBody body,
         CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetOrdersByRestaurantIdQuery(id, body.Cursor, body.Limit, body.Status),
+        var result = await _mediator.Send(
+            new GetOrdersByRestaurantIdQuery(id, body.CursorCreatedAt, body.CursorId, body.Limit, body.Status),
             cancellationToken);
         return result.Any() ? Ok(result) : Ok();
     }

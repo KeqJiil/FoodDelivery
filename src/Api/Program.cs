@@ -3,7 +3,6 @@ using Api.ExceptionHandlers;
 using Api.Modules;
 using Deliveries.Infrastructure.Persistence;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
 using Ordering.Infrastructure.Persistence;
 using OrderRequests.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence;
@@ -13,6 +12,7 @@ using Saga.Infrastructure.Persistence;
 using Serilog;
 using SharedKernel.Infrastructure.Interceptors;
 using SharedKernel.Infrastructure.Messaging;
+using SharedKernel.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,15 +41,18 @@ builder.Services.AddPaymentsModule(builder.Configuration);
 builder.Services.AddDeliveriesModule(builder.Configuration);
 builder.Services.AddSagaModule(builder.Configuration);
 
+builder.Services.AddOptions<SagaOptions>().Bind(builder.Configuration.GetSection(SagaOptions.SectionName))
+    .ValidateDataAnnotations().ValidateOnStart();
+
 Queues.RegisterEndpointConventions();
 
 builder.Services.AddMassTransit(x =>
 {
-    x.AddOrderingMessaging();
-    x.AddRestaurantsMessaging();
-    x.AddOrderRequestsMessaging();
-    x.AddPaymentsMessaging();
-    x.AddDeliveriesMessaging();
+    x.AddOrderingMessaging(builder.Configuration);
+    x.AddRestaurantsMessaging(builder.Configuration);
+    x.AddOrderRequestsMessaging(builder.Configuration);
+    x.AddPaymentsMessaging(builder.Configuration);
+    x.AddDeliveriesMessaging(builder.Configuration);
 
     x.AddHealthChecks();
 
@@ -66,7 +69,8 @@ builder.Services.AddMassTransit(x =>
     if (builder.Environment.IsDevelopment())
         x.UsingRabbitMq((context, cfg) =>
         {
-            cfg.Host(builder.Configuration["RabbitMq:Host"], "/", h =>
+            var rabbitMqPort = builder.Configuration.GetValue<ushort?>("RabbitMq:Port") ?? 5672;
+            cfg.Host(builder.Configuration["RabbitMq:Host"], rabbitMqPort, "/", h =>
             {
                 h.Username(builder.Configuration["RabbitMq:Username"] ?? "guest");
                 h.Password(builder.Configuration["RabbitMq:Password"] ?? "guest");
@@ -126,3 +130,5 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program;

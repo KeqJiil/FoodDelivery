@@ -1,10 +1,12 @@
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Saga.Application;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Infrastructure.IntegrationEvents.SagaEvents;
 using SharedKernel.Infrastructure.Messaging;
+using SharedKernel.Options;
 
 namespace Saga.UnitTest.TestHelpers;
 
@@ -24,6 +26,11 @@ public abstract class OrderSagaTestBase : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _provider = new ServiceCollection()
+            .AddSingleton(Options.Create(new SagaOptions
+            {
+                TimeoutApprovement = 20,
+                TimeoutPayment = 10
+            }))
             .AddMassTransitTestHarness(x =>
             {
                 x.AddDelayedMessageScheduler();

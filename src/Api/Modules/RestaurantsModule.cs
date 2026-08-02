@@ -28,13 +28,14 @@ public static class RestaurantsModule
         return services;
     }
 
-    public static IBusRegistrationConfigurator AddRestaurantsMessaging(this IBusRegistrationConfigurator busConfigurator)
+    public static IBusRegistrationConfigurator AddRestaurantsMessaging(this IBusRegistrationConfigurator busConfigurator,
+        IConfiguration configuration)
     {
         busConfigurator.AddConsumers(typeof(RestaurantsDbContext).Assembly);
-        // No UseBusOutbox() here: MassTransit 8.x supports only one bus outbox per bus (see OrderingModule).
         busConfigurator.AddEntityFrameworkOutbox<RestaurantsDbContext>(o =>
         {
             o.UseSqlServer();
+            o.QueryDelay = TimeSpan.FromMilliseconds(configuration.GetValue("Messaging:OutboxQueryDelayMs", 10000));
         });
 
         return busConfigurator;

@@ -7,4 +7,5 @@ public record ByRestaurantIdBody(
     [Range(1, byte.MaxValue)] byte Limit,
     [EnumDataType(typeof(OrderRequestStatus))]
     OrderRequestStatus? Status,
-    Guid? Cursor);
+    DateTime? CursorCreatedAt,
+    Guid? CursorId);
