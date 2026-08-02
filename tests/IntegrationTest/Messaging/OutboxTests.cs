@@ -97,7 +97,9 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
             await context.SaveChangesAsync();
         }
 
-        (await harness.Consumed.Any<OrderPlacedIntegration>(m => m.Context.Message.OrderId == order.Id.Id))
+        using var cts = new CancellationTokenSource(harness.TestTimeout);
+        (await harness.Consumed.Any<OrderPlacedIntegration>(m => m.Context.Message.OrderId == order.Id.Id,
+                cts.Token))
             .Should().BeTrue();
         (await harness.Consumed.SelectAsync<OrderPlacedIntegration>()
                 .Where(m => m.Context.Message.OrderId == order.Id.Id).CountAsync())
