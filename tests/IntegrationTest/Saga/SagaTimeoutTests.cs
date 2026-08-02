@@ -74,4 +74,24 @@ public class SagaTimeoutTests(MsSqlContainerFixture fixture) : OrderSagaIntegrat
         var persisted = await LoadFromDbOrThrowAsync(orderId);
         persisted.PaymentTimeoutTokenId.Should().BeNull();
     }
+
+    [Fact]
+    public async Task LatePaymentSuccess_AfterTimeoutAlreadyFired_ShouldRecoverSagaToAwaitingConfirmation()
+    {
+        var orderId = Guid.CreateVersion7();
+        await GivenAwaitingPayment(orderId);
+        var instance = await LoadFromDbOrThrowAsync(orderId);
+
+        await FireTimeout(new PaymentTimeoutExpired(orderId), instance.PaymentTimeoutTokenId);
+        await SagaHarness.Exists(orderId, m => m.CompensatingPayment, Harness.TestTimeout);
+        var compensating = await LoadFromDbOrThrowAsync(orderId);
+        compensating.FailedAt.Should().NotBeNull();
+
+        await Advance(orderId, new PaymentSucceededIntegration(orderId), m => m.AwaitingConfirmation);
+
+        (await Harness.Sent.Any<ConfirmOrder>(m => m.Context.Message.OrderId == orderId)).Should().BeTrue();
+
+        var recovered = await LoadFromDbOrThrowAsync(orderId);
+        recovered.FailedAt.Should().BeNull();
+    }
 }

@@ -91,11 +91,12 @@ public class IntegrationEventTranslatorTests
     public void OrderRequestCancelledTranslator_ShouldMapToIntegrationEvent()
     {
         var orderRequestId = new OrderRequests.Domain.Ids.OrderRequestId(Guid.CreateVersion7());
-        var domainEvent = new OrderRequests.Domain.Events.OrderCancelled(orderRequestId);
+        var orderRefId = new OrderRequests.Domain.Ids.OrderRefId(Guid.CreateVersion7());
+        var domainEvent = new OrderRequests.Domain.Events.OrderCancelled(orderRequestId, orderRefId);
 
         var result = new OrderRequestCancelledIntegrationTranslator().Translate(domainEvent);
 
-        result.Should().BeEquivalentTo(new OrderRequestCancelledIntegration(orderRequestId.Id), opts => opts.Excluding(e => e.OccurredOn));
+        result.Should().BeEquivalentTo(new OrderRequestCancelledIntegration(orderRefId.Id), opts => opts.Excluding(e => e.OccurredOn));
     }
 
     [Fact]

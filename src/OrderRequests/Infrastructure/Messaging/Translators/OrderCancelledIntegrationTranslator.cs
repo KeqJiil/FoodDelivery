@@ -9,6 +9,6 @@ public class OrderRequestCancelledIntegrationTranslator : IIntegrationEventTrans
 {
     public IntegrationEvent Translate(OrderCancelled message)
     {
-        return new OrderRequestCancelledIntegration(message.Id.Id);
+        return new OrderRequestCancelledIntegration(message.OrderRefId.Id);
     }
 }

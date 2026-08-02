@@ -96,4 +96,26 @@ public class OrderRequestsEndpointsTests
 
         result.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
+
+    [Fact]
+    public async Task RejectOrder_FailScenario_AlreadyApproved()
+    {
+        var id = await TestData.SeedOrderRequest(_factory.ConnectionString);
+        await _client.PostAsync($"v1/orderrequests/{id}/approve", null);
+
+        var result = await _client.PostAsync($"v1/orderrequests/{id}/reject", null);
+
+        result.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task ApproveOrder_FailScenario_AlreadyRejected()
+    {
+        var id = await TestData.SeedOrderRequest(_factory.ConnectionString);
+        await _client.PostAsync($"v1/orderrequests/{id}/reject", null);
+
+        var result = await _client.PostAsync($"v1/orderrequests/{id}/approve", null);
+
+        result.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
 }

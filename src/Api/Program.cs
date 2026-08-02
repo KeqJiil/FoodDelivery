@@ -48,11 +48,11 @@ Queues.RegisterEndpointConventions();
 
 builder.Services.AddMassTransit(x =>
 {
-    x.AddOrderingMessaging();
-    x.AddRestaurantsMessaging();
-    x.AddOrderRequestsMessaging();
-    x.AddPaymentsMessaging();
-    x.AddDeliveriesMessaging();
+    x.AddOrderingMessaging(builder.Configuration);
+    x.AddRestaurantsMessaging(builder.Configuration);
+    x.AddOrderRequestsMessaging(builder.Configuration);
+    x.AddPaymentsMessaging(builder.Configuration);
+    x.AddDeliveriesMessaging(builder.Configuration);
 
     x.AddHealthChecks();
 
@@ -69,7 +69,8 @@ builder.Services.AddMassTransit(x =>
     if (builder.Environment.IsDevelopment())
         x.UsingRabbitMq((context, cfg) =>
         {
-            cfg.Host(builder.Configuration["RabbitMq:Host"], "/", h =>
+            var rabbitMqPort = builder.Configuration.GetValue<ushort?>("RabbitMq:Port") ?? 5672;
+            cfg.Host(builder.Configuration["RabbitMq:Host"], rabbitMqPort, "/", h =>
             {
                 h.Username(builder.Configuration["RabbitMq:Username"] ?? "guest");
                 h.Password(builder.Configuration["RabbitMq:Password"] ?? "guest");

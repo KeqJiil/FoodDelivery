@@ -31,14 +31,14 @@ public static class DeliveriesModule
     }
 
     public static IBusRegistrationConfigurator AddDeliveriesMessaging(
-        this IBusRegistrationConfigurator busConfigurator)
+        this IBusRegistrationConfigurator busConfigurator, IConfiguration configuration)
     {
         busConfigurator.AddConsumer<CreateDeliveryConsumer>()
             .Endpoint(e => e.Name = Queues.CreateDelivery);
-        // No UseBusOutbox() here: MassTransit 8.x supports only one bus outbox per bus (see OrderingModule).
         busConfigurator.AddEntityFrameworkOutbox<DeliveriesDbContext>(o =>
             {
                 o.UseSqlServer();
+                o.QueryDelay = TimeSpan.FromMilliseconds(configuration.GetValue("Messaging:OutboxQueryDelayMs", 10000));
             }
         );
 

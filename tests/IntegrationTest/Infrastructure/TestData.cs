@@ -1,11 +1,16 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Api.Controllers.Ordering;
 using Api.Controllers.Restaurants;
 using Deliveries.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Ordering.Domain.Enums;
+using OrderRequests.Domain.Enums;
 using OrderRequests.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence;
+using Saga.Application;
+using Saga.Infrastructure.Persistence;
 using Restaurants.Domain.Enums;
 using Restaurants.Domain.ValueObjects;
 using SharedKernel.Domain.Enums;
@@ -27,6 +32,23 @@ internal record RestaurantTestDto(
     RestaurantStatus Status,
     IReadOnlyList<OpeningWindow> OpeningWindows,
     IReadOnlyList<MenuItemTestDto> MenuItems);
+
+internal record OrderLineTestDto(Guid Id, MoneyTestDto Price, byte Quantity, Guid MenuItemRefId);
+
+internal record OrderTestDto(
+    Guid Id,
+    OrderStatus Status,
+    Guid RestaurantRefId,
+    MoneyTestDto? TotalPrice,
+    IReadOnlyList<OrderLineTestDto> OrderLines,
+    DateTime CreatedAt);
+
+internal record OrderRequestTestDto(
+    Guid OrderRequestId,
+    Guid RestaurantId,
+    Guid OrderId,
+    OrderRequestStatus Status,
+    DateTime CreatedAt);
 
 public static class TestData
 {
@@ -72,6 +94,34 @@ public static class TestData
         var restaurant = await GetRestaurant(client, restaurantId);
 
         return restaurant.MenuItems.First(x => x.Name == menuItem.Name).Id;
+    }
+
+    public static async Task<Guid> SeedOrder(HttpClient client, Guid restaurantId)
+    {
+        var response = await client.PostAsJsonAsync("v1/ordering", new CreateOrderRequest(restaurantId));
+        var body = await response.Content.ReadFromJsonAsync<CreatedResponse>();
+
+        return body!.Id;
+    }
+
+    internal static async Task<OrderTestDto> GetOrder(HttpClient client, Guid orderId)
+    {
+        var response = await client.GetAsync($"v1/ordering/{orderId}");
+
+        return (await response.Content.ReadFromJsonAsync<OrderTestDto>(JsonOptions))!;
+    }
+
+    internal static async Task<OrderRequestTestDto?> FindOrderRequestByOrderId(HttpClient client, Guid restaurantId,
+        Guid orderId)
+    {
+        var response = await client.GetAsync($"v1/orderrequests/restaurant/{restaurantId}?Limit=100");
+        var raw = await response.Content.ReadAsStringAsync();
+        
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+
+        var body = JsonSerializer.Deserialize<List<OrderRequestTestDto>>(raw, JsonOptions) ?? [];
+
+        return body.FirstOrDefault(x => x.OrderId == orderId);
     }
 
     private static TContext CreateContext<TContext>(string connectionString, string schema,
@@ -126,5 +176,32 @@ public static class TestData
         await context.SaveChangesAsync();
 
         return orderRequest.Id.Id;
+    }
+
+    public static async Task<Payments.Domain.Aggregates.Payment?> FindPaymentByOrderId(string connectionString,
+        Guid orderId)
+    {
+        await using var context = CreateContext<PaymentsDbContext>(connectionString, "payments",
+            o => new PaymentsDbContext(o));
+
+        return await context.Payments.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.OrderRefId == new Payments.Domain.Ids.OrderRefId(orderId));
+    }
+
+    public static async Task<Deliveries.Domain.Aggregates.Delivery?> FindDeliveryByOrderId(string connectionString,
+        Guid orderId)
+    {
+        await using var context = CreateContext<DeliveriesDbContext>(connectionString, "deliveries",
+            o => new DeliveriesDbContext(o));
+
+        return await context.Deliveries.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.OrderRefId == new Deliveries.Domain.Ids.OrderRefId(orderId));
+    }
+
+    public static async Task<OrderState?> GetSagaState(string connectionString, Guid orderId)
+    {
+        await using var context = CreateContext<SagaDbContext>(connectionString, "saga", o => new SagaDbContext(o));
+
+        return await context.OrderStates.AsNoTracking().FirstOrDefaultAsync(x => x.CorrelationId == orderId);
     }
 }

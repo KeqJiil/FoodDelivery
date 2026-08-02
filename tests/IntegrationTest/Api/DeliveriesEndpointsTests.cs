@@ -101,4 +101,28 @@ public class DeliveriesEndpointsTests
 
         result.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
+
+    [Fact]
+    public async Task PickUp_FailScenario_AlreadyDelivered()
+    {
+        var id = await TestData.SeedDelivery(_factory.ConnectionString);
+        await _client.PostAsync($"v1/deliveries/pickup/{id}", null);
+        await _client.PostAsync($"v1/deliveries/complete/{id}", null);
+
+        var result = await _client.PostAsync($"v1/deliveries/pickup/{id}", null);
+
+        result.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Fail_FailScenario_AlreadyDelivered()
+    {
+        var id = await TestData.SeedDelivery(_factory.ConnectionString);
+        await _client.PostAsync($"v1/deliveries/pickup/{id}", null);
+        await _client.PostAsync($"v1/deliveries/complete/{id}", null);
+
+        var result = await _client.PostAsJsonAsync($"v1/deliveries/fail/{id}", new { Reason = "too late" });
+
+        result.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
 }

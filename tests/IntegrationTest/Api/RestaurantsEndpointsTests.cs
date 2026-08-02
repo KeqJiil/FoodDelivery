@@ -101,6 +101,45 @@ public class RestaurantsEndpointsTests
     }
 
     [Fact]
+    public async Task ChangeRestaurantDescription_HappyScenario()
+    {
+        var id = await TestData.SeedRestaurant(_client);
+
+        var result = await _client.PatchAsJsonAsync($"v1/restaurants/{id}/description",
+            new { Description = "brand new description" });
+
+        result.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var restaurant = await TestData.GetRestaurant(_client, id);
+        restaurant.Description.Should().Be("brand new description");
+    }
+
+    [Fact]
+    public async Task ChangeRestaurantDescription_FailScenario_TooShort()
+    {
+        var id = await TestData.SeedRestaurant(_client);
+
+        var result = await _client.PatchAsJsonAsync($"v1/restaurants/{id}/description", new { Description = "short" });
+
+        result.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task ChangeRestaurantSchedule_HappyScenario()
+    {
+        var id = await TestData.SeedRestaurant(_client);
+        var newSchedule = new List<OpeningWindow>
+            { new(DayOfWeek.Monday, new TimeOnly(9, 0), DayOfWeek.Monday, new TimeOnly(18, 0)) };
+
+        var result = await _client.PatchAsJsonAsync($"v1/restaurants/{id}/schedule", new { Schedules = newSchedule });
+
+        result.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var restaurant = await TestData.GetRestaurant(_client, id);
+        restaurant.OpeningWindows.Should().ContainSingle(x => x.OpenDay == DayOfWeek.Monday);
+    }
+
+    [Fact]
     public async Task DeactivateRestaurant_FailScenario_NoSuchRestaurant()
     {
         var result = await _client.PostAsync($"v1/restaurants/{Guid.NewGuid()}/deactivate", null);

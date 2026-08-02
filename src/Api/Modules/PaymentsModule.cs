@@ -35,16 +35,17 @@ public static class PaymentsModule
         return services;
     }
 
-    public static IBusRegistrationConfigurator AddPaymentsMessaging(this IBusRegistrationConfigurator busConfigurator)
+    public static IBusRegistrationConfigurator AddPaymentsMessaging(this IBusRegistrationConfigurator busConfigurator,
+        IConfiguration configuration)
     {
         busConfigurator.AddConsumer<OrderConfirmedConsumer>()
             .Endpoint(e => e.Name = Queues.CreatePayment);
         busConfigurator.AddConsumer<CancelPaymentConsumer>()
             .Endpoint(e => e.Name = Queues.CancelPayment);
-        // No UseBusOutbox() here: MassTransit 8.x supports only one bus outbox per bus (see OrderingModule).
         busConfigurator.AddEntityFrameworkOutbox<PaymentsDbContext>(o =>
             {
                 o.UseSqlServer();
+                o.QueryDelay = TimeSpan.FromMilliseconds(configuration.GetValue("Messaging:OutboxQueryDelayMs", 10000));
             }
         );
 

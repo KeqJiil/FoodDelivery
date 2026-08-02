@@ -39,7 +39,8 @@ public static class OrderingModule
         return services;
     }
 
-    public static IBusRegistrationConfigurator AddOrderingMessaging(this IBusRegistrationConfigurator busConfigurator)
+    public static IBusRegistrationConfigurator AddOrderingMessaging(this IBusRegistrationConfigurator busConfigurator,
+        IConfiguration configuration)
     {
         busConfigurator.AddConsumer<OrderProcessConsumer>()
             .Endpoint(e => e.Name = Queues.OrderProcess);
@@ -49,13 +50,10 @@ public static class OrderingModule
             .Endpoint(e => e.Name = Queues.ConfirmOrder);
         busConfigurator.AddConsumer<ChangeOrderLineItemPriceConsumer>()
             .Endpoint(e => e.Name = Queues.MenuItemPriceChanged);
-        // MassTransit 8.x allows only one bus outbox per bus; Ordering is the one DbContext that keeps it.
-        // Other modules' DomainEventPublishInterceptor publishes still work, just without the transactional
-        // guarantee tying the publish to that module's own SaveChanges.
         busConfigurator.AddEntityFrameworkOutbox<OrderingDbContext>(o =>
         {
             o.UseSqlServer();
-            o.UseBusOutbox();
+            o.QueryDelay = TimeSpan.FromMilliseconds(configuration.GetValue("Messaging:OutboxQueryDelayMs", 10000));
         });
 
         return busConfigurator;

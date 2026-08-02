@@ -36,6 +36,7 @@ public abstract class OrderSagaIntegrationTestBase(MsSqlContainerFixture fixture
 
     public async Task DisposeAsync()
     {
+        await Harness.Stop();
         await _provider.DisposeAsync();
     }
 

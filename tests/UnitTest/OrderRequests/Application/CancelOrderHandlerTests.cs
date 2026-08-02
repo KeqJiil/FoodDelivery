@@ -22,14 +22,14 @@ public class CancelOrderHandlerTests
         _handler = new CancelOrderHandler(_repository.Object, _unitOfWork.Object);
     }
 
-    private static OrderRequest PendingRequest(Guid? id = null) =>
-        OrderRequest.Create(new OrderRequestId(id ?? Guid.NewGuid()),
-            new OrderRefId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
+    private static OrderRequest PendingRequest(Guid? orderId = null) =>
+        OrderRequest.Create(new OrderRequestId(Guid.NewGuid()),
+            new OrderRefId(orderId ?? Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
 
     [Fact]
     public async Task Handle_ShouldReturnNotFound_WhenOrderRequestDoesNotExist()
     {
-        _repository.Setup(r => r.GetByIdAsync(It.IsAny<OrderRequestId>(), It.IsAny<CancellationToken>()))
+        _repository.Setup(r => r.GetByOrderRefIdAsync(It.IsAny<OrderRefId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((OrderRequest?)null);
 
         var result = await _handler.Handle(new CancelOrderCommand(Guid.NewGuid()), CancellationToken.None);
@@ -40,24 +40,26 @@ public class CancelOrderHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldWrapRawGuid_IntoOrderRequestId()
+    public async Task Handle_ShouldWrapRawGuid_IntoOrderRefId()
     {
-        var id = Guid.NewGuid();
-        _repository.Setup(r => r.GetByIdAsync(It.IsAny<OrderRequestId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(PendingRequest(id));
+        var orderId = Guid.NewGuid();
+        _repository.Setup(r => r.GetByOrderRefIdAsync(It.IsAny<OrderRefId>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PendingRequest(orderId));
 
-        await _handler.Handle(new CancelOrderCommand(id), CancellationToken.None);
+        await _handler.Handle(new CancelOrderCommand(orderId), CancellationToken.None);
 
-        _repository.Verify(r => r.GetByIdAsync(new OrderRequestId(id), It.IsAny<CancellationToken>()), Times.Once);
+        _repository.Verify(r => r.GetByOrderRefIdAsync(new OrderRefId(orderId), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task Handle_ShouldCancel_AndPersist_WhenPending()
     {
         var request = PendingRequest();
-        _repository.Setup(r => r.GetByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(request);
+        _repository.Setup(r => r.GetByOrderRefIdAsync(request.OrderRefId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(request);
 
-        var result = await _handler.Handle(new CancelOrderCommand(request.Id.Id), CancellationToken.None);
+        var result = await _handler.Handle(new CancelOrderCommand(request.OrderRefId.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         request.Status.Should().Be(OrderRequestStatus.Cancelled);
@@ -70,9 +72,10 @@ public class CancelOrderHandlerTests
     {
         var request = PendingRequest();
         request.Approve();
-        _repository.Setup(r => r.GetByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(request);
+        _repository.Setup(r => r.GetByOrderRefIdAsync(request.OrderRefId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(request);
 
-        var result = await _handler.Handle(new CancelOrderCommand(request.Id.Id), CancellationToken.None);
+        var result = await _handler.Handle(new CancelOrderCommand(request.OrderRefId.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         request.Status.Should().Be(OrderRequestStatus.Cancelled);
@@ -84,9 +87,10 @@ public class CancelOrderHandlerTests
     {
         var request = PendingRequest();
         request.Reject();
-        _repository.Setup(r => r.GetByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(request);
+        _repository.Setup(r => r.GetByOrderRefIdAsync(request.OrderRefId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(request);
 
-        var result = await _handler.Handle(new CancelOrderCommand(request.Id.Id), CancellationToken.None);
+        var result = await _handler.Handle(new CancelOrderCommand(request.OrderRefId.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
         result.Error!.Type.Should().Be(ErrorEnum.Conflict);
@@ -99,9 +103,10 @@ public class CancelOrderHandlerTests
     {
         var request = PendingRequest();
         request.Cancel();
-        _repository.Setup(r => r.GetByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(request);
+        _repository.Setup(r => r.GetByOrderRefIdAsync(request.OrderRefId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(request);
 
-        var result = await _handler.Handle(new CancelOrderCommand(request.Id.Id), CancellationToken.None);
+        var result = await _handler.Handle(new CancelOrderCommand(request.OrderRefId.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
         result.Error!.Type.Should().Be(ErrorEnum.Conflict);
@@ -114,11 +119,11 @@ public class CancelOrderHandlerTests
     {
         var request = PendingRequest();
         using var cts = new CancellationTokenSource();
-        _repository.Setup(r => r.GetByIdAsync(request.Id, cts.Token)).ReturnsAsync(request);
+        _repository.Setup(r => r.GetByOrderRefIdAsync(request.OrderRefId, cts.Token)).ReturnsAsync(request);
 
-        await _handler.Handle(new CancelOrderCommand(request.Id.Id), cts.Token);
+        await _handler.Handle(new CancelOrderCommand(request.OrderRefId.Id), cts.Token);
 
-        _repository.Verify(r => r.GetByIdAsync(request.Id, cts.Token), Times.Once);
+        _repository.Verify(r => r.GetByOrderRefIdAsync(request.OrderRefId, cts.Token), Times.Once);
         _unitOfWork.Verify(u => u.SaveChangesAsync(cts.Token), Times.Once);
     }
 }

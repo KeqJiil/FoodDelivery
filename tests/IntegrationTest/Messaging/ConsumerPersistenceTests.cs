@@ -339,7 +339,7 @@ public class ConsumerPersistenceTests(MsSqlContainerFixture fixture)
             await context.SaveChangesAsync();
         }
 
-        await harness.Bus.Publish(new CancelOrderRequest(orderRequest.Id.Id));
+        await harness.Bus.Publish(new CancelOrderRequest(orderRequest.OrderRefId.Id));
         (await harness.Consumed.Any<CancelOrderRequest>()).Should().BeTrue();
 
         using var readScope = provider.CreateScope();

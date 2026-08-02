@@ -6,7 +6,7 @@ public class RabbitMqContainerFixture : IAsyncLifetime
 {
     public string Host { get; private set; } = string.Empty;
 
-    public ushort Port = 5672;
+    public ushort Port { get; private set; }
     public static string Username => "fooddelivery";
     public static string Password => "fooddelivery";
 
@@ -17,6 +17,7 @@ public class RabbitMqContainerFixture : IAsyncLifetime
     {
         await _container.StartAsync();
         Host = _container.Hostname;
+        Port = _container.GetMappedPublicPort(5672);
     }
 
     public async Task DisposeAsync()

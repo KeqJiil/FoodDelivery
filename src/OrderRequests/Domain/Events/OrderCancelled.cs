@@ -3,4 +3,4 @@ using SharedKernel.Domain;
 
 namespace OrderRequests.Domain.Events;
 
-public record OrderCancelled(OrderRequestId Id): DomainEvent<OrderRequestId>(Id);
+public record OrderCancelled(OrderRequestId Id, OrderRefId OrderRefId): DomainEvent<OrderRequestId>(Id);
