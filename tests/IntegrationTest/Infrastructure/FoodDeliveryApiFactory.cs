@@ -10,6 +10,8 @@ public class FoodDeliveryApiFactory
     private readonly RabbitMqContainerFixture _rmq = new();
     private readonly MsSqlContainerFixture _msql = new();
 
+    public string ConnectionString => _msql.ConnectionString;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureAppConfiguration((context, configBuilder) =>
