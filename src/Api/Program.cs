@@ -4,6 +4,8 @@ using Api.Middleware;
 using Api.Modules;
 using Deliveries.Infrastructure.Persistence;
 using MassTransit;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Ordering.Infrastructure.Persistence;
 using OrderRequests.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence;
@@ -35,6 +37,16 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<DeliveriesDbContext>("deliveries-db")
     .AddDbContextCheck<SagaDbContext>("saga-db");
 
+builder.Services.AddOpenTelemetry().ConfigureResource(resource =>
+        resource.AddService(Environment.GetEnvironmentVariable("OpenTelemetryServiceName") ?? "FoodDelivery.Api"))
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation();
+        tracing.AddSource("MassTransit");
+        tracing.AddOtlpExporter(x => x.Endpoint = new Uri(Environment.GetEnvironmentVariable("JaegerEndpoint")!));
+        tracing.AddConsoleExporter();
+    });
+
 builder.Services.AddOrderingModule(builder.Configuration);
 builder.Services.AddRestaurantsModule(builder.Configuration);
 builder.Services.AddOrderRequestsModule(builder.Configuration);
@@ -63,10 +75,6 @@ builder.Services.AddMassTransit(x =>
             r.Intervals(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30)));
         cfg.UseMessageRetry(r => r.Immediate(5));
         cfg.UseInMemoryOutbox(context);
-        
-        cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
-        cfg.UsePublishFilter(typeof(CorrelationSendFilter<>), context);
-        cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
     });
 
     x.AddDelayedMessageScheduler();
@@ -82,6 +90,10 @@ builder.Services.AddMassTransit(x =>
             });
             cfg.UseDelayedMessageScheduler();
             cfg.ConfigureEndpoints(context);
+
+            cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
+            cfg.UsePublishFilter(typeof(CorrelationSendFilter<>), context);
+            cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
         });
     else
         x.UsingAzureServiceBus((context, cfg) =>
@@ -89,6 +101,10 @@ builder.Services.AddMassTransit(x =>
             cfg.Host(builder.Configuration.GetConnectionString("AzureServiceBus"));
             cfg.UseServiceBusMessageScheduler();
             cfg.ConfigureEndpoints(context);
+
+            cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
+            cfg.UsePublishFilter(typeof(CorrelationSendFilter<>), context);
+            cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
         });
 
     x.AddSagaStateMachine<OrderSaga, OrderState>().EntityFrameworkRepository(r =>
