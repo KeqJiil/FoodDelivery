@@ -2,8 +2,10 @@ using System.Text.Json.Serialization;
 using Api.ExceptionHandlers;
 using Api.Middleware;
 using Api.Modules;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Deliveries.Infrastructure.Persistence;
 using MassTransit;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Ordering.Infrastructure.Persistence;
@@ -43,8 +45,16 @@ builder.Services.AddOpenTelemetry().ConfigureResource(resource =>
     {
         tracing.AddAspNetCoreInstrumentation();
         tracing.AddSource("MassTransit");
-        tracing.AddOtlpExporter(x => x.Endpoint = new Uri(Environment.GetEnvironmentVariable("JaegerEndpoint")!));
+        if (builder.Environment.IsDevelopment())
+            tracing.AddOtlpExporter(x => x.Endpoint = new Uri(Environment.GetEnvironmentVariable("JaegerEndpoint")!));
         tracing.AddConsoleExporter();
+        tracing.AddAzureMonitorTraceExporter();
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation();
+        metrics.AddConsoleExporter();
+        metrics.AddAzureMonitorMetricExporter();
     });
 
 builder.Services.AddOrderingModule(builder.Configuration);
@@ -134,16 +144,18 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapSwaggerUI(setupAction: options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
-
-    await app.MigrateOrderingDatabaseAsync(builder.Configuration);
-    await app.MigrateRestaurantsDatabaseAsync(builder.Configuration);
-    await app.MigrateOrderRequestsDatabaseAsync(builder.Configuration);
-    await app.MigratePaymentsDatabaseAsync(builder.Configuration);
-    await app.MigrateDeliveriesDatabaseAsync(builder.Configuration);
-    await app.MigrateSagaDatabaseAsync(builder.Configuration);
+    
 }
+
+app.MapOpenApi();
+app.MapSwaggerUI(setupAction: options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
+
+await app.MigrateOrderingDatabaseAsync(builder.Configuration);
+await app.MigrateRestaurantsDatabaseAsync(builder.Configuration);
+await app.MigrateOrderRequestsDatabaseAsync(builder.Configuration);
+await app.MigratePaymentsDatabaseAsync(builder.Configuration);
+await app.MigrateDeliveriesDatabaseAsync(builder.Configuration);
+await app.MigrateSagaDatabaseAsync(builder.Configuration);
 
 app.UseCors("AllowAll");
 app.UseExceptionHandler();
