@@ -92,7 +92,7 @@ builder.Services.AddMassTransit(x =>
             cfg.ConfigureEndpoints(context);
 
             cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
-            cfg.UsePublishFilter(typeof(CorrelationSendFilter<>), context);
+            cfg.UsePublishFilter(typeof(CorrelationPublishFilter<>), context);
             cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
         });
     else
@@ -103,7 +103,7 @@ builder.Services.AddMassTransit(x =>
             cfg.ConfigureEndpoints(context);
 
             cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
-            cfg.UsePublishFilter(typeof(CorrelationSendFilter<>), context);
+            cfg.UsePublishFilter(typeof(CorrelationPublishFilter<>), context);
             cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
         });
 
