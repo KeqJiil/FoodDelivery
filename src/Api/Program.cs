@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Api.ExceptionHandlers;
+using Api.Middleware;
 using Api.Modules;
 using Deliveries.Infrastructure.Persistence;
 using MassTransit;
@@ -62,6 +63,10 @@ builder.Services.AddMassTransit(x =>
             r.Intervals(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30)));
         cfg.UseMessageRetry(r => r.Immediate(5));
         cfg.UseInMemoryOutbox(context);
+        
+        cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
+        cfg.UsePublishFilter(typeof(CorrelationSendFilter<>), context);
+        cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
     });
 
     x.AddDelayedMessageScheduler();
@@ -127,6 +132,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
+app.UseMiddleware<CorrelationMiddleware>();
 app.MapControllers();
 
 app.Run();
