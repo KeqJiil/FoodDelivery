@@ -152,10 +152,6 @@ forwardedHeadersOptions.KnownProxies.Clear();
 
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
-if (app.Environment.IsDevelopment())
-{
-}
-
 app.MapOpenApi();
 app.MapSwaggerUI(setupAction: options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
 
