@@ -5,6 +5,7 @@ using Api.Modules;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Deliveries.Infrastructure.Persistence;
 using MassTransit;
+using Microsoft.AspNetCore.HttpOverrides;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -142,9 +143,17 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
 var app = builder.Build();
 
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+};
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
 if (app.Environment.IsDevelopment())
 {
-    
 }
 
 app.MapOpenApi();
