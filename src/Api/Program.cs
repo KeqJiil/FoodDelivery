@@ -40,22 +40,27 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<DeliveriesDbContext>("deliveries-db")
     .AddDbContextCheck<SagaDbContext>("saga-db");
 
+var hasAzureMonitorConnectionString = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING"));
+var jaegerEndpoint = Environment.GetEnvironmentVariable("JaegerEndpoint");
+
 builder.Services.AddOpenTelemetry().ConfigureResource(resource =>
         resource.AddService(Environment.GetEnvironmentVariable("OpenTelemetryServiceName") ?? "FoodDelivery.Api"))
     .WithTracing(tracing =>
     {
         tracing.AddAspNetCoreInstrumentation();
         tracing.AddSource("MassTransit");
-        if (builder.Environment.IsDevelopment())
-            tracing.AddOtlpExporter(x => x.Endpoint = new Uri(Environment.GetEnvironmentVariable("JaegerEndpoint")!));
+        if (builder.Environment.IsDevelopment() && !string.IsNullOrEmpty(jaegerEndpoint))
+            tracing.AddOtlpExporter(x => x.Endpoint = new Uri(jaegerEndpoint));
         tracing.AddConsoleExporter();
-        tracing.AddAzureMonitorTraceExporter();
+        if (hasAzureMonitorConnectionString)
+            tracing.AddAzureMonitorTraceExporter();
     })
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation();
         metrics.AddConsoleExporter();
-        metrics.AddAzureMonitorMetricExporter();
+        if (hasAzureMonitorConnectionString)
+            metrics.AddAzureMonitorMetricExporter();
     });
 
 builder.Services.AddOrderingModule(builder.Configuration);
@@ -102,8 +107,8 @@ builder.Services.AddMassTransit(x =>
             cfg.UseDelayedMessageScheduler();
             cfg.ConfigureEndpoints(context);
 
-            cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
-            cfg.UsePublishFilter(typeof(CorrelationPublishFilter<>), context);
+            cfg.ConnectSendObserver(new CorrelationSendObserver());
+            cfg.ConnectPublishObserver(new CorrelationPublishObserver());
             cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
         });
     else
@@ -113,8 +118,8 @@ builder.Services.AddMassTransit(x =>
             cfg.UseServiceBusMessageScheduler();
             cfg.ConfigureEndpoints(context);
 
-            cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
-            cfg.UsePublishFilter(typeof(CorrelationPublishFilter<>), context);
+            cfg.ConnectSendObserver(new CorrelationSendObserver());
+            cfg.ConnectPublishObserver(new CorrelationPublishObserver());
             cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
         });
 
