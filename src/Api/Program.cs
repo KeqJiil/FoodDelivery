@@ -40,6 +40,8 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<DeliveriesDbContext>("deliveries-db")
     .AddDbContextCheck<SagaDbContext>("saga-db");
 
+var hasAzureMonitorConnectionString = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING"));
+
 builder.Services.AddOpenTelemetry().ConfigureResource(resource =>
         resource.AddService(Environment.GetEnvironmentVariable("OpenTelemetryServiceName") ?? "FoodDelivery.Api"))
     .WithTracing(tracing =>
@@ -49,13 +51,15 @@ builder.Services.AddOpenTelemetry().ConfigureResource(resource =>
         if (builder.Environment.IsDevelopment())
             tracing.AddOtlpExporter(x => x.Endpoint = new Uri(Environment.GetEnvironmentVariable("JaegerEndpoint")!));
         tracing.AddConsoleExporter();
-        tracing.AddAzureMonitorTraceExporter();
+        if (hasAzureMonitorConnectionString)
+            tracing.AddAzureMonitorTraceExporter();
     })
     .WithMetrics(metrics =>
     {
         metrics.AddAspNetCoreInstrumentation();
         metrics.AddConsoleExporter();
-        metrics.AddAzureMonitorMetricExporter();
+        if (hasAzureMonitorConnectionString)
+            metrics.AddAzureMonitorMetricExporter();
     });
 
 builder.Services.AddOrderingModule(builder.Configuration);
