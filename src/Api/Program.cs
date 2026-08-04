@@ -1,8 +1,14 @@
 using System.Text.Json.Serialization;
 using Api.ExceptionHandlers;
+using Api.Middleware;
 using Api.Modules;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Deliveries.Infrastructure.Persistence;
 using MassTransit;
+using Microsoft.AspNetCore.HttpOverrides;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Ordering.Infrastructure.Persistence;
 using OrderRequests.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence;
@@ -33,6 +39,24 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<PaymentsDbContext>("payments-db")
     .AddDbContextCheck<DeliveriesDbContext>("deliveries-db")
     .AddDbContextCheck<SagaDbContext>("saga-db");
+
+builder.Services.AddOpenTelemetry().ConfigureResource(resource =>
+        resource.AddService(Environment.GetEnvironmentVariable("OpenTelemetryServiceName") ?? "FoodDelivery.Api"))
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation();
+        tracing.AddSource("MassTransit");
+        if (builder.Environment.IsDevelopment())
+            tracing.AddOtlpExporter(x => x.Endpoint = new Uri(Environment.GetEnvironmentVariable("JaegerEndpoint")!));
+        tracing.AddConsoleExporter();
+        tracing.AddAzureMonitorTraceExporter();
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation();
+        metrics.AddConsoleExporter();
+        metrics.AddAzureMonitorMetricExporter();
+    });
 
 builder.Services.AddOrderingModule(builder.Configuration);
 builder.Services.AddRestaurantsModule(builder.Configuration);
@@ -77,6 +101,10 @@ builder.Services.AddMassTransit(x =>
             });
             cfg.UseDelayedMessageScheduler();
             cfg.ConfigureEndpoints(context);
+
+            cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
+            cfg.UsePublishFilter(typeof(CorrelationPublishFilter<>), context);
+            cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
         });
     else
         x.UsingAzureServiceBus((context, cfg) =>
@@ -84,6 +112,10 @@ builder.Services.AddMassTransit(x =>
             cfg.Host(builder.Configuration.GetConnectionString("AzureServiceBus"));
             cfg.UseServiceBusMessageScheduler();
             cfg.ConfigureEndpoints(context);
+
+            cfg.UseSendFilter(typeof(CorrelationSendFilter<>), context);
+            cfg.UsePublishFilter(typeof(CorrelationPublishFilter<>), context);
+            cfg.UseConsumeFilter(typeof(CorrelationConsumeFilter<>), context);
         });
 
     x.AddSagaStateMachine<OrderSaga, OrderState>().EntityFrameworkRepository(r =>
@@ -111,22 +143,29 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
-    app.MapOpenApi();
-    app.MapSwaggerUI(setupAction: options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+};
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
 
-    await app.MigrateOrderingDatabaseAsync(builder.Configuration);
-    await app.MigrateRestaurantsDatabaseAsync(builder.Configuration);
-    await app.MigrateOrderRequestsDatabaseAsync(builder.Configuration);
-    await app.MigratePaymentsDatabaseAsync(builder.Configuration);
-    await app.MigrateDeliveriesDatabaseAsync(builder.Configuration);
-    await app.MigrateSagaDatabaseAsync(builder.Configuration);
-}
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
+app.MapOpenApi();
+app.MapSwaggerUI(setupAction: options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
+
+await app.MigrateOrderingDatabaseAsync(builder.Configuration);
+await app.MigrateRestaurantsDatabaseAsync(builder.Configuration);
+await app.MigrateOrderRequestsDatabaseAsync(builder.Configuration);
+await app.MigratePaymentsDatabaseAsync(builder.Configuration);
+await app.MigrateDeliveriesDatabaseAsync(builder.Configuration);
+await app.MigrateSagaDatabaseAsync(builder.Configuration);
 
 app.UseCors("AllowAll");
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
+app.UseMiddleware<CorrelationMiddleware>();
 app.MapControllers();
 
 app.Run();

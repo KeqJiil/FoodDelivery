@@ -11,6 +11,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Serilog" Version="4.3.0" />
         <PackageReference Include="MassTransit" Version="8.5.10" />
         <PackageReference Include="MassTransit.Azure.ServiceBus.Core" Version="8.5.10" />
         <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.5.10" />
