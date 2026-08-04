@@ -2,36 +2,34 @@
 
 namespace SharedKernel.Infrastructure.Messaging;
 
-public class CorrelationSendFilter<T> : IFilter<SendContext<T>> where T : class
+public class CorrelationSendObserver : ISendObserver
 {
-    public async Task Send(SendContext<T> context, IPipe<SendContext<T>> next)
+    public Task PreSend<T>(SendContext<T> context) where T : class
     {
         var correlationId = CorrelationContext.CorrelationId ?? Guid.NewGuid().ToString();
         context.Headers.Set("X-Correlation-Id", correlationId);
 
-        await next.Send(context);
+        return Task.CompletedTask;
     }
 
-    public void Probe(ProbeContext context)
-    {
-        context.CreateFilterScope("correlation");
-    }
+    public Task PostSend<T>(SendContext<T> context) where T : class => Task.CompletedTask;
+
+    public Task SendFault<T>(SendContext<T> context, Exception exception) where T : class => Task.CompletedTask;
 }
 
-public class CorrelationPublishFilter<T> : IFilter<PublishContext<T>> where T : class
+public class CorrelationPublishObserver : IPublishObserver
 {
-    public async Task Send(PublishContext<T> context, IPipe<PublishContext<T>> next)
+    public Task PrePublish<T>(PublishContext<T> context) where T : class
     {
         var correlationId = CorrelationContext.CorrelationId ?? Guid.NewGuid().ToString();
         context.Headers.Set("X-Correlation-Id", correlationId);
 
-        await next.Send(context);
+        return Task.CompletedTask;
     }
 
-    public void Probe(ProbeContext context)
-    {
-        context.CreateFilterScope("correlation");
-    }
+    public Task PostPublish<T>(PublishContext<T> context) where T : class => Task.CompletedTask;
+
+    public Task PublishFault<T>(PublishContext<T> context, Exception exception) where T : class => Task.CompletedTask;
 }
 
 public class CorrelationConsumeFilter<T> : IFilter<ConsumeContext<T>> where T : class
