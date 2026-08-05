@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Api.ExceptionHandlers;
 using Api.Middleware;
 using Api.Modules;
+using Api.OpenApi;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Deliveries.Infrastructure.Persistence;
 using MassTransit;
@@ -24,7 +25,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddOperationTransformer<XmlCommentsOperationTransformer>();
+    options.AddSchemaTransformer<XmlCommentsSchemaTransformer>();
+});
 builder.Services.AddExceptionHandler<BasicExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddCors(options =>

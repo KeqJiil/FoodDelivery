@@ -28,7 +28,7 @@ public class CreateRestaurantHandler(
 
         var id = new RestaurantId();
         var restaurant = Restaurant.Create(id, nameResult.Ok!, descriptionResult.Ok!, moneyResult.Ok!,
-            new Schedule(request.Schedule));
+            Schedule.Create(request.Schedule));
 
         repository.Add(restaurant);
 

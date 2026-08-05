@@ -28,6 +28,8 @@ public class RestaurantsController : MyBasicController
         _mediator = mediator;
     }
 
+    /// <summary>Gets a restaurant by id, including its menu and schedule.</summary>
+    /// <param name="id">Restaurant id.</param>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -36,18 +38,21 @@ public class RestaurantsController : MyBasicController
         return result is null ? NotFound() : Ok(result);
     }
 
+    /// <summary>Registers a new restaurant, inactive by default.</summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateRestaurantRequest request,
         CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateRestaurantCommand(request.Name, request.Description,
-            request.Currency, request.Amount, request.Schedules), cancellationToken);
+            request.Currency, request.Amount, ToScheduleTuples(request.Schedules)), cancellationToken);
 
         return !result.IsSuccess
             ? GetProblem(result.Error!)
             : CreatedAtAction(nameof(Get), new { id = result.Ok!.Id }, new { id = result.Ok!.Id });
     }
 
+    /// <summary>Changes a restaurant's name.</summary>
+    /// <param name="id">Restaurant id.</param>
     [HttpPatch("{id:guid}/name")]
     public async Task<IActionResult> ChangeName([FromRoute] Guid id, [FromBody] ChangeNameRequest request,
         CancellationToken cancellationToken)
@@ -58,6 +63,8 @@ public class RestaurantsController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Changes a restaurant's description.</summary>
+    /// <param name="id">Restaurant id.</param>
     [HttpPatch("{id:guid}/description")]
     public async Task<IActionResult> ChangeDescription([FromRoute] Guid id, [FromBody] ChangeDescriptionRequest request,
         CancellationToken cancellationToken)
@@ -69,16 +76,21 @@ public class RestaurantsController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Replaces a restaurant's opening schedule.</summary>
+    /// <param name="id">Restaurant id.</param>
     [HttpPatch("{id:guid}/schedule")]
     public async Task<IActionResult> ChangeSchedule([FromRoute] Guid id, [FromBody] ChangeScheduleRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new ChangeRestaurantScheduleCommand(new RestaurantId(id), request.Schedules),
+        var result = await _mediator.Send(
+            new ChangeRestaurantScheduleCommand(new RestaurantId(id), ToScheduleTuples(request.Schedules)),
             cancellationToken);
 
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Sets the minimum price an order must reach before it can be placed at this restaurant.</summary>
+    /// <param name="id">Restaurant id.</param>
     [HttpPatch("{id:guid}/minimal-order-price")]
     public async Task<IActionResult> SetMinimalOrderPrice([FromRoute] Guid id, [FromBody] MoneyRequest request,
         CancellationToken cancellationToken)
@@ -91,6 +103,8 @@ public class RestaurantsController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Activates a restaurant, making it visible to customers.</summary>
+    /// <param name="id">Restaurant id.</param>
     [HttpPost("{id:guid}/activate")]
     public async Task<IActionResult> Activate([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -99,6 +113,8 @@ public class RestaurantsController : MyBasicController
         return !result.IsSuccess ? GetProblem(result.Error!) : NoContent();
     }
 
+    /// <summary>Deactivates a restaurant, hiding it from customers.</summary>
+    /// <param name="id">Restaurant id.</param>
     [HttpPost("{id:guid}/deactivate")]
     public async Task<IActionResult> Deactivate([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -107,6 +123,8 @@ public class RestaurantsController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Adds a new item to a restaurant's menu.</summary>
+    /// <param name="id">Restaurant id.</param>
     [HttpPost("{id:guid}/menu-items")]
     public async Task<IActionResult> AddMenuItem([FromRoute] Guid id, [FromBody] AddMenuItemRequest request,
         CancellationToken cancellationToken)
@@ -114,9 +132,14 @@ public class RestaurantsController : MyBasicController
         var result = await _mediator.Send(new AddMenuItemCommand(new RestaurantId(id), request.Name,
             request.Description, request.Currency, request.Amount), cancellationToken);
 
-        return result.IsSuccess ? CreatedAtAction(nameof(Get), new { id }, null) : GetProblem(result.Error!);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(Get), new { id = result.Ok!.Id }, new { id = result.Ok!.Id })
+            : GetProblem(result.Error!);
     }
 
+    /// <summary>Removes an item from a restaurant's menu.</summary>
+    /// <param name="id">Restaurant id.</param>
+    /// <param name="menuItemId">Menu item id to remove.</param>
     [HttpDelete("{id:guid}/menu-items/{menuItemId:guid}")]
     public async Task<IActionResult> RemoveMenuItem([FromRoute] Guid id, [FromRoute] Guid menuItemId,
         CancellationToken cancellationToken)
@@ -127,6 +150,9 @@ public class RestaurantsController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Changes a menu item's name.</summary>
+    /// <param name="id">Restaurant id.</param>
+    /// <param name="menuItemId">Menu item id.</param>
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/name")]
     public async Task<IActionResult> ChangeMenuItemName([FromRoute] Guid id, [FromRoute] Guid menuItemId,
         [FromBody] ChangeNameRequest request, CancellationToken cancellationToken)
@@ -138,6 +164,9 @@ public class RestaurantsController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Changes a menu item's description.</summary>
+    /// <param name="id">Restaurant id.</param>
+    /// <param name="menuItemId">Menu item id.</param>
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/description")]
     public async Task<IActionResult> ChangeMenuItemDescription([FromRoute] Guid id, [FromRoute] Guid menuItemId,
         [FromBody] ChangeDescriptionRequest request, CancellationToken cancellationToken)
@@ -148,6 +177,9 @@ public class RestaurantsController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Changes a menu item's price.</summary>
+    /// <param name="id">Restaurant id.</param>
+    /// <param name="menuItemId">Menu item id.</param>
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/price")]
     public async Task<IActionResult> ChangeMenuItemPrice([FromRoute] Guid id, [FromRoute] Guid menuItemId,
         [FromBody] MoneyRequest request, CancellationToken cancellationToken)
@@ -157,4 +189,8 @@ public class RestaurantsController : MyBasicController
 
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
+
+    private static List<(DayOfWeek OpenDay, TimeOnly OpenTime, DayOfWeek CloseDay, TimeOnly CloseTime)>
+        ToScheduleTuples(List<OpeningWindowRequest> schedules) =>
+        schedules.Select(w => (w.OpenDay, w.OpenTime, w.CloseDay, w.CloseTime)).ToList();
 }

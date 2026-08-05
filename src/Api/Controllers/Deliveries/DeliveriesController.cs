@@ -19,6 +19,8 @@ public class DeliveriesController : MyBasicController
         _mediator = mediator;
     }
 
+    /// <summary>Gets a delivery by id.</summary>
+    /// <param name="id">Delivery id.</param>
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> GetDelivery([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -26,6 +28,8 @@ public class DeliveriesController : MyBasicController
         return result is null ? NotFound() : Ok(result);
     }
 
+    /// <summary>Marks a delivery as picked up by the courier.</summary>
+    /// <param name="id">Delivery id.</param>
     [HttpPost("pickup/{id:Guid}")]
     public async Task<IActionResult> PickUp([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -33,6 +37,8 @@ public class DeliveriesController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Marks a delivery as completed, finishing the order's saga.</summary>
+    /// <param name="id">Delivery id.</param>
     [HttpPost("complete/{id:Guid}")]
     public async Task<IActionResult> Complete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -40,6 +46,8 @@ public class DeliveriesController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Marks a delivery as failed.</summary>
+    /// <param name="id">Delivery id.</param>
     [HttpPost("fail/{id:Guid}")]
     public async Task<IActionResult> Fail([FromRoute] Guid id, [FromBody] FailDeliveryBody body,
         CancellationToken cancellationToken)
@@ -49,4 +57,6 @@ public class DeliveriesController : MyBasicController
     }
 }
 
+/// <summary>Reason a delivery could not be completed.</summary>
+/// <param name="Reason">Free-text failure reason.</param>
 public record FailDeliveryBody(string Reason);

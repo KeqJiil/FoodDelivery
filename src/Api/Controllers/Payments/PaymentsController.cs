@@ -15,6 +15,8 @@ public class PaymentsController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>Gets a payment by id.</summary>
+    /// <param name="id">Payment id.</param>
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> GetPayment([FromRoute] Guid id, CancellationToken cancellationToken)
     {

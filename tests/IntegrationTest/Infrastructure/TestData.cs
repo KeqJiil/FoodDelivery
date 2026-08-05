@@ -61,7 +61,7 @@ public static class TestData
     private static CreateRestaurantRequest GetRestaurantRequest()
     {
         return new CreateRestaurantRequest("restaurant", "restaurant", 1, Currency.Usd,
-            new List<OpeningWindow>
+            new List<OpeningWindowRequest>
                 { new(DayOfWeek.Friday, new TimeOnly(1, 1), DayOfWeek.Monday, new TimeOnly(2, 2)) });
     }
 

@@ -23,7 +23,7 @@ public class RestaurantsEndpointsTests
     public async Task CreateRestaurant_HappyScenario()
     {
         var req = new CreateRestaurantRequest("Restaurant", "Restaurant", 100, Currency.Usd,
-            new List<OpeningWindow>
+            new List<OpeningWindowRequest>
                 { new(DayOfWeek.Friday, new TimeOnly(12, 12), DayOfWeek.Monday, new TimeOnly(13, 13)) });
 
         var result = await _client.PostAsJsonAsync("v1/restaurants", req);
@@ -35,7 +35,7 @@ public class RestaurantsEndpointsTests
     public async Task CreateRestaurant_FailScenario()
     {
         var req = new CreateRestaurantRequest("R", "r", -1, Currency.Usd,
-            new List<OpeningWindow>
+            new List<OpeningWindowRequest>
                 { new(DayOfWeek.Friday, new TimeOnly(12, 12), DayOfWeek.Monday, new TimeOnly(13, 13)) });
 
         var result = await _client.PostAsJsonAsync("v1/restaurants", req);
@@ -128,7 +128,7 @@ public class RestaurantsEndpointsTests
     public async Task ChangeRestaurantSchedule_HappyScenario()
     {
         var id = await TestData.SeedRestaurant(_client);
-        var newSchedule = new List<OpeningWindow>
+        var newSchedule = new List<OpeningWindowRequest>
             { new(DayOfWeek.Monday, new TimeOnly(9, 0), DayOfWeek.Monday, new TimeOnly(18, 0)) };
 
         var result = await _client.PatchAsJsonAsync($"v1/restaurants/{id}/schedule", new { Schedules = newSchedule });
