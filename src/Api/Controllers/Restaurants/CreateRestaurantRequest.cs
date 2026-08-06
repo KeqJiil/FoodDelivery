@@ -14,4 +14,9 @@ public sealed record CreateRestaurantRequest(
     [Required] [MaxLength(1000)] string Description,
     [Range(0.01, double.MaxValue)] decimal Amount,
     [EnumDataType(typeof(Currency))] Currency Currency,
-    [Required] List<OpeningWindowRequest> Schedules);
+    [Required] List<OpeningWindowRequest> Schedules)
+{
+    public static CreateRestaurantRequest Example { get; } = new(
+        "Sakura Sushi", "Downtown Japanese restaurant, dine-in and delivery.", 15.00m, Currency.Usd,
+        [new OpeningWindowRequest(DayOfWeek.Monday, new TimeOnly(9, 0), DayOfWeek.Monday, new TimeOnly(22, 0))]);
+}

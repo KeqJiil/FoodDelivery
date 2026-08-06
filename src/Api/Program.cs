@@ -29,6 +29,7 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddOperationTransformer<XmlCommentsOperationTransformer>();
     options.AddSchemaTransformer<XmlCommentsSchemaTransformer>();
+    options.AddSchemaTransformer<ExampleValuesSchemaTransformer>();
 });
 builder.Services.AddExceptionHandler<BasicExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -45,7 +46,8 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<DeliveriesDbContext>("deliveries-db")
     .AddDbContextCheck<SagaDbContext>("saga-db");
 
-var hasAzureMonitorConnectionString = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING"));
+var hasAzureMonitorConnectionString =
+    !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING"));
 var jaegerEndpoint = Environment.GetEnvironmentVariable("JaegerEndpoint");
 
 builder.Services.AddOpenTelemetry().ConfigureResource(resource =>
@@ -155,7 +157,8 @@ var app = builder.Build();
 
 var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto |
+                       ForwardedHeaders.XForwardedHost
 };
 forwardedHeadersOptions.KnownIPNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();

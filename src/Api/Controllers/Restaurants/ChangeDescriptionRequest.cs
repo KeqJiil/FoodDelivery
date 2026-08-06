@@ -5,4 +5,7 @@ namespace Api.Controllers.Restaurants;
 /// <summary>Changes a restaurant's description.</summary>
 /// <param name="Description">New description, 10-200 characters.</param>
 public sealed record ChangeDescriptionRequest(
-    [Required] [MinLength(10)] [MaxLength(200)] string Description);
+    [Required] [MinLength(10)] [MaxLength(200)] string Description)
+{
+    public static ChangeDescriptionRequest Example { get; } = new("Downtown Japanese restaurant, dine-in and delivery.");
+}

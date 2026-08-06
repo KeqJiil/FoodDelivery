@@ -59,4 +59,7 @@ public class DeliveriesController : MyBasicController
 
 /// <summary>Reason a delivery could not be completed.</summary>
 /// <param name="Reason">Free-text failure reason.</param>
-public record FailDeliveryBody(string Reason);
+public record FailDeliveryBody(string Reason)
+{
+    public static FailDeliveryBody Example { get; } = new("Courier could not reach the delivery address.");
+}

@@ -22,4 +22,8 @@ public sealed record AddMenuItemRequest(
     Currency Currency,
     [Required]
     [Range(0.1, double.MaxValue)]
-    decimal Amount);
+    decimal Amount)
+{
+    public static AddMenuItemRequest Example { get; } =
+        new("California Roll", "Crab, avocado, and cucumber, topped with tobiko.", Currency.Usd, 8.50m);
+}

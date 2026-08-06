@@ -8,4 +8,7 @@ namespace Api.Controllers.Restaurants;
 /// <param name="Amount">Non-negative amount.</param>
 public sealed record MoneyRequest(
     [Required] [EnumDataType(typeof(Currency))] Currency Currency,
-    [Range(0, double.MaxValue)] decimal Amount);
+    [Range(0, double.MaxValue)] decimal Amount)
+{
+    public static MoneyRequest Example { get; } = new(Currency.Usd, 15.00m);
+}
