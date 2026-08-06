@@ -19,6 +19,8 @@ using Restaurants.Infrastructure.Persistence;
 using Saga.Application;
 using Saga.Infrastructure.Persistence;
 using Serilog;
+using SharedKernel.Domain;
+using SharedKernel.Infrastructure;
 using SharedKernel.Infrastructure.Interceptors;
 using SharedKernel.Infrastructure.Messaging;
 using SharedKernel.Options;
@@ -37,6 +39,7 @@ builder.Services.AddExceptionHandler<BasicExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+builder.Services.AddSingleton<IClock, ClockDateTimeUtf>();
 
 if (!builder.Environment.IsDevelopment())
     builder.Services.AddRateLimiter(options =>

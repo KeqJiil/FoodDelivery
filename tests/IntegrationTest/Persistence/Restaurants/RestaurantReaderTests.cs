@@ -7,6 +7,7 @@ using Restaurants.Infrastructure.Persistence;
 using Restaurants.Infrastructure.Persistence.Readers;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.ValueObjects;
+using SharedKernel.Infrastructure;
 
 namespace FoodDelivery.IntegrationTest.Persistence.Restaurants;
 
@@ -34,7 +35,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
         }
 
         await using var readContext = CreateRestaurantsContext();
-        var reader = new RestaurantReader(readContext);
+        var reader = new RestaurantReader(readContext, new ClockDateTimeUtf());
 
         var dto = await reader.GetByIdAsync(restaurant.Id.Id);
 
@@ -65,7 +66,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
         }
 
         await using var readContext = CreateRestaurantsContext();
-        var reader = new RestaurantReader(readContext);
+        var reader = new RestaurantReader(readContext, new ClockDateTimeUtf());
 
         var price = await reader.GetMenuItemPriceByIdAsync(menuItemId.Id);
 
@@ -76,7 +77,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
     public async Task GetMenuItemPriceByIdAsync_ShouldReturnNull_WhenItemDoesNotExist()
     {
         await using var readContext = CreateRestaurantsContext();
-        var reader = new RestaurantReader(readContext);
+        var reader = new RestaurantReader(readContext, new ClockDateTimeUtf());
 
         var price = await reader.GetMenuItemPriceByIdAsync(Guid.NewGuid());
 
@@ -86,8 +87,13 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
     [Fact]
     public async Task IsActiveAsync_ShouldReturnTrue_WhenRestaurantIsActive()
     {
+        // Practically-always-open window (same pattern as RestaurantTests), so this doesn't
+        // depend on what day/time the test happens to run.
+        var schedule = new Schedule([
+            new OpeningWindow(DayOfWeek.Monday, new TimeOnly(0, 0), DayOfWeek.Sunday, new TimeOnly(23, 59))
+        ]);
         var restaurant = Restaurant.Create(new RestaurantId(Guid.NewGuid()), Name.Create("Taco Stand").Ok!,
-            Description.Create("Street tacos made fresh to order").Ok!, Money.Create(Currency.Usd, 5m).Ok!);
+            Description.Create("Street tacos made fresh to order").Ok!, Money.Create(Currency.Usd, 5m).Ok!, schedule);
 
         await using (var writeContext = CreateRestaurantsContext())
         {
@@ -96,7 +102,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
         }
 
         await using var readContext = CreateRestaurantsContext();
-        var reader = new RestaurantReader(readContext);
+        var reader = new RestaurantReader(readContext, new ClockDateTimeUtf());
 
         var isActive = await reader.IsActiveAsync(restaurant.Id.Id);
 
@@ -117,7 +123,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
         }
 
         await using var readContext = CreateRestaurantsContext();
-        var reader = new RestaurantReader(readContext);
+        var reader = new RestaurantReader(readContext, new ClockDateTimeUtf());
 
         var isActive = await reader.IsActiveAsync(restaurant.Id.Id);
 
@@ -125,14 +131,14 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
     }
 
     [Fact]
-    public async Task IsActiveAsync_ShouldReturnNull_WhenRestaurantDoesNotExist()
+    public async Task IsActiveAsync_ShouldReturnFalse_WhenRestaurantDoesNotExist()
     {
         await using var readContext = CreateRestaurantsContext();
-        var reader = new RestaurantReader(readContext);
+        var reader = new RestaurantReader(readContext, new ClockDateTimeUtf());
 
         var isActive = await reader.IsActiveAsync(Guid.NewGuid());
 
-        isActive.Should().BeNull();
+        isActive.Should().BeFalse();
     }
 
     private RestaurantsDbContext CreateRestaurantsContext()

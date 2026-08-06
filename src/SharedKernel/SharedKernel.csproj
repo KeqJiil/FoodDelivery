@@ -7,19 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Infrastructure\" />
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     </ItemGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Serilog" />
-        <PackageReference Include="MassTransit" />
-        <PackageReference Include="MassTransit.Azure.ServiceBus.Core" />
-        <PackageReference Include="MassTransit.EntityFrameworkCore" />
-        <PackageReference Include="MassTransit.RabbitMQ" />
+        <PackageReference Include="Serilog"/>
+        <PackageReference Include="MassTransit"/>
+        <PackageReference Include="MassTransit.Azure.ServiceBus.Core"/>
+        <PackageReference Include="MassTransit.EntityFrameworkCore"/>
+        <PackageReference Include="MassTransit.RabbitMQ"/>
     </ItemGroup>
 
 </Project>

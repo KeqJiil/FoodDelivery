@@ -2,13 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using Restaurants.Application.Abstractions;
 using Restaurants.Application.GetRestaurantById;
 using Restaurants.Domain.Entities;
-using Restaurants.Domain.Enums;
 using Restaurants.Domain.Ids;
+using SharedKernel.Domain;
 using SharedKernel.Domain.ValueObjects;
 
 namespace Restaurants.Infrastructure.Persistence.Readers;
 
-public class RestaurantReader(RestaurantsDbContext context) : IRestaurantReader
+public class RestaurantReader(RestaurantsDbContext context, IClock clock) : IRestaurantReader
 {
     public async Task<RestaurantDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -35,8 +35,8 @@ public class RestaurantReader(RestaurantsDbContext context) : IRestaurantReader
     {
         var restaurantId = new RestaurantId(id);
         var restaurant = await context.Restaurants.AsNoTracking().Where(x => x.Id == restaurantId)
-            .Select(x => new { x.Status, x.Schedule }).FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
 
-        return restaurant?.Status == RestaurantStatus.Active && restaurant.Schedule.IsOpenNow(DateTimeOffset.Now);
+        return restaurant is not null && restaurant.IsActive() && restaurant.IsOpen(clock.Now);
     }
 }

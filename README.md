@@ -131,6 +131,8 @@ stateDiagram-v2
 
 Every terminal-looking transition (`Rejected`, `Cancelled`, timeout) routes through a dedicated `Compensating*` state rather than failing in place — the saga always unwinds through the same explicit chain (cancel the payment if one was taken, cancel the order request, fail the order) regardless of which step triggered it.
 
+**Saga boundary and point of no return.** The saga finalizes at `DeliveryPlaced` — when the delivery record is *created* — not at delivery completion; courier pickup, drop-off, and failure are tracked locally within `Deliveries` and don't feed back into `OrderSaga`. Compensation is also only available up to and including payment: once `PaymentSucceeded` is observed, the flow only moves forward (`AwaitingConfirmation` → `AwaitingDelivery` → `Completed`) — there's no path to cancel an order after it's been paid for. Both are deliberate boundaries on what "the order flow" means for this system, not gaps: extending the saga past delivery creation, or allowing cancellation after payment, are real features with real compensation-flow design behind them, not configuration toggles.
+
 ### 4. Domain events published through an EF Core interceptor
 
 Aggregates raise domain events without knowing a message bus exists. `DomainEventPublishInterceptor` — a `SaveChangesInterceptor` — collects events from tracked aggregates and publishes them as `SaveChangesAsync` runs, so publication is tied to the persistence transaction rather than scattered across handlers.
@@ -190,6 +192,14 @@ Correlating a single logical request across an HTTP call and multiple async mess
 
 OpenTelemetry tracing (`AddSource("MassTransit")`) additionally propagates W3C trace context through message headers natively, giving a single `TraceId` across HTTP → saga → every downstream consumer for free — verified empirically by capturing real trace output across multiple hops.
 
+### 12. No authentication, permissive CORS, and a public Swagger UI
+
+There is no `[Authorize]` anywhere in this codebase, `Program.cs` registers a CORS policy that allows any origin, and Swagger UI is mapped unconditionally, including in the deployed environment.
+
+This is deliberate, not an oversight. The project demonstrates domain modeling, saga orchestration, and messaging reliability — identity and authorization would add configuration, not architecture, while meaningfully complicating the 167-test integration suite for no corresponding signal. The same reasoning covers CORS and Swagger: there's no UI and no real user data, and the deployed instance exists purely as a live demo of the API surface — anyone hitting it is a reviewer poking at Swagger or running `Api.http`, not a customer.
+
+**Trade-off accepted:** the live deployment is unauthenticated and publicly documented. That's an acceptable trade for a demo instance with no real data; it would not be for a production system.
+
 ---
 
 ## Reliability
@@ -235,9 +245,9 @@ The integration suite has caught real bugs that unit tests structurally cannot, 
 Cursor pagination (`OrderRequestReader.GetAllByRestaurantIdAsync`) got the same scrutiny: rather than trust a green test, the generated SQL was captured directly (`.LogTo` + `EnableSensitiveDataLogging`) to confirm the cursor filter and `TOP` limit were genuinely pushed server-side and not silently pulling the table into memory — a real EF Core failure mode pre-3.0, and worth verifying rather than assuming the framework still guards against it.
 
 ```bash
-dotnet test                                              # everything
-dotnet test tests/UnitTest                                # unit only, no Docker needed
-dotnet test tests/IntegrationTest/IntegrationTest.csproj  # integration, needs Docker Desktop running
+dotnet test                                                     # everything (unit + integration)
+for f in tests/UnitTest/*/*.csproj; do dotnet test "$f"; done   # unit only, no Docker needed
+dotnet test tests/IntegrationTest/IntegrationTest.csproj        # integration, needs Docker Desktop running
 ```
 
 ---
@@ -255,7 +265,7 @@ For manual testing outside Swagger, `src/Api/Api.http` has a ready-to-run reques
 
 ## CI/CD
 
-- **CI** (`.github/workflows/ci.yml`) — runs on every push/PR to `main`: restore, build, `dotnet test` (unit + integration, Docker-backed).
+- **CI** (`.github/workflows/ci.yml`) — runs on every push/PR to `main`, as two independent jobs: `unit_tests` (fast, no Docker) and `integration_tests` (Docker-backed, MSSQL + RabbitMQ via Testcontainers), so a slow or flaky integration run never delays unit-test feedback.
 - **CD** (`.github/workflows/cd.yml`) — on push to `main`: builds the API's Docker image, pushes it to Azure Container Registry, and deploys to an Azure Container App via `az containerapp update`.
 
 ---
