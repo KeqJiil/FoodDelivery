@@ -16,6 +16,12 @@ public record Schedule
         _openingWindows = [];
     }
 
+    public static Schedule Create(
+        IEnumerable<(DayOfWeek OpenDay, TimeOnly OpenTime, DayOfWeek CloseDay, TimeOnly CloseTime)>? windows = null)
+    {
+        return new Schedule(windows?.Select(w => new OpeningWindow(w.OpenDay, w.OpenTime, w.CloseDay, w.CloseTime)));
+    }
+
     public bool IsOpenNow(DateTimeOffset moment)
     {
         return _openingWindows.Any(x => Contains(x, moment));

@@ -19,6 +19,8 @@ public class OrderRequestsController : MyBasicController
         _mediator = mediator;
     }
 
+    /// <summary>Lists a restaurant's order requests, newest first, using cursor-based pagination.</summary>
+    /// <param name="id">Restaurant id.</param>
     [HttpGet("restaurant/{id:Guid}")]
     public async Task<IActionResult> GetOrdersByRestaurantId([FromRoute] Guid id, [FromQuery] ByRestaurantIdBody body,
         CancellationToken cancellationToken)
@@ -29,6 +31,8 @@ public class OrderRequestsController : MyBasicController
         return result.Any() ? Ok(result) : Ok();
     }
 
+    /// <summary>Gets an order request by id.</summary>
+    /// <param name="id">Order request id.</param>
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> GetOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -36,6 +40,8 @@ public class OrderRequestsController : MyBasicController
         return result is null ? NotFound() : Ok(result);
     }
 
+    /// <summary>Rejects an order request. Triggers the saga's compensating flow for the originating order.</summary>
+    /// <param name="id">Order request id.</param>
     [HttpPost("{id:Guid}/reject")]
     public async Task<IActionResult> RejectOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -43,6 +49,8 @@ public class OrderRequestsController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
+    /// <summary>Approves an order request, letting the order proceed to payment.</summary>
+    /// <param name="id">Order request id.</param>
     [HttpPost("{id:Guid}/approve")]
     public async Task<IActionResult> ApproveOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {

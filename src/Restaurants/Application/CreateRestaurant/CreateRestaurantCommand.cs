@@ -1,6 +1,5 @@
 using MediatR;
 using Restaurants.Domain.Ids;
-using Restaurants.Domain.ValueObjects;
 using SharedKernel.Domain;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.Errors;
@@ -12,4 +11,5 @@ public record CreateRestaurantCommand(
     string Description,
     Currency Currency,
     decimal Amount,
-    List<OpeningWindow>? Schedule) : IRequest<Result<RestaurantId, Error>>;
+    List<(DayOfWeek OpenDay, TimeOnly OpenTime, DayOfWeek CloseDay, TimeOnly CloseTime)>? Schedule)
+    : IRequest<Result<RestaurantId, Error>>;

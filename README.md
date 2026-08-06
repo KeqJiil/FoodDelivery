@@ -9,13 +9,13 @@ This is a portfolio project. Its purpose is not feature completeness, but demons
 | | |
 |---|---|
 | Bounded contexts | 6 (Ordering, Restaurants, OrderRequests, Payments, Deliveries, Saga) |
-| Unit tests | 350+ across 8 per-module projects |
+| Unit tests | 449 across 8 per-module projects |
 | Integration tests | 167, against real MSSQL + RabbitMQ via Testcontainers |
 | Production bugs caught *by the test suite itself* | 11 — see [Testing](#testing) |
 | CI | build + full test suite (Docker-backed) on every PR |
 | CD | auto-deploy to Azure Container Apps on merge to `main` |
 
-The 11-bugs number is the point, not a vanity metric: every one of them is a case where the code built cleanly, looked correct on review, and would have shipped a real defect — wrong data on the wire, a silently dropped event, a request that 500s under real SQL Server, a redelivered message that faults instead of no-oping. Details below.
+The bug-count is the point, not a vanity metric: every one of them is a case where the code built cleanly, looked correct on review, and would have shipped a real defect — wrong data on the wire, a silently dropped event, a request that 500s under real SQL Server, a redelivered message that faults instead of no-oping. Details below.
 
 ---
 
@@ -29,39 +29,32 @@ flowchart TB
         Api[Controllers] --> MediatR{{MediatR<br/>in-process CQRS}}
     end
 
-    MediatR --> Ordering
-    MediatR --> Restaurants
-    MediatR --> OrderRequests
-    MediatR --> Payments
-    MediatR --> Deliveries
-
-    OrderRequests -.->|events| Saga{{OrderSaga<br/>state machine}}
-    Payments -.->|events| Saga
-    Deliveries -.->|events| Saga
-    Saga -.->|commands| OrderRequests
-    Saga -.->|commands| Payments
-    Saga -.->|commands| Deliveries
-
-    subgraph Ordering["Ordering — core context, rich domain"]
-        OApp[Application] --> ODom[Domain<br/>Order aggregate, policies]
-        OApp --> OInf[Infrastructure<br/>EF Core, repositories, consumers]
+    subgraph Modules["Bounded contexts — MediatR handlers, own EF Core schema each"]
+        direction LR
+        Ordering[Ordering<br/>core domain]
+        Restaurants[Restaurants]
+        OrderRequests[OrderRequests]
+        Payments[Payments]
+        Deliveries[Deliveries]
     end
 
-    subgraph Restaurants["Restaurants — supporting context"]
-        RDom[Domain<br/>Restaurant, Schedule, MenuItem]
-    end
+    MediatR --> Modules
+    Ordering -.->|reads via<br/>adapter| Restaurants
 
-    OInf --> DB[(MSSQL<br/>+ outbox table)]
+    Ordering ==>|OrderPlaced| Saga{{OrderSaga<br/>state machine}}
+    Saga ==>|approve → pay → deliver| OrderRequests & Payments & Deliveries
+    Saga ==>|confirm / fail| Ordering
+    OrderRequests & Payments & Deliveries -.->|status events| Saga
+
+    Modules --> DB[(MSSQL<br/>+ outbox table)]
     DB -.->|transactional outbox| MQ[(RabbitMQ /<br/>Azure Service Bus)]
-    MQ -->|integration events| OInf
+    MQ -.->|integration events| Modules
 
     style Ordering fill:#e8f4f8
-    style Restaurants fill:#f5f5f5
     style Saga fill:#f8e8f4
-    style Host fill:#fff8e8
 ```
 
-Modules never reference each other's internals. Cross-context communication happens through **integration events** (`SharedKernel/IntegrationEvents`) routed through MassTransit, and through **explicit read adapters** — never through a shared database schema or a direct project reference into another context's domain. `OrderSaga` (a MassTransit state machine) coordinates the multi-step order → approval → payment → delivery flow, including compensation on rejection, timeout, or payment failure.
+Modules never reference each other's internals. Cross-context communication happens through **integration events** (`SharedKernel/IntegrationEvents`) routed through MassTransit, and through **explicit read adapters** — never through a shared database schema or a direct project reference into another context's domain. `OrderSaga` (a MassTransit state machine) coordinates the multi-step order → approval → payment → delivery flow, including compensation on rejection, timeout, or payment failure — Ordering is both the trigger (`OrderPlaced`) and one of the saga's targets (`ConfirmOrder`/`OrderFail`), not just a bystander.
 
 ---
 
@@ -105,7 +98,7 @@ x.AddEntityFrameworkOutbox<OrderingDbContext>(o =>
 });
 ```
 
-`UseBusOutbox()` (a bus-wide middleware that captures *any* `Send`/`Publish` call app-wide into the outbox) was deliberately left out: `DomainEventPublishInterceptor` is the only place the codebase ever calls `Publish`, and it always does so during that same `OrderingDbContext`'s `SaveChangesAsync` — the exact scope `AddEntityFrameworkOutbox<OrderingDbContext>` already covers on its own. The bus-wide catch-all has nothing extra to catch here.
+`UseBusOutbox()` (a bus-wide middleware that captures *any* `Send`/`Publish` call app-wide into the outbox) is deliberately left out: `DomainEventPublishInterceptor` is the only place the codebase ever calls `Publish`, and it always does so during that same `OrderingDbContext`'s `SaveChangesAsync` — the exact scope `AddEntityFrameworkOutbox<OrderingDbContext>` already covers on its own. The bus-wide catch-all has nothing extra to catch here.
 
 Consumers additionally use `UseInMemoryOutbox`, so messages a consumer produces are only published once its own transaction commits — no phantom events from a handler that later rolled back.
 
@@ -187,7 +180,11 @@ Ordering needs a restaurant's minimum order price and a menu item's price. Rathe
 
 This is an anti-corruption layer: Ordering defines the contract on its own terms, and swapping the implementation for a different source is a one-class change.
 
-### 10. Correlation via `AsyncLocal`, propagation via OpenTelemetry
+### 10. API request DTOs never reference Domain types
+
+Early on, `CreateRestaurantRequest`/`ChangeScheduleRequest` took a `List<OpeningWindow>` — a Domain value object — straight from the Api layer, which meant Domain had to carry Api-facing concerns (XML doc generation for Swagger) it had no business knowing about. Fixed by giving the Api layer its own `OpeningWindowRequest` DTO and adding `Schedule.Create(...)`, a factory that takes raw `(DayOfWeek, TimeOnly, DayOfWeek, TimeOnly)` tuples and builds `OpeningWindow`s internally — nothing outside `Restaurants.Domain` ever needs to know that type exists.
+
+### 11. Correlation via `AsyncLocal`, propagation via OpenTelemetry
 
 Correlating a single logical request across an HTTP call and multiple async message hops (saga → command → consumer) can't rely on DI scope — ASP.NET Core's request scope and MassTransit's per-message consume scope are different scopes even within the same logical flow. `CorrelationContext` uses `AsyncLocal<string?>`, which flows with the async call chain regardless of scope boundaries; middleware and MassTransit send/publish/consume filters read and write it consistently.
 
@@ -215,7 +212,7 @@ OpenTelemetry tracing (`AddSource("MassTransit")`) additionally propagates W3C t
 - **OpenTelemetry** traces and metrics, instrumented via `AddAspNetCoreInstrumentation` and MassTransit's native `ActivitySource`.
 - **Jaeger** (local dev, via Docker Compose) for trace visualization — no extra code needed beyond the OTLP exporter.
 - **Azure Monitor** exporter wired conditionally (only enabled when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set), so the same OTel pipeline feeds Application Insights in production without a separate instrumentation path.
-- **Correlation IDs** threaded through HTTP requests and message headers (see design decision 10), independent of the trace ID, for a human/business-facing identifier alongside the technical one.
+- **Correlation IDs** threaded through HTTP requests and message headers (see design decision 11), independent of the trace ID, for a human/business-facing identifier alongside the technical one.
 
 ---
 
@@ -242,6 +239,17 @@ dotnet test                                              # everything
 dotnet test tests/UnitTest                                # unit only, no Docker needed
 dotnet test tests/IntegrationTest/IntegrationTest.csproj  # integration, needs Docker Desktop running
 ```
+
+---
+
+## API documentation
+
+Swagger UI is generated from the OpenAPI 3.1 document (`Microsoft.AspNetCore.OpenApi`) at `/swagger`, enriched with:
+
+- **XML doc comments** on every controller action and request DTO, pulled in via a custom `IOpenApiOperationTransformer`/`IOpenApiSchemaTransformer` pair (`Microsoft.AspNetCore.OpenApi` has no built-in equivalent of Swashbuckle's `IncludeXmlComments`, so this reads the compiler-generated `.xml` doc file directly and matches members by the same ID format the compiler uses).
+- **Realistic default request bodies** for every `[FromBody]` DTO, so "Try it out" starts from valid, sensible values instead of an auto-generated placeholder. This mattered concretely: the auto-generated placeholder for `TimeOnly` fields rendered as an RFC 3339-style timestamp with a trailing `Z` (`"20:04:53.962Z"`), which `TimeOnly`'s converter rejects outright — every default request for a restaurant's schedule 400'd before a user changed anything.
+
+For manual testing outside Swagger, `src/Api/Api.http` has a ready-to-run request chain — create a restaurant, add a menu item, place an order, and walk it through the saga to approval — plus standalone requests for every other endpoint.
 
 ---
 
@@ -272,7 +280,8 @@ This starts the API, MSSQL, RabbitMQ, and Jaeger. Migrations are applied automat
 | Service | URL |
 |---|---|
 | API | http://localhost:8000 |
-| OpenAPI | http://localhost:8000/openapi/v1.json |
+| Swagger UI | http://localhost:8000/swagger |
+| OpenAPI document | http://localhost:8000/openapi/v1.json |
 | RabbitMQ management | http://localhost:15672 |
 | Jaeger UI | http://localhost:16686 |
 
@@ -282,6 +291,8 @@ Running tests without Docker (unit tests only — integration tests need Docker 
 dotnet restore
 dotnet test tests/UnitTest
 ```
+
+Running the API locally from an IDE while infrastructure stays in Docker: bring up just the dependencies (`docker compose up mssql rabbitmq jaeger`) and run `src/Api` with `ASPNETCORE_ENVIRONMENT=Development` — `appsettings.Development.json` points at `127.0.0.1` (Docker's forwarded ports), not the `mssql`/`rabbitmq` container hostnames those services only resolve to *inside* the Compose network.
 
 ---
 
@@ -320,8 +331,8 @@ tests/
 
 ## Roadmap
 
+- [ ] Read models for cross-module queries (e.g. an order-details view spanning Ordering/Payments/Deliveries), built off the same integration events already flowing through the outbox instead of readers querying each module's write-side schema directly — accepting eventual consistency on the read side in exchange for read models shaped for actual query needs rather than joins across module boundaries
 - [ ] Application Insights in production (Azure Monitor exporter is wired; Azure resource provisioning and Key Vault/secrets strategy not yet done)
 - [ ] Decide whether the hand-rolled correlation ID is still worth keeping now that OpenTelemetry's `TraceId` propagates end-to-end natively
 - [ ] Multi-instance-safe startup migrations (current `MigrateAsync()` on startup is safe for a single instance; concurrent migration attempts from multiple simultaneously-starting replicas isn't handled — not relevant at current single-instance scale)
 - [ ] Audit remaining handlers for the unconditional-insert-without-unique-index gap found and fixed in `Deliveries`
-- [ ] Dedicated read models, built off the same integration events already flowing through the outbox, instead of readers querying each module's write-side schema directly — a natural extension of the CQRS split that's already in place, accepting eventual consistency on the read side in exchange for read models shaped for actual query needs (e.g. a cross-module order summary) rather than joins across module boundaries

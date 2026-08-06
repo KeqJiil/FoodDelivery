@@ -1,0 +1,231 @@
+@baseUrl = http://localhost:8000
+
+### =============================================================================
+### Health
+### =============================================================================
+
+### Liveness probe — 200 as soon as the process is up
+GET {{baseUrl}}/liveness
+
+### Readiness probe — 200 only if every module's database is reachable
+GET {{baseUrl}}/readiness
+
+
+### =============================================================================
+### End-to-end happy path
+### Run these top to bottom — each request captures an id the next one needs.
+### Demonstrates the full saga flow: place order -> approval -> payment -> delivery,
+### the last two happening automatically with no further HTTP calls.
+### =============================================================================
+
+### 1. Create a restaurant (inactive by default)
+# @name createRestaurant
+POST {{baseUrl}}/v1/restaurants
+Content-Type: application/json
+
+{
+  "name": "Sakura Sushi",
+  "description": "Downtown Japanese restaurant, dine-in and delivery.",
+  "amount": 15.00,
+  "currency": "Usd",
+  "schedules": [
+    { "openDay": "Monday", "openTime": "09:00:00", "closeDay": "Monday", "closeTime": "22:00:00" }
+  ]
+}
+
+### 2. Activate it — otherwise it stays invisible to customers
+POST {{baseUrl}}/v1/restaurants/{{createRestaurant.response.body.$.id}}/activate
+
+### 3. Add a menu item
+# @name addMenuItem
+POST {{baseUrl}}/v1/restaurants/{{createRestaurant.response.body.$.id}}/menu-items
+Content-Type: application/json
+
+{
+  "name": "California Roll",
+  "description": "Crab, avocado, and cucumber, topped with tobiko.",
+  "currency": "Usd",
+  "amount": 8.50
+}
+
+### 4. Create a draft order for that restaurant
+# @name createOrder
+POST {{baseUrl}}/v1/ordering
+Content-Type: application/json
+
+{
+  "restaurantId": "{{createRestaurant.response.body.$.id}}"
+}
+
+### 5. Add the menu item to the order
+POST {{baseUrl}}/v1/ordering/{{createOrder.response.body.$.id}}/add-items
+Content-Type: application/json
+
+{
+  "menuId": "{{addMenuItem.response.body.$.id}}"
+}
+
+### 6. Place the order — kicks off OrderSaga (-> AwaitingApproval), publishes CreateRequest
+POST {{baseUrl}}/v1/ordering/{{createOrder.response.body.$.id}}/place
+
+### 7. List the restaurant's order requests to find the one the saga just created.
+###    This runs async over the message bus — if the array comes back empty, wait a
+###    second and re-run this request.
+# @name listOrderRequests
+GET {{baseUrl}}/v1/orderrequests/restaurant/{{createRestaurant.response.body.$.id}}?limit=10
+
+### 8. Approve it — saga proceeds to payment (mock gateway auto-succeeds) and delivery,
+###    both created automatically with no further HTTP calls needed.
+POST {{baseUrl}}/v1/orderrequests/{{listOrderRequests.response.body.$[0].orderRequestId}}/approve
+
+### 9. Check the order's final state (should be Confirmed a moment later)
+GET {{baseUrl}}/v1/ordering/{{createOrder.response.body.$.id}}
+
+### NOTE: Payments/Deliveries are internal saga steps by design — there's no public
+### "list payments/deliveries" endpoint, only GetById. To inspect one, grab its id from
+### a DB query, log line, or Jaeger trace (http://localhost:16686), then use the
+### standalone GET requests in those sections below.
+
+
+### =============================================================================
+### Ordering — standalone requests
+### =============================================================================
+
+### Get an order by id
+GET {{baseUrl}}/v1/ordering/{{createOrder.response.body.$.id}}
+
+### Cancel an order — only works before it's placed (fails with Conflict afterward,
+### so this needs a fresh draft order — run steps 4-5 again first if you want to try it)
+# @name draftOrderToCancel
+POST {{baseUrl}}/v1/ordering
+Content-Type: application/json
+
+{
+  "restaurantId": "{{createRestaurant.response.body.$.id}}"
+}
+
+###
+POST {{baseUrl}}/v1/ordering/{{draftOrderToCancel.response.body.$.id}}/cancel
+
+
+### =============================================================================
+### Restaurants — standalone requests
+### =============================================================================
+
+@restaurantId = {{createRestaurant.response.body.$.id}}
+
+### Get a restaurant by id
+GET {{baseUrl}}/v1/restaurants/{{restaurantId}}
+
+### Deactivate a restaurant
+POST {{baseUrl}}/v1/restaurants/{{restaurantId}}/deactivate
+
+### Change name
+PATCH {{baseUrl}}/v1/restaurants/{{restaurantId}}/name
+Content-Type: application/json
+
+{
+  "name": "Sakura Sushi & Ramen"
+}
+
+### Change description
+PATCH {{baseUrl}}/v1/restaurants/{{restaurantId}}/description
+Content-Type: application/json
+
+{
+  "description": "Downtown Japanese restaurant, now with ramen."
+}
+
+### Replace the opening schedule
+PATCH {{baseUrl}}/v1/restaurants/{{restaurantId}}/schedule
+Content-Type: application/json
+
+{
+  "schedules": [
+    { "openDay": "Monday", "openTime": "09:00:00", "closeDay": "Monday", "closeTime": "22:00:00" },
+    { "openDay": "Saturday", "openTime": "11:00:00", "closeDay": "Sunday", "closeTime": "02:00:00" }
+  ]
+}
+
+### Set the minimum order price
+PATCH {{baseUrl}}/v1/restaurants/{{restaurantId}}/minimal-order-price
+Content-Type: application/json
+
+{
+  "currency": "Usd",
+  "amount": 20.00
+}
+
+### Remove a menu item
+DELETE {{baseUrl}}/v1/restaurants/{{restaurantId}}/menu-items/{{addMenuItem.response.body.$.id}}
+
+### Change a menu item's name
+PUT {{baseUrl}}/v1/restaurants/{{restaurantId}}/menu-items/{{addMenuItem.response.body.$.id}}/name
+Content-Type: application/json
+
+{
+  "name": "Spicy California Roll"
+}
+
+### Change a menu item's description
+PUT {{baseUrl}}/v1/restaurants/{{restaurantId}}/menu-items/{{addMenuItem.response.body.$.id}}/description
+Content-Type: application/json
+
+{
+  "description": "Crab, avocado, and cucumber, topped with spicy tobiko."
+}
+
+### Change a menu item's price
+PUT {{baseUrl}}/v1/restaurants/{{restaurantId}}/menu-items/{{addMenuItem.response.body.$.id}}/price
+Content-Type: application/json
+
+{
+  "currency": "Usd",
+  "amount": 9.50
+}
+
+
+### =============================================================================
+### OrderRequests — standalone requests
+### =============================================================================
+
+### Get an order request by id
+GET {{baseUrl}}/v1/orderrequests/{{listOrderRequests.response.body.$[0].orderRequestId}}
+
+### Reject an order request — run the happy-path flow again first (steps 1-7) to get a
+### fresh, still-pending order request; the one from step 8 above is already approved
+POST {{baseUrl}}/v1/orderrequests/{{listOrderRequests.response.body.$[0].orderRequestId}}/reject
+
+
+### =============================================================================
+### Payments — standalone requests
+### No listing endpoint exists (see note above) — replace with a real id
+### =============================================================================
+
+### Get a payment by id
+GET {{baseUrl}}/v1/payments/00000000-0000-0000-0000-000000000000
+
+
+### =============================================================================
+### Deliveries — standalone requests
+### No listing endpoint exists (see note above) — replace with a real id
+### =============================================================================
+
+@deliveryId = 00000000-0000-0000-0000-000000000000
+
+### Get a delivery by id
+GET {{baseUrl}}/v1/deliveries/{{deliveryId}}
+
+### Mark picked up
+POST {{baseUrl}}/v1/deliveries/pickup/{{deliveryId}}
+
+### Mark completed
+POST {{baseUrl}}/v1/deliveries/complete/{{deliveryId}}
+
+### Mark failed
+POST {{baseUrl}}/v1/deliveries/fail/{{deliveryId}}
+Content-Type: application/json
+
+{
+  "reason": "Courier could not reach the delivery address."
+}

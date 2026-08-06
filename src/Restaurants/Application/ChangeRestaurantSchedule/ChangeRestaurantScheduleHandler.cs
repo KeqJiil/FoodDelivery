@@ -23,7 +23,7 @@ public class ChangeRestaurantScheduleHandler(
             return Result<Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
-        var result = restaurant.ChangeSchedule(new Schedule(request.NewSchedule));
+        var result = restaurant.ChangeSchedule(Schedule.Create(request.NewSchedule));
         if (!result.IsSuccess)
         {
             logger.LogWarning("Failed to change schedule of restaurant {RestaurantId}: {Error}", request.Id,

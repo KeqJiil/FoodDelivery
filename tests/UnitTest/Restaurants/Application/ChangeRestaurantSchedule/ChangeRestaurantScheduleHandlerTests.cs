@@ -3,7 +3,6 @@ using Moq;
 using Restaurants.Application.Abstractions;
 using Restaurants.Application.ChangeRestaurantSchedule;
 using Restaurants.Domain.Ids;
-using Restaurants.Domain.ValueObjects;
 using Restaurants.UnitTest.TestHelpers;
 
 namespace Restaurants.UnitTest.Application.ChangeRestaurantSchedule;
@@ -26,15 +25,16 @@ public class ChangeRestaurantScheduleHandlerTests
     {
         var restaurant = RestaurantFactory.CreateValid();
         _repository.Setup(r => r.GetById(restaurant.Id, It.IsAny<CancellationToken>())).ReturnsAsync(restaurant);
-        var newSchedule = new List<OpeningWindow>
+        var newSchedule = new List<(DayOfWeek OpenDay, TimeOnly OpenTime, DayOfWeek CloseDay, TimeOnly CloseTime)>
         {
-            new(DayOfWeek.Monday, new TimeOnly(9, 0), DayOfWeek.Monday, new TimeOnly(22, 0))
+            (DayOfWeek.Monday, new TimeOnly(9, 0), DayOfWeek.Monday, new TimeOnly(22, 0))
         };
 
         var result = await _handler.Handle(new ChangeRestaurantScheduleCommand(restaurant.Id, newSchedule), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        restaurant.Schedule.OpeningWindows.Should().BeEquivalentTo(newSchedule);
+        restaurant.Schedule.OpeningWindows.Should().BeEquivalentTo(newSchedule,
+            options => options.ExcludingMissingMembers());
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
