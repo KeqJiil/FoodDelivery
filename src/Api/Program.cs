@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Api.ExceptionHandlers;
 using Api.Middleware;
 using Api.Modules;
@@ -7,6 +8,7 @@ using Azure.Monitor.OpenTelemetry.Exporter;
 using Deliveries.Infrastructure.Persistence;
 using MassTransit;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -35,6 +37,20 @@ builder.Services.AddExceptionHandler<BasicExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
+if (!builder.Environment.IsDevelopment())
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+            RateLimitPartition.GetTokenBucketLimiter(
+                httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new TokenBucketRateLimiterOptions
+                {
+                    ReplenishmentPeriod = TimeSpan.FromSeconds(10), QueueLimit = 25, TokenLimit = 50,
+                    TokensPerPeriod = 3
+                }));
+    });
 
 builder.Services.AddScoped<DomainEventPublishInterceptor>();
 
@@ -176,9 +192,11 @@ await app.MigrateDeliveriesDatabaseAsync(builder.Configuration);
 await app.MigrateSagaDatabaseAsync(builder.Configuration);
 
 app.UseCors("AllowAll");
+app.UseMiddleware<CorrelationMiddleware>();
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
-app.UseMiddleware<CorrelationMiddleware>();
+if (!app.Environment.IsDevelopment())
+    app.UseRateLimiter();
 app.MapControllers();
 
 app.Run();

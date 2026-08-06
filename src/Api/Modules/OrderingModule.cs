@@ -21,6 +21,7 @@ public static class OrderingModule
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOrderReader, OrderReader>();
         services.AddScoped<IRestaurantMinimumOrderPriceAdapter, RestaurantMinimumOrderPriceAdapter>();
+        services.AddScoped<IRestaurantActiveAdapter, RestaurantActiveAdapter>();
         services.AddScoped<IMenuPriceForOrderLineAdapter, MenuPriceForOrderLineAdapter>();
         services.AddScoped<IIntegrationEventTranslator<OrderPlaced>, OrderPlacedIntegrationEventTranslator>();
         services.AddScoped<IIntegrationEventTranslator<OrderConfirmed>, OrderConfirmedIntegrationEventTranslator>();

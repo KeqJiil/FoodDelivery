@@ -15,7 +15,7 @@ public class MsSqlContainerFixture : IAsyncLifetime
     private const string DatabaseName = "FoodDeliveryTests";
 
     private readonly MsSqlContainer _container =
-        new MsSqlBuilder().WithImage("mcr.microsoft.com/mssql/server:2022-latest").Build();
+        new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
 
     public string ConnectionString { get; private set; } = string.Empty;
     

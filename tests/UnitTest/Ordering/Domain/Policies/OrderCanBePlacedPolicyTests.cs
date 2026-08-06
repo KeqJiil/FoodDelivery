@@ -29,7 +29,7 @@ public class OrderCanBePlacedPolicyTests
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
         var money = Money.Create(Currency.Eur, 2m).Ok!;
 
-        var result = OrderCanBePlacedPolicy.CanBePlaced(order, money);
+        var result = OrderCanBePlacedPolicy.CanBePlaced(order, money, isRestaurantActive: true);
 
         result.IsSuccess.Should().BeFalse();
         result.Error!.Type.Should().Be(ErrorEnum.Validation);
@@ -43,7 +43,7 @@ public class OrderCanBePlacedPolicyTests
             new MenuItemRefId(Guid.NewGuid()));
         var money = Money.Create(Currency.Eur, 2m).Ok!;
 
-        var result = OrderCanBePlacedPolicy.CanBePlaced(order, money);
+        var result = OrderCanBePlacedPolicy.CanBePlaced(order, money, isRestaurantActive: true);
 
         result.IsSuccess.Should().BeFalse();
         result.Error!.Type.Should().Be(ErrorEnum.Validation);
@@ -57,8 +57,22 @@ public class OrderCanBePlacedPolicyTests
             new MenuItemRefId(Guid.NewGuid()));
         var money = Money.Create(Currency.Eur, 2m).Ok!;
 
-        var result = OrderCanBePlacedPolicy.CanBePlaced(order, money);
+        var result = OrderCanBePlacedPolicy.CanBePlaced(order, money, isRestaurantActive: true);
 
         result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public void CanBePlaced_ShouldFail_WhenRestaurantIsNotActive()
+    {
+        var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Eur, 10m).Ok!,
+            new MenuItemRefId(Guid.NewGuid()));
+        var money = Money.Create(Currency.Eur, 2m).Ok!;
+
+        var result = OrderCanBePlacedPolicy.CanBePlaced(order, money, isRestaurantActive: false);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Type.Should().Be(ErrorEnum.Validation);
     }
 }

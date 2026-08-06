@@ -35,7 +35,7 @@ public class OrderPersistenceTests(MsSqlContainerFixture fixture) : IntegrationT
         reloaded!.Status.Should().Be(OrderStatus.Draft);
         reloaded.RestaurantRefId.Should().Be(restaurantId);
         reloaded.OrderLines.Should().HaveCount(1);
-        reloaded.OrderLines[0].Price.Should().Be(Money.Create(Currency.Usd, 12.50m).Ok);
+        reloaded.OrderLines[0].Price.Should().Be(Money.Create(Currency.Usd, 12.50m).Ok!);
     }
 
     private OrderingDbContext CreateOrderingContext()

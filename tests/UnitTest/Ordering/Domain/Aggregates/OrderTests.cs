@@ -43,6 +43,19 @@ public class OrderTests
     }
 
     [Fact]
+    public void Place_ShouldFail_WhenRestaurantIsNotActive()
+    {
+        var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));
+        order.AddOrderLineItem(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
+            new MenuItemRefId(Guid.NewGuid()));
+
+        var result = order.Place(Money.Create(Currency.Usd, 1m).Ok!, isRestaurantActive: false);
+
+        order.Status.Should().Be(OrderStatus.Draft);
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [Fact]
     public void Confirm_ShouldTransitionToConfirmed_AndRaiseOrderConfirmed_WhenProcessing()
     {
         var order = Order.Create(new OrderId(Guid.NewGuid()), new RestaurantRefId(Guid.NewGuid()));

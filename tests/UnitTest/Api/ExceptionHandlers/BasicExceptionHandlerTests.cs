@@ -1,17 +1,26 @@
 using System.Text.Json;
 using Api.ExceptionHandlers;
 using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Moq;
+using SharedKernel.Infrastructure.Messaging;
 
 namespace Api.UnitTest.ExceptionHandlers;
 
 public class BasicExceptionHandlerTests
 {
-    private readonly BasicExceptionHandler _handler =
-        new(Mock.Of<Microsoft.Extensions.Logging.ILogger<BasicExceptionHandler>>());
+    private readonly BasicExceptionHandler _handler = CreateHandler(Environments.Development);
+
+    private static BasicExceptionHandler CreateHandler(string environmentName)
+    {
+        var environment = Mock.Of<IHostEnvironment>(e => e.EnvironmentName == environmentName);
+        return new BasicExceptionHandler(Mock.Of<Microsoft.Extensions.Logging.ILogger<BasicExceptionHandler>>(),
+            environment);
+    }
 
     private static DefaultHttpContext CreateContext(string path = "/api/orders")
     {
@@ -77,7 +86,7 @@ public class BasicExceptionHandlerTests
     }
 
     [Fact]
-    public async Task TryHandleAsync_ShouldLeakExceptionMessage_AsDetail()
+    public async Task TryHandleAsync_ShouldIncludeExceptionMessage_AsDetail_InDevelopment()
     {
         var context = CreateContext();
 
@@ -86,6 +95,44 @@ public class BasicExceptionHandlerTests
 
         var problem = await ReadBody(context);
         problem.Detail.Should().Be("connection string is bad");
+    }
+
+    [Fact]
+    public async Task TryHandleAsync_ShouldHideExceptionMessage_OutsideDevelopment()
+    {
+        var handler = CreateHandler(Environments.Production);
+        var context = CreateContext();
+
+        await handler.TryHandleAsync(context, new InvalidOperationException("connection string is bad"),
+            CancellationToken.None);
+
+        var problem = await ReadBody(context);
+        problem.Detail.Should().NotBeNullOrEmpty().And.NotContain("connection string");
+    }
+
+    [Fact]
+    public async Task TryHandleAsync_ShouldHideConcurrencyExceptionMessage_OutsideDevelopment()
+    {
+        var handler = CreateHandler(Environments.Production);
+        var context = CreateContext();
+
+        await handler.TryHandleAsync(context, new DbUpdateConcurrencyException("row version mismatch"),
+            CancellationToken.None);
+
+        var problem = await ReadBody(context);
+        problem.Detail.Should().NotBeNullOrEmpty().And.NotContain("row version mismatch");
+    }
+
+    [Fact]
+    public async Task TryHandleAsync_ShouldIncludeCorrelationId_InExtensions()
+    {
+        var context = CreateContext();
+        CorrelationContext.CorrelationId = "test-correlation-id";
+
+        await _handler.TryHandleAsync(context, new Exception("boom"), CancellationToken.None);
+
+        var problem = await ReadBody(context);
+        problem.Extensions["correlationId"]!.ToString().Should().Be("test-correlation-id");
     }
 
     [Fact]

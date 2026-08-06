@@ -12,6 +12,7 @@ public class PlaceOrderHandler(
     IOrderRepository repository,
     IUnitOfWork unitOfWork,
     IRestaurantMinimumOrderPriceAdapter restaurantMinimumOrderPriceAdapter,
+    IRestaurantActiveAdapter restaurantActiveAdapter,
     ILogger<PlaceOrderHandler> logger)
     : IRequestHandler<PlaceOrderCommand, Result<OrderId, Error>>
 {
@@ -33,7 +34,9 @@ public class PlaceOrderHandler(
             return Result<OrderId, Error>.Fail(Error.NotFound("Restaurant not found"));
         }
 
-        var result = order.Place(minimumPrice);
+        var isRestaurantActive = await restaurantActiveAdapter.IsActiveAsync(order.RestaurantRefId, cancellationToken);
+
+        var result = order.Place(minimumPrice, isRestaurantActive);
         if (!result.IsSuccess)
         {
             logger.LogWarning("Failed to place order {OrderId}: {Error}", order.Id, result.Error);

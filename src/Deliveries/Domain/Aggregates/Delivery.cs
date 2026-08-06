@@ -22,6 +22,8 @@ public class Delivery : AggregateRoot<DeliveryId>
 
     private Delivery()
     {
+        Id = null!;
+        OrderRefId = null!;
     }
 
     public static Delivery Create(DeliveryId id, OrderRefId orderRefId)

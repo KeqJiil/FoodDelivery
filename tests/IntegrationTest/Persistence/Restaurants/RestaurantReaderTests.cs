@@ -41,7 +41,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
         dto.Should().NotBeNull();
         dto!.Name.Should().Be("Pizza Place");
         dto.Description.Should().Be("Wood-fired pizza with fresh local ingredients");
-        dto.MinimalOrderPrice.Should().Be(Money.Create(Currency.Usd, 12m).Ok);
+        dto.MinimalOrderPrice.Should().Be(Money.Create(Currency.Usd, 12m).Ok!);
         dto.OpeningWindows.Should().ContainSingle();
         dto.MenuItems.Should().ContainSingle().Which.Name.Should().Be("Margherita");
     }
@@ -69,7 +69,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
 
         var price = await reader.GetMenuItemPriceByIdAsync(menuItemId.Id);
 
-        price.Should().Be(Money.Create(Currency.Usd, 7.5m).Ok);
+        price.Should().Be(Money.Create(Currency.Usd, 7.5m).Ok!);
     }
 
     [Fact]
@@ -81,6 +81,58 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
         var price = await reader.GetMenuItemPriceByIdAsync(Guid.NewGuid());
 
         price.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task IsActiveAsync_ShouldReturnTrue_WhenRestaurantIsActive()
+    {
+        var restaurant = Restaurant.Create(new RestaurantId(Guid.NewGuid()), Name.Create("Taco Stand").Ok!,
+            Description.Create("Street tacos made fresh to order").Ok!, Money.Create(Currency.Usd, 5m).Ok!);
+
+        await using (var writeContext = CreateRestaurantsContext())
+        {
+            writeContext.Restaurants.Add(restaurant);
+            await writeContext.SaveChangesAsync();
+        }
+
+        await using var readContext = CreateRestaurantsContext();
+        var reader = new RestaurantReader(readContext);
+
+        var isActive = await reader.IsActiveAsync(restaurant.Id.Id);
+
+        isActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task IsActiveAsync_ShouldReturnFalse_WhenRestaurantIsInactive()
+    {
+        var restaurant = Restaurant.Create(new RestaurantId(Guid.NewGuid()), Name.Create("Taco Stand").Ok!,
+            Description.Create("Street tacos made fresh to order").Ok!, Money.Create(Currency.Usd, 5m).Ok!);
+        restaurant.Deactivate();
+
+        await using (var writeContext = CreateRestaurantsContext())
+        {
+            writeContext.Restaurants.Add(restaurant);
+            await writeContext.SaveChangesAsync();
+        }
+
+        await using var readContext = CreateRestaurantsContext();
+        var reader = new RestaurantReader(readContext);
+
+        var isActive = await reader.IsActiveAsync(restaurant.Id.Id);
+
+        isActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task IsActiveAsync_ShouldReturnNull_WhenRestaurantDoesNotExist()
+    {
+        await using var readContext = CreateRestaurantsContext();
+        var reader = new RestaurantReader(readContext);
+
+        var isActive = await reader.IsActiveAsync(Guid.NewGuid());
+
+        isActive.Should().BeNull();
     }
 
     private RestaurantsDbContext CreateRestaurantsContext()

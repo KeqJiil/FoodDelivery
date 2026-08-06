@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Api.Controllers.Health;
 
+[ApiController]
+[DisableRateLimiting]
 public class HealthController(HealthCheckService healthCheckService) : ControllerBase
 {
     /// <summary>Liveness probe: returns 200 as soon as the process is running, regardless of dependency health.</summary>

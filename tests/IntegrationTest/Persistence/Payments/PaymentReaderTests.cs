@@ -32,7 +32,7 @@ public class PaymentReaderTests(MsSqlContainerFixture fixture) : IntegrationTest
         dto.Should().NotBeNull();
         dto!.OrderRefId.Should().Be(orderRefId.Id);
         dto.Status.Should().Be(PaymentStatus.Pending);
-        dto.Amount.Should().Be(Money.Create(Currency.Usd, 42m).Ok);
+        dto.Amount.Should().Be(Money.Create(Currency.Usd, 42m).Ok!);
         dto.CreatedAt.Should().NotBe(default);
     }
 

@@ -35,7 +35,7 @@ public class OrderReaderTests(MsSqlContainerFixture fixture) : IntegrationTestBa
         dto.Should().NotBeNull();
         dto.Status.Should().Be(OrderStatus.Draft);
         dto.OrderLines.Should().HaveCount(2);
-        dto.TotalPrice.Should().Be(Money.Create(Currency.Usd, 35m).Ok);
+        dto.TotalPrice.Should().Be(Money.Create(Currency.Usd, 35m).Ok!);
         dto.CreatedAt.Should().NotBe(default);
     }
 
