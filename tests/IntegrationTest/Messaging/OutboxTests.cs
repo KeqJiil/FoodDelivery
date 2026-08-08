@@ -18,7 +18,10 @@ namespace FoodDelivery.IntegrationTest.Messaging;
 
 public class OrderPlacedIntegrationSubscriber : IConsumer<OrderPlacedIntegration>
 {
-    public Task Consume(ConsumeContext<OrderPlacedIntegration> context) => Task.CompletedTask;
+    public Task Consume(ConsumeContext<OrderPlacedIntegration> context)
+    {
+        return Task.CompletedTask;
+    }
 }
 
 [Collection("Database")]
@@ -49,7 +52,7 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
         builder.Services.AddDbContext<OrderingDbContext>((sp, options) =>
         {
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
-                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", "ordering"));
+                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", "ordering").EnableRetryOnFailure());
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
         builder.Services.AddMassTransitTestHarness(x =>
@@ -63,7 +66,7 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
             });
             x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
         });
-        
+
         _host = builder.Build();
         await _host.StartAsync();
 
@@ -118,12 +121,16 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
         using (var scope = _host!.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-            await using var transaction = await context.Database.BeginTransactionAsync();
-            context.Orders.Add(order);
-            await context.SaveChangesAsync();
-            await transaction.RollbackAsync();
+            var strategy = context.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await context.Database.BeginTransactionAsync();
+                context.Orders.Add(order);
+                await context.SaveChangesAsync();
+                await transaction.RollbackAsync();
+            });
         }
-        
+
         await Task.Delay(1500);
         (await harness.Consumed.Any<OrderPlacedIntegration>(m => m.Context.Message.OrderId == order.Id.Id))
             .Should().BeFalse();

@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
+COPY ["Directory.Packages.props", "."]
 COPY ["src/Api/Api.csproj", "src/Api/"]
 COPY ["src/Ordering/Ordering.csproj", "src/Ordering/"]
 COPY ["src/Restaurants/Restaurants.csproj", "src/Restaurants/"]
