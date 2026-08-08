@@ -21,6 +21,7 @@ public class DeliveriesController : MyBasicController
 
     /// <summary>Gets a delivery by id.</summary>
     /// <param name="id">Delivery id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> GetDelivery([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -30,6 +31,7 @@ public class DeliveriesController : MyBasicController
 
     /// <summary>Marks a delivery as picked up by the courier.</summary>
     /// <param name="id">Delivery id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("pickup/{id:Guid}")]
     public async Task<IActionResult> PickUp([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -37,8 +39,9 @@ public class DeliveriesController : MyBasicController
         return result.IsSuccess ? NoContent() : GetProblem(result.Error!);
     }
 
-    /// <summary>Marks a delivery as completed, finishing the order's saga.</summary>
+    /// <summary>Marks a delivery as completed.</summary>
     /// <param name="id">Delivery id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("complete/{id:Guid}")]
     public async Task<IActionResult> Complete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -48,6 +51,8 @@ public class DeliveriesController : MyBasicController
 
     /// <summary>Marks a delivery as failed.</summary>
     /// <param name="id">Delivery id.</param>
+    /// <param name="body">Failure reason.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("fail/{id:Guid}")]
     public async Task<IActionResult> Fail([FromRoute] Guid id, [FromBody] FailDeliveryBody body,
         CancellationToken cancellationToken)

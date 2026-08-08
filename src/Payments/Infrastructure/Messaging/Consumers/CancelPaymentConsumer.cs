@@ -15,7 +15,7 @@ public class CancelPaymentConsumer(ILogger<CancelPaymentConsumer> logger, ISende
         var result = await mediatr.Send(new CancelPaymentByOrderIdCommand(msg.OrderId), context.CancellationToken);
         if (!result.IsSuccess)
         {
-            if (result.Error.Type is ErrorEnum.Conflict or ErrorEnum.NotFound)
+            if (result.Error!.Type is ErrorEnum.Conflict or ErrorEnum.NotFound)
             {
                 logger.LogWarning("Payment cancel conflict or not not found msg:{msg}", result.Error.Message);
                 return;

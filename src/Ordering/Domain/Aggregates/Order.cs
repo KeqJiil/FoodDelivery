@@ -38,9 +38,9 @@ public class Order : AggregateRoot<OrderId>
         return aggregate;
     }
 
-    public Result<Error> Place(Money minimalPrice)
+    public Result<Error> Place(Money minimalPrice, bool isRestaurantActive = true)
     {
-        var policyResult = OrderCanBePlacedPolicy.CanBePlaced(this, minimalPrice);
+        var policyResult = OrderCanBePlacedPolicy.CanBePlaced(this, minimalPrice, isRestaurantActive);
         if (!policyResult.IsSuccess)
             return Result<Error>.Fail(policyResult.Error ?? Error.Unexpected());
 
@@ -101,7 +101,7 @@ public class Order : AggregateRoot<OrderId>
             return Result<Error>.Success();
         }
 
-        if (orderLine.Quantity >= 255 || orderLine.Quantity + quantity >= 255)
+        if (orderLine.Quantity + quantity > byte.MaxValue)
             return Result<Error>.Fail(Error.Validation("Quantity can't be greater than 255"));
 
         orderLine.IncreaseQuantity(quantity);
@@ -113,7 +113,7 @@ public class Order : AggregateRoot<OrderId>
         if (Status is not OrderStatus.Draft)
             return Result<Error>.Fail(Error.Conflict("Status can't be changed"));
 
-        var orderLine = FindOrderLineOrThrow(orderLineId);
+        var orderLine = FindOrderLineById(orderLineId);
         if (orderLine is null) return Result<Error>.Success();
 
         if (orderLine.Quantity <= 1)
@@ -138,7 +138,7 @@ public class Order : AggregateRoot<OrderId>
         return Result<Error>.Success();
     }
 
-    private OrderLine? FindOrderLineOrThrow(OrderLineId id)
+    private OrderLine? FindOrderLineById(OrderLineId id)
     {
         return _orderLines.Find(x => x.Id == id);
     }

@@ -7,4 +7,5 @@ public interface IRestaurantReader
 {
     Task<RestaurantDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Money?> GetMenuItemPriceByIdAsync(Guid menuItemId, CancellationToken cancellationToken = default);
+    Task<bool?> IsActiveAsync(Guid id, CancellationToken cancellationToken = default);
 }

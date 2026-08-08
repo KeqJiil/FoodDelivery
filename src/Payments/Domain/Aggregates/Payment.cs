@@ -25,6 +25,9 @@ public class Payment : AggregateRoot<PaymentId>
 
     private Payment()
     {
+        Id = null!;
+        OrderRefId = null!;
+        Amount = null!;
     }
 
     public static Payment Create(PaymentId id, OrderRefId orderRefId, Money amount)

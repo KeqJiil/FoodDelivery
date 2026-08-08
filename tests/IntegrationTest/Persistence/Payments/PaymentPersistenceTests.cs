@@ -30,7 +30,7 @@ public class PaymentPersistenceTests(MsSqlContainerFixture fixture) : Integratio
         reloaded.Should().NotBeNull();
         reloaded!.Status.Should().Be(PaymentStatus.Pending);
         reloaded.OrderRefId.Should().Be(orderRefId);
-        reloaded.Amount.Should().Be(Money.Create(Currency.Usd, 25m).Ok);
+        reloaded.Amount.Should().Be(Money.Create(Currency.Usd, 25m).Ok!);
         reloaded.FailureReason.Should().BeNull();
     }
 

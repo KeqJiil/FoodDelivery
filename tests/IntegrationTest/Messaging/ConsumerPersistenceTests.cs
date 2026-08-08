@@ -233,7 +233,7 @@ public class ConsumerPersistenceTests(MsSqlContainerFixture fixture)
         using var readScope = provider.CreateScope();
         var readContext = readScope.ServiceProvider.GetRequiredService<OrderingDbContext>();
         var reloaded = await readContext.Orders.Include(o => o.OrderLines).FirstAsync(o => o.Id == order.Id);
-        reloaded.OrderLines.Single().Price.Should().Be(Money.Create(Currency.Usd, 20m).Ok);
+        reloaded.OrderLines.Single().Price.Should().Be(Money.Create(Currency.Usd, 20m).Ok!);
     }
 
     [Fact]
@@ -270,7 +270,7 @@ public class ConsumerPersistenceTests(MsSqlContainerFixture fixture)
         var readContext = readScope.ServiceProvider.GetRequiredService<PaymentsDbContext>();
         var payment = await readContext.Payments.FirstAsync(p => p.OrderRefId == new PaymentsOrderRefId(orderId));
         payment.Status.Should().Be(PaymentStatus.Succeeded);
-        payment.Amount.Should().Be(Money.Create(Currency.Eur, 15.5m).Ok);
+        payment.Amount.Should().Be(Money.Create(Currency.Eur, 15.5m).Ok!);
     }
 
     [Fact]

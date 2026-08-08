@@ -18,7 +18,7 @@ GET {{baseUrl}}/readiness
 ### the last two happening automatically with no further HTTP calls.
 ### =============================================================================
 
-### 1. Create a restaurant (inactive by default)
+### 1. Create a restaurant (active by default)
 # @name createRestaurant
 POST {{baseUrl}}/v1/restaurants
 Content-Type: application/json
@@ -33,10 +33,7 @@ Content-Type: application/json
   ]
 }
 
-### 2. Activate it — otherwise it stays invisible to customers
-POST {{baseUrl}}/v1/restaurants/{{createRestaurant.response.body.$.id}}/activate
-
-### 3. Add a menu item
+### 2. Add a menu item
 # @name addMenuItem
 POST {{baseUrl}}/v1/restaurants/{{createRestaurant.response.body.$.id}}/menu-items
 Content-Type: application/json
@@ -48,7 +45,7 @@ Content-Type: application/json
   "amount": 8.50
 }
 
-### 4. Create a draft order for that restaurant
+### 3. Create a draft order for that restaurant
 # @name createOrder
 POST {{baseUrl}}/v1/ordering
 Content-Type: application/json
@@ -57,7 +54,7 @@ Content-Type: application/json
   "restaurantId": "{{createRestaurant.response.body.$.id}}"
 }
 
-### 5. Add the menu item to the order
+### 4. Add the menu item to the order
 POST {{baseUrl}}/v1/ordering/{{createOrder.response.body.$.id}}/add-items
 Content-Type: application/json
 
@@ -65,20 +62,20 @@ Content-Type: application/json
   "menuId": "{{addMenuItem.response.body.$.id}}"
 }
 
-### 6. Place the order — kicks off OrderSaga (-> AwaitingApproval), publishes CreateRequest
+### 5. Place the order — kicks off OrderSaga (-> AwaitingApproval), publishes CreateRequest
 POST {{baseUrl}}/v1/ordering/{{createOrder.response.body.$.id}}/place
 
-### 7. List the restaurant's order requests to find the one the saga just created.
+### 6. List the restaurant's order requests to find the one the saga just created.
 ###    This runs async over the message bus — if the array comes back empty, wait a
 ###    second and re-run this request.
 # @name listOrderRequests
 GET {{baseUrl}}/v1/orderrequests/restaurant/{{createRestaurant.response.body.$.id}}?limit=10
 
-### 8. Approve it — saga proceeds to payment (mock gateway auto-succeeds) and delivery,
+### 7. Approve it — saga proceeds to payment (mock gateway auto-succeeds) and delivery,
 ###    both created automatically with no further HTTP calls needed.
 POST {{baseUrl}}/v1/orderrequests/{{listOrderRequests.response.body.$[0].orderRequestId}}/approve
 
-### 9. Check the order's final state (should be Confirmed a moment later)
+### 8. Check the order's final state (should be Confirmed a moment later)
 GET {{baseUrl}}/v1/ordering/{{createOrder.response.body.$.id}}
 
 ### NOTE: Payments/Deliveries are internal saga steps by design — there's no public

@@ -17,6 +17,7 @@ public class PaymentsController : ControllerBase
 
     /// <summary>Gets a payment by id.</summary>
     /// <param name="id">Payment id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> GetPayment([FromRoute] Guid id, CancellationToken cancellationToken)
     {

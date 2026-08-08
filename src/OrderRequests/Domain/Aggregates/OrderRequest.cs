@@ -23,6 +23,9 @@ public class OrderRequest : AggregateRoot<OrderRequestId>
 
     private OrderRequest()
     {
+        Id = null!;
+        OrderRefId = null!;
+        RestaurantRefId = null!;
     }
 
     public static OrderRequest Create(OrderRequestId id, OrderRefId orderRefId, RestaurantRefId restaurantRefId)
@@ -35,7 +38,7 @@ public class OrderRequest : AggregateRoot<OrderRequestId>
     public Result<Error> Reject()
     {
         if (Status != OrderRequestStatus.Pending)
-            return Result<Error>.Fail(Error.Conflict($"Cannot approve an order request that is already {Status}"));
+            return Result<Error>.Fail(Error.Conflict($"Cannot reject an order request that is already {Status}"));
 
         Status = OrderRequestStatus.Rejected;
         AddEvent(new OrderRejected(Id, OrderRefId));

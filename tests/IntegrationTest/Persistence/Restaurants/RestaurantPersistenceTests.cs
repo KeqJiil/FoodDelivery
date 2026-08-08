@@ -42,11 +42,11 @@ public class RestaurantPersistenceTests(MsSqlContainerFixture fixture) : Integra
         reloaded.Should().NotBeNull();
         reloaded!.Status.Should().Be(RestaurantStatus.Active);
         reloaded.Name.Should().Be(Name.Create("Sushi House").Ok);
-        reloaded.MinimalOrderPrice.Should().Be(Money.Create(Currency.Usd, 15m).Ok);
+        reloaded.MinimalOrderPrice.Should().Be(Money.Create(Currency.Usd, 15m).Ok!);
         reloaded.Schedule.OpeningWindows.Should().ContainSingle()
             .Which.Should()
             .Be(new OpeningWindow(DayOfWeek.Monday, new TimeOnly(9, 0), DayOfWeek.Monday, new TimeOnly(22, 0)));
-        reloaded.MenuItems.Should().ContainSingle().Which.Price.Should().Be(Money.Create(Currency.Usd, 8m).Ok);
+        reloaded.MenuItems.Should().ContainSingle().Which.Price.Should().Be(Money.Create(Currency.Usd, 8m).Ok!);
     }
 
     private RestaurantsDbContext CreateRestaurantsContext()

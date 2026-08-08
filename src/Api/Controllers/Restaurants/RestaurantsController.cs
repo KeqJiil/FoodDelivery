@@ -30,6 +30,7 @@ public class RestaurantsController : MyBasicController
 
     /// <summary>Gets a restaurant by id, including its menu and schedule.</summary>
     /// <param name="id">Restaurant id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -38,7 +39,7 @@ public class RestaurantsController : MyBasicController
         return result is null ? NotFound() : Ok(result);
     }
 
-    /// <summary>Registers a new restaurant, inactive by default.</summary>
+    /// <summary>Registers a new restaurant, active by default.</summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateRestaurantRequest request,
         CancellationToken cancellationToken)
@@ -53,6 +54,8 @@ public class RestaurantsController : MyBasicController
 
     /// <summary>Changes a restaurant's name.</summary>
     /// <param name="id">Restaurant id.</param>
+    /// <param name="request">New name.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPatch("{id:guid}/name")]
     public async Task<IActionResult> ChangeName([FromRoute] Guid id, [FromBody] ChangeNameRequest request,
         CancellationToken cancellationToken)
@@ -65,6 +68,8 @@ public class RestaurantsController : MyBasicController
 
     /// <summary>Changes a restaurant's description.</summary>
     /// <param name="id">Restaurant id.</param>
+    /// <param name="request">New description.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPatch("{id:guid}/description")]
     public async Task<IActionResult> ChangeDescription([FromRoute] Guid id, [FromBody] ChangeDescriptionRequest request,
         CancellationToken cancellationToken)
@@ -78,6 +83,8 @@ public class RestaurantsController : MyBasicController
 
     /// <summary>Replaces a restaurant's opening schedule.</summary>
     /// <param name="id">Restaurant id.</param>
+    /// <param name="request">New weekly opening schedule.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPatch("{id:guid}/schedule")]
     public async Task<IActionResult> ChangeSchedule([FromRoute] Guid id, [FromBody] ChangeScheduleRequest request,
         CancellationToken cancellationToken)
@@ -91,6 +98,8 @@ public class RestaurantsController : MyBasicController
 
     /// <summary>Sets the minimum price an order must reach before it can be placed at this restaurant.</summary>
     /// <param name="id">Restaurant id.</param>
+    /// <param name="request">New minimum order price.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPatch("{id:guid}/minimal-order-price")]
     public async Task<IActionResult> SetMinimalOrderPrice([FromRoute] Guid id, [FromBody] MoneyRequest request,
         CancellationToken cancellationToken)
@@ -105,6 +114,7 @@ public class RestaurantsController : MyBasicController
 
     /// <summary>Activates a restaurant, making it visible to customers.</summary>
     /// <param name="id">Restaurant id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("{id:guid}/activate")]
     public async Task<IActionResult> Activate([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -115,6 +125,7 @@ public class RestaurantsController : MyBasicController
 
     /// <summary>Deactivates a restaurant, hiding it from customers.</summary>
     /// <param name="id">Restaurant id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("{id:guid}/deactivate")]
     public async Task<IActionResult> Deactivate([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -125,6 +136,8 @@ public class RestaurantsController : MyBasicController
 
     /// <summary>Adds a new item to a restaurant's menu.</summary>
     /// <param name="id">Restaurant id.</param>
+    /// <param name="request">Menu item to add.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("{id:guid}/menu-items")]
     public async Task<IActionResult> AddMenuItem([FromRoute] Guid id, [FromBody] AddMenuItemRequest request,
         CancellationToken cancellationToken)
@@ -140,6 +153,7 @@ public class RestaurantsController : MyBasicController
     /// <summary>Removes an item from a restaurant's menu.</summary>
     /// <param name="id">Restaurant id.</param>
     /// <param name="menuItemId">Menu item id to remove.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpDelete("{id:guid}/menu-items/{menuItemId:guid}")]
     public async Task<IActionResult> RemoveMenuItem([FromRoute] Guid id, [FromRoute] Guid menuItemId,
         CancellationToken cancellationToken)
@@ -153,6 +167,8 @@ public class RestaurantsController : MyBasicController
     /// <summary>Changes a menu item's name.</summary>
     /// <param name="id">Restaurant id.</param>
     /// <param name="menuItemId">Menu item id.</param>
+    /// <param name="request">New name.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/name")]
     public async Task<IActionResult> ChangeMenuItemName([FromRoute] Guid id, [FromRoute] Guid menuItemId,
         [FromBody] ChangeNameRequest request, CancellationToken cancellationToken)
@@ -167,6 +183,8 @@ public class RestaurantsController : MyBasicController
     /// <summary>Changes a menu item's description.</summary>
     /// <param name="id">Restaurant id.</param>
     /// <param name="menuItemId">Menu item id.</param>
+    /// <param name="request">New description.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/description")]
     public async Task<IActionResult> ChangeMenuItemDescription([FromRoute] Guid id, [FromRoute] Guid menuItemId,
         [FromBody] ChangeDescriptionRequest request, CancellationToken cancellationToken)
@@ -180,6 +198,8 @@ public class RestaurantsController : MyBasicController
     /// <summary>Changes a menu item's price.</summary>
     /// <param name="id">Restaurant id.</param>
     /// <param name="menuItemId">Menu item id.</param>
+    /// <param name="request">New price.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPut("{id:guid}/menu-items/{menuItemId:guid}/price")]
     public async Task<IActionResult> ChangeMenuItemPrice([FromRoute] Guid id, [FromRoute] Guid menuItemId,
         [FromBody] MoneyRequest request, CancellationToken cancellationToken)

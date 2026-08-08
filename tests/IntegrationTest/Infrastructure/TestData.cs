@@ -60,9 +60,11 @@ public static class TestData
 
     private static CreateRestaurantRequest GetRestaurantRequest()
     {
+        // Practically-always-open window, so order placement doesn't depend on which day/time
+        // the test suite happens to run (order placement now checks Restaurant.IsOpen()).
         return new CreateRestaurantRequest("restaurant", "restaurant", 1, Currency.Usd,
             new List<OpeningWindowRequest>
-                { new(DayOfWeek.Friday, new TimeOnly(1, 1), DayOfWeek.Monday, new TimeOnly(2, 2)) });
+                { new(DayOfWeek.Monday, new TimeOnly(0, 0), DayOfWeek.Sunday, new TimeOnly(23, 59)) });
     }
 
     public static async Task<Guid> SeedRestaurant(HttpClient client,

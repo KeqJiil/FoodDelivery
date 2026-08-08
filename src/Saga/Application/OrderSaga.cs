@@ -6,6 +6,11 @@ using SharedKernel.Options;
 
 namespace Saga.Application;
 
+// State/Event/Schedule properties on this class are populated by MassTransitStateMachine's
+// base constructor via reflection (matched by property name/expression), not by C# assignment,
+// so the compiler can't see them being set - CS8618 here is a known false positive for this
+// DSL, not a real initialization gap.
+#pragma warning disable CS8618, CS8602
 public class OrderSaga : MassTransitStateMachine<OrderState>
 {
     public OrderSaga(IOptions<SagaOptions> options)
@@ -189,6 +194,7 @@ public class OrderSaga : MassTransitStateMachine<OrderState>
     public Schedule<OrderState, ApprovalTimeoutExpired> ApprovalTimeout { get; private set; }
     public Schedule<OrderState, PaymentTimeoutExpired> PaymentTimeout { get; private set; }
 }
+#pragma warning restore CS8618, CS8602
 
 public record ApprovalTimeoutExpired(Guid OrderId);
 

@@ -23,6 +23,7 @@ public class OrderingController : MyBasicController
 
     /// <summary>Gets an order by id.</summary>
     /// <param name="id">Order id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -46,6 +47,7 @@ public class OrderingController : MyBasicController
 
     /// <summary>Cancels an order. Only allowed while the order hasn't been placed yet.</summary>
     /// <param name="id">Order id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("{id:guid}/cancel")]
     public async Task<IActionResult> CancelOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -56,6 +58,7 @@ public class OrderingController : MyBasicController
 
     /// <summary>Places a draft order, moving it from the restaurant's queue toward approval. Fails if the order has no lines or is below the restaurant's minimum order price.</summary>
     /// <param name="id">Order id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("{id:guid}/place")]
     public async Task<IActionResult> PlaceOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -66,6 +69,8 @@ public class OrderingController : MyBasicController
 
     /// <summary>Adds a menu item to a draft order as a new order line.</summary>
     /// <param name="id">Order id.</param>
+    /// <param name="request">Menu item to add.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPost("{id:guid}/add-items")]
     public async Task<IActionResult> AddOrderLineItem([FromRoute] Guid id, [FromBody] AddOrderLineRequest request,
         CancellationToken cancellationToken)
@@ -82,6 +87,7 @@ public class OrderingController : MyBasicController
     /// <summary>Removes a line from a draft order.</summary>
     /// <param name="id">Order id.</param>
     /// <param name="orderLineId">Order line id to remove.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpDelete("{id:guid}/remove/{orderLineId:guid}")]
     public async Task<IActionResult> RemoveOrderLineItem([FromRoute] Guid id, [FromRoute] Guid orderLineId,
         CancellationToken cancellationToken)
