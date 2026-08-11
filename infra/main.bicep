@@ -6,8 +6,11 @@ param location string = resourceGroup().location
 
 param imageTag string
 
+<<<<<<< HEAD
 param sqlLocation string = location
 
+=======
+>>>>>>> a1559a6dbba4016e8406b4f16ff7c69ee2170dee
 @secure()
 param administratorSqlLogin string
 
