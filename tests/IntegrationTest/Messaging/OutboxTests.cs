@@ -72,6 +72,7 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
 
         var harness = _host.Services.GetRequiredService<ITestHarness>();
         harness.TestTimeout = TimeSpan.FromSeconds(10);
+        harness.TestInactivityTimeout = TimeSpan.FromSeconds(10);
         await harness.Start();
         return harness;
     }
