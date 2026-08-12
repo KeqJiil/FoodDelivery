@@ -51,7 +51,7 @@ resource sqlServer 'Microsoft.Sql/servers@2025-01-01' = {
 resource database 'Microsoft.Sql/servers/databases@2025-01-01' = {
   parent: sqlServer
   name: 'db-fooddelivery'
-  location: location
+  location: sqlLocation
   sku: {
     name: 'GP_S_Gen5'
     tier: 'GeneralPurpose'
