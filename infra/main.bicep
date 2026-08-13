@@ -4,7 +4,7 @@ param environmentName string = 'dev'
 
 param location string = resourceGroup().location
 
-// param imageTag string
+param imageTag string
 
 param sqlLocation string = location
 
@@ -162,32 +162,44 @@ resource containerApp 'Microsoft.App/containerApps@2026-01-01' = {
         targetPort: 8000
       }
       registries: [{
-        server: containerRegistry.properties.loginServer
-        identity: 'system'
-      }]
-      secrets: [
-        {
-          name: 'sql-connection-string'
-          keyVaultUrl: '${kvStore.properties.vaultUri}secrets/sql-connection-string'
+          server: containerRegistry.properties.loginServer
           identity: 'system'
-        }
-        {
-          name: 'service-bus-connection-string'
-          keyVaultUrl: '${kvStore.properties.vaultUri}secrets/service-bus-connection-string'
-          identity: 'system'
-        }
-      ]
+        }]
+        secrets: [
+          {
+            name: 'sql-connection-string'
+            keyVaultUrl: '${kvStore.properties.vaultUri}secrets/sql-connection-string'
+            identity: 'system'
+          }
+          {
+            name: 'service-bus-connection-string'
+            keyVaultUrl: '${kvStore.properties.vaultUri}secrets/service-bus-connection-string'
+            identity: 'system'
+          }
+        ]
     }
     template: {
       containers: [
         {
           name: 'api'
-          image: 'mcr.microsoft.com/k8se/quickstart:latest'
+          image: '${containerRegistry.properties.loginServer}/fooddelivery-api:${imageTag}'
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
           }
           env: [
+            {
+              name: 'ConnectionStrings__DefaultConnection'
+              secretRef: 'sql-connection-string'
+            }
+            {
+              name: 'ConnectionStrings__AzureServiceBus'
+              secretRef: 'service-bus-connection-string'
+            }
+            {
+              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+              value: insights.properties.ConnectionString
+            }
           ]
         }
       ]
