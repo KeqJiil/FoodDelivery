@@ -188,18 +188,6 @@ resource containerApp 'Microsoft.App/containerApps@2026-01-01' = {
             memory: '1Gi'
           }
           env: [
-            {
-              name: 'ConnectionStrings__DefaultConnection'
-              secretRef: 'sql-connection-string'
-            }
-            {
-              name: 'ConnectionStrings__AzureServiceBus'
-              secretRef: 'service-bus-connection-string'
-            }
-            {
-              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-              value: insights.properties.ConnectionString
-            }
           ]
         }
       ]
