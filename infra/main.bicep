@@ -182,7 +182,7 @@ resource containerApp 'Microsoft.App/containerApps@2026-01-01' = {
       containers: [
         {
           name: 'api'
-          image: '${containerRegistry.properties.loginServer}/fooddelivery-api:${imageTag}'
+          image: image: 'mcr.microsoft.com/k8se/quickstart:latest'
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
