@@ -4,7 +4,7 @@ param environmentName string = 'dev'
 
 param location string = resourceGroup().location
 
-param imageTag string
+// param imageTag string
 
 param sqlLocation string = location
 
@@ -182,7 +182,7 @@ resource containerApp 'Microsoft.App/containerApps@2026-01-01' = {
       containers: [
         {
           name: 'api'
-          image: image: 'mcr.microsoft.com/k8se/quickstart:latest'
+          image: 'mcr.microsoft.com/k8se/quickstart:latest'
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
