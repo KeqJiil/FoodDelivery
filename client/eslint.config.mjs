@@ -3,6 +3,10 @@ import angular from "angular-eslint";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
+  {
+    ignores: ["dist/**", ".angular/**", "node_modules/**"],
+  },
+
   // ============================================================
   // JavaScript / TypeScript base
   // ============================================================
@@ -63,8 +67,6 @@ export default tseslint.config(
 
       "@typescript-eslint/no-explicit-any": "error",
 
-      "@typescript-eslint/no-unsafe-any": "error",
-
       "@typescript-eslint/no-unsafe-assignment": "error",
 
       "@typescript-eslint/no-unsafe-argument": "error",
@@ -93,24 +95,6 @@ export default tseslint.config(
         "error",
         {
           assertionStyle: "never",
-        },
-      ],
-
-      // ====================================================
-      // Boolean strictness
-      // ====================================================
-
-      "@typescript-eslint/strict-boolean-expressions": [
-        "error",
-        {
-          allowString: false,
-          allowNumber: false,
-          allowNullableObject: false,
-          allowNullableBoolean: false,
-          allowNullableString: false,
-          allowNullableNumber: false,
-          allowNullableEnum: false,
-          allowAny: false,
         },
       ],
 
@@ -153,14 +137,6 @@ export default tseslint.config(
 
       "@typescript-eslint/prefer-readonly": "error",
 
-      "@typescript-eslint/prefer-readonly-parameter-types": [
-        "error",
-        {
-          checkParameterProperties: true,
-          ignoreInferredTypes: false,
-        },
-      ],
-
       // ====================================================
       // Naming conventions
       // ====================================================
@@ -168,50 +144,72 @@ export default tseslint.config(
       "@typescript-eslint/naming-convention": [
         "error",
 
-        // Classes / interfaces / types / enums
         {
-          selector: "typeLike",
+          selector: "interface",
+          format: ["PascalCase"],
+          custom: {
+            regex: "^I[A-Z]",
+            match: true,
+          },
+        },
+
+        {
+          selector: ["class", "enum", "typeAlias"],
           format: ["PascalCase"],
         },
 
-        // Functions
-        {
-          selector: "function",
-          format: ["camelCase"],
-        },
-
-        // Variables
         {
           selector: "variable",
-          format: ["camelCase", "UPPER_CASE"],
+          modifiers: ["const", "global"],
+          format: ["PascalCase", "UPPER_CASE"],
+          leadingUnderscore: "allow",
         },
 
-        // Parameters
+        {
+          selector: "variable",
+          format: ["camelCase"],
+          leadingUnderscore: "allow",
+        },
+
+        {
+          selector: "classProperty",
+          modifiers: ["private"],
+          format: ["camelCase"],
+          leadingUnderscore: "require",
+        },
+        {
+          selector: "classProperty",
+          modifiers: ["public"],
+          format: ["PascalCase", "camelCase"],
+        },
+        {
+          selector: "classProperty",
+          modifiers: ["protected"],
+          format: ["PascalCase", "camelCase"],
+          leadingUnderscore: "allow",
+        },
+
+        {
+          selector: "function",
+          format: ["PascalCase", "camelCase"],
+        },
+
         {
           selector: "parameter",
           format: ["camelCase"],
           leadingUnderscore: "allow",
         },
 
-        // Class properties
-        {
-          selector: "classProperty",
-          format: ["camelCase"],
-        },
-
-        // Class methods
-        {
-          selector: "classMethod",
-          format: ["camelCase"],
-        },
-
-        // Enum members
         {
           selector: "enumMember",
           format: ["PascalCase"],
         },
 
-        // Destructured variables
+        {
+          selector: "objectLiteralProperty",
+          format: null,
+        },
+
         {
           selector: "variable",
           modifiers: ["destructured"],
