@@ -25,11 +25,11 @@ public class OrderingController : MyBasicController
     /// <param name="id">Order id.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<OrderDto>> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetOrderByIdQuery(id), cancellationToken);
 
-        return result is not null ? Ok(result) : NotFound();
+        return result is not null ? result : NotFound();
     }
 
     /// <summary>Creates a new draft order for a restaurant. The order starts empty; add lines with the add-items endpoint before placing it.</summary>

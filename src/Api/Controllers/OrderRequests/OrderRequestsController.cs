@@ -24,23 +24,23 @@ public class OrderRequestsController : MyBasicController
     /// <param name="body">Pagination cursor, page size, and optional status filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("restaurant/{id:Guid}")]
-    public async Task<IActionResult> GetOrdersByRestaurantId([FromRoute] Guid id, [FromQuery] ByRestaurantIdBody body,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<OrderRequestDto>>> GetOrdersByRestaurantId([FromRoute] Guid id,
+        [FromQuery] ByRestaurantIdBody body, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(
             new GetOrdersByRestaurantIdQuery(id, body.CursorCreatedAt, body.CursorId, body.Limit, body.Status),
             cancellationToken);
-        return result.Any() ? Ok(result) : Ok();
+        return Ok(result);
     }
 
     /// <summary>Gets an order request by id.</summary>
     /// <param name="id">Order request id.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("{id:Guid}")]
-    public async Task<IActionResult> GetOrder([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<OrderRequestDto>> GetOrder([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetOrderRequestByIdQuery(id), cancellationToken);
-        return result is null ? NotFound() : Ok(result);
+        return result is null ? NotFound() : result;
     }
 
     /// <summary>Rejects an order request. Triggers the saga's compensating flow for the originating order.</summary>

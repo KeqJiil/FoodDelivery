@@ -11,6 +11,7 @@ using Restaurants.Application.ChangeRestaurantSchedule;
 using Restaurants.Application.CreateRestaurant;
 using Restaurants.Application.DeactivateRestaurant;
 using Restaurants.Application.GetRestaurantById;
+using Restaurants.Application.GetRestaurantsList;
 using Restaurants.Application.RemoveMenuItem;
 using Restaurants.Application.SetMinimalOrderPrice;
 using Restaurants.Domain.Ids;
@@ -28,15 +29,25 @@ public class RestaurantsController : MyBasicController
         _mediator = mediator;
     }
 
+    /// <summary>Gets restaurants list, including its menu and schedule.</summary>
+    [HttpGet]
+    public async Task<ActionResult<RestaurantsListPagination>> GetList([FromQuery] GetRestaurantsBody request,
+        CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetRestaurantsListQuery(request.Page, request.PageSize), ct);
+
+        return result;
+    }
+
     /// <summary>Gets a restaurant by id, including its menu and schedule.</summary>
     /// <param name="id">Restaurant id.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<RestaurantDto>> Get([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetRestaurantByIdQuery(id), cancellationToken);
 
-        return result is null ? NotFound() : Ok(result);
+        return result is null ? NotFound() : result;
     }
 
     /// <summary>Registers a new restaurant, active by default.</summary>
@@ -211,6 +222,8 @@ public class RestaurantsController : MyBasicController
     }
 
     private static List<(DayOfWeek OpenDay, TimeOnly OpenTime, DayOfWeek CloseDay, TimeOnly CloseTime)>
-        ToScheduleTuples(List<OpeningWindowRequest> schedules) =>
-        schedules.Select(w => (w.OpenDay, w.OpenTime, w.CloseDay, w.CloseTime)).ToList();
+        ToScheduleTuples(List<OpeningWindowRequest> schedules)
+    {
+        return schedules.Select(w => (w.OpenDay, w.OpenTime, w.CloseDay, w.CloseTime)).ToList();
+    }
 }

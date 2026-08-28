@@ -17,7 +17,7 @@ public class HealthController(HealthCheckService healthCheckService) : Controlle
 
     /// <summary>Readiness probe: checks every module's database is reachable, returning 503 if any is down.</summary>
     [HttpGet("readiness")]
-    public async Task<IActionResult> Readiness(CancellationToken cancellationToken)
+    public async Task<ActionResult<string>> Readiness(CancellationToken cancellationToken)
     {
         var report = await healthCheckService.CheckHealthAsync(cancellationToken);
 

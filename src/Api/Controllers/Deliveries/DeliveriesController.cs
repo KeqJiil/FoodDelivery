@@ -23,10 +23,10 @@ public class DeliveriesController : MyBasicController
     /// <param name="id">Delivery id.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("{id:Guid}")]
-    public async Task<IActionResult> GetDelivery([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<DeliveryDto>> GetDelivery([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetDeliveryByIdQuery(id), cancellationToken);
-        return result is null ? NotFound() : Ok(result);
+        return result is null ? NotFound() : result;
     }
 
     /// <summary>Marks a delivery as picked up by the courier.</summary>
