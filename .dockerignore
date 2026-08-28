@@ -4,3 +4,6 @@
 **/.git/
 **/.gitignore
 **/*.user
+**/node_modules/
+**/dist/
+**/.angular/

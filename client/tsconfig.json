@@ -34,7 +34,13 @@
 
     "experimentalDecorators": true,
 
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": ["src/*"],
+      "@/core": ["src/Core/*"],
+      "@/features": ["src/Features/*"],
+      "@/shared": ["src/Shared/*"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
