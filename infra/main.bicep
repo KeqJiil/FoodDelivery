@@ -14,6 +14,8 @@ param administratorSqlLogin string
 @secure()
 param administratorLoginPassword string
 
+param deployerPrincipalId string
+
 var uniqueSuffix = uniqueString(resourceGroup().id)
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-07-01' = {
@@ -226,3 +228,17 @@ resource kvPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     principalType: 'ServicePrincipal'
   }
 }
+
+resource acrPushRoleForDeployer 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: containerRegistry
+  name: guid(containerRegistry.id, deployerPrincipalId, 'AcrPush')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')
+    principalId: deployerPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+output acrName string = containerRegistry.name
+output acrLoginServer string = containerRegistry.properties.loginServer
+output containerAppName string = containerApp.name

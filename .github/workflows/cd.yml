@@ -1,39 +1,67 @@
-﻿name: CD
+name: CD
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
-jobs: 
+env:
+  RESOURCE_GROUP: rg-fooddelivery
+  LOCATION: eastUS
+  IMAGE_NAME: api-fooddelivery-dev
+
+jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     environment: fooddeliveryenv
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
-      - name: Docker Login
-        uses: docker/login-action@v3
-        with:
-          registry: fooddeliveryacr.azurecr.io
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-    
-      - name: Build Docker
-        run: docker build -f src/Dockerfile -t fooddeliveryacr.azurecr.io/fooddelivery-api:${{ github.sha }} .
-
-      - name: Push Docker
-        run: docker push fooddeliveryacr.azurecr.io/fooddelivery-api:${{ github.sha }}
 
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          
-      - name: Deploy to Container App
+
+      - name: Resolve deployer principal id
+        run: |
+          CLIENT_ID=$(az account show --query user.name -o tsv)
+          PRINCIPAL_ID=$(az ad sp show --id "$CLIENT_ID" --query id -o tsv)
+          echo "PRINCIPAL_ID=$PRINCIPAL_ID" >> "$GITHUB_ENV"
+
+      - name: Create resource group (idempotent)
+        run: az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
+
+      - name: Build Docker image
+        run: docker build -f src/Dockerfile -t "$IMAGE_NAME:${{ github.sha }}" .
+
+      - name: Deploy infrastructure (bicep)
+        run: |
+          OUTPUTS=$(az deployment group create \
+            --resource-group "$RESOURCE_GROUP" \
+            --template-file infra/main.bicep \
+            --parameters \
+              imageTag="${{ github.sha }}" \
+              administratorSqlLogin="${{ secrets.SQL_ADMIN_LOGIN }}" \
+              administratorLoginPassword="${{ secrets.SQL_ADMIN_PASSWORD }}" \
+              deployerPrincipalId="$PRINCIPAL_ID" \
+            --query "properties.outputs" -o json)
+
+          echo "ACR_NAME=$(echo "$OUTPUTS" | jq -r .acrName.value)" >> "$GITHUB_ENV"
+          echo "ACR_LOGIN_SERVER=$(echo "$OUTPUTS" | jq -r .acrLoginServer.value)" >> "$GITHUB_ENV"
+          echo "CONTAINER_APP_NAME=$(echo "$OUTPUTS" | jq -r .containerAppName.value)" >> "$GITHUB_ENV"
+
+      - name: ACR login
+        run: az acr login --name "$ACR_NAME"
+
+      - name: Tag and push image
+        run: |
+          docker tag "$IMAGE_NAME:${{ github.sha }}" "$ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }}"
+          docker push "$ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }}"
+
+      - name: Roll out new revision
         run: |
           az containerapp update \
-            --name fooddelivery-api \
-            --resource-group FoodDeliveryProject \
-            --image fooddeliveryacr.azurecr.io/fooddelivery-api:${{ github.sha }}
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }}"
