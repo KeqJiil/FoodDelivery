@@ -14,17 +14,10 @@ import { environment } from '@/environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class RestaurantsService {
-  private readonly _http: HttpClient;
+  private readonly _http: HttpClient = inject(HttpClient);
 
-  public constructor() {
-    this._http = inject(HttpClient);
-  }
-
-  public getRestaurantsList(
-    pageSize: number,
-    currentPage: number | null,
-  ): Observable<IRestaurantsList> {
-    const params = new HttpParams().set('page', currentPage ?? 1).set('pageSize', pageSize);
+  public getRestaurantsList(data: IRestaurantListRequest): Observable<IRestaurantsList> {
+    const params = new HttpParams().set('page', data.currentPage ?? 1).set('pageSize', data.pageSize);
 
     return this._http.get<IRestaurantsList>(`${environment.apiUrl}/Restaurants`, { params });
   }
@@ -47,8 +40,8 @@ export class RestaurantsService {
     );
   }
 
-  public removeMenuItem(restaurantId: string, menuItemId: string): Observable<unknown> {
-    return this._http.delete<unknown>(
+  public removeMenuItem(restaurantId: string, menuItemId: string): Observable<void> {
+    return this._http.delete<void>(
       `${environment.apiUrl}/Restaurants/${restaurantId}/menu-items/${menuItemId}`,
     );
   }
@@ -57,8 +50,8 @@ export class RestaurantsService {
     restaurantId: string,
     menuItemId: string,
     newName: string,
-  ): Observable<unknown> {
-    return this._http.put<unknown>(
+  ): Observable<void> {
+    return this._http.put<void>(
       `${environment.apiUrl}/Restaurants/${restaurantId}/menu-items/${menuItemId}/name`,
       { name: newName },
     );
@@ -68,8 +61,8 @@ export class RestaurantsService {
     restaurantId: string,
     menuItemId: string,
     newDescription: string,
-  ): Observable<unknown> {
-    return this._http.put<unknown>(
+  ): Observable<void> {
+    return this._http.put<void>(
       `${environment.apiUrl}/Restaurants/${restaurantId}/menu-items/${menuItemId}/description`,
       { description: newDescription },
     );
@@ -79,36 +72,48 @@ export class RestaurantsService {
     restaurantId: string,
     menuItemId: string,
     price: IMoney,
-  ): Observable<unknown> {
-    return this._http.put<unknown>(
+  ): Observable<void> {
+    return this._http.put<void>(
       `${environment.apiUrl}/Restaurants/${restaurantId}/menu-items/${menuItemId}/price`,
       price,
     );
   }
 
-  public changeName(id: string, newName: string): Observable<unknown> {
-    return this._http.patch<unknown>(`${environment.apiUrl}/Restaurants/${id}/name`, { name: newName });
+  public changeName(id: string, newName: string): Observable<void> {
+    return this._http.patch<void>(`${environment.apiUrl}/Restaurants/${id}/name`, {
+      name: newName,
+    });
   }
 
-  public changeDescription(id: string, newDescription: string): Observable<unknown> {
-    return this._http.patch<unknown>(`${environment.apiUrl}/Restaurants/${id}/description`, {
+  public changeDescription(id: string, newDescription: string): Observable<void> {
+    return this._http.patch<void>(`${environment.apiUrl}/Restaurants/${id}/description`, {
       description: newDescription,
     });
   }
 
-  public changeMinPrice(id: string, price: IMoney): Observable<unknown> {
-    return this._http.patch<unknown>(`${environment.apiUrl}/Restaurants/${id}/minimal-order-price`, price);
+  public changeMinPrice(id: string, price: IMoney): Observable<void> {
+    return this._http.patch<void>(
+      `${environment.apiUrl}/Restaurants/${id}/minimal-order-price`,
+      price,
+    );
   }
 
-  public changeSchedule(id: string, schedule: IOpeningWindow[]): Observable<unknown> {
-    return this._http.patch<unknown>(`${environment.apiUrl}/Restaurants/${id}/schedule`, { schedule });
+  public changeSchedule(id: string, schedule: IOpeningWindow[]): Observable<void> {
+    return this._http.patch<void>(`${environment.apiUrl}/Restaurants/${id}/schedule`, {
+      schedule,
+    });
   }
 
-  public activate(id: string): Observable<unknown> {
-    return this._http.post<unknown>(`${environment.apiUrl}/Restaurants/${id}/activate`, null);
+  public activate(id: string): Observable<void> {
+    return this._http.post<void>(`${environment.apiUrl}/Restaurants/${id}/activate`, null);
   }
 
-  public deactivate(id: string): Observable<unknown> {
-    return this._http.post<unknown>(`${environment.apiUrl}/Restaurants/${id}/deactivate`, null);
+  public deactivate(id: string): Observable<void> {
+    return this._http.post<void>(`${environment.apiUrl}/Restaurants/${id}/deactivate`, null);
   }
+}
+
+export interface IRestaurantListRequest {
+  pageSize: number;
+  currentPage: number | null;
 }

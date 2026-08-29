@@ -1,0 +1,11 @@
+<div class="pagination">
+  <button type="button" [disabled]="!hasPreviousPage()" (click)="onPreviousPage()">Prev</button>
+  <span>Page {{ page() }}</span>
+  <button type="button" [disabled]="!hasNextPage()" (click)="onNextPage()">Next</button>
+
+  <select [value]="pageSize()" (change)="onPageSizeChange(+$any($event.target).value)">
+    <option [value]="10">10</option>
+    <option [value]="20">20</option>
+    <option [value]="50">50</option>
+  </select>
+</div>

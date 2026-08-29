@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, input } from "@angular/core";
+import type { IRestaurantDetails } from "../models/IRestaurantDetails";
 
 @Component({
   selector: 'app-restaurants-list',
@@ -7,4 +8,6 @@ import { Component } from '@angular/core';
   templateUrl: './restaurants-list.html',
   styleUrl: './restaurants-list.css',
 })
-export class RestaurantsList {}
+export class RestaurantsList {
+  public readonly restaurantsList = input.required<IRestaurantDetails[]>();
+}

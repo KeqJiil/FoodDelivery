@@ -1,1 +1,11 @@
-<p>restaurants-list works!</p>
+<div class="restaurants-list">
+  @for (restaurant of restaurantsList(); track restaurant.id) {
+    <div class="restaurant-card">
+      <h3>{{ restaurant.name }}</h3>
+      <p>{{ restaurant.description }}</p>
+      <p>Min order: {{ restaurant.minimalOrderPrice.amount }}</p>
+    </div>
+  } @empty {
+    <p>No restaurants found.</p>
+  }
+</div>

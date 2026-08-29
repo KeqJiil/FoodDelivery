@@ -3,7 +3,7 @@
   name: string;
   description: string;
   minimalOrderPrice: IMoney;
-  status: number;
+  status: Status;
   openingWindows: IOpeningWindow[];
   menuItems: IMenuItem[];
 }
@@ -21,8 +21,23 @@ export interface IMenuItem {
 }
 
 export interface IOpeningWindow {
-  openDay: number;
-  openTime: Date;
-  closeDay: number;
-  closeTime: Date;
+  openDay: Days;
+  openTime: string;
+  closeDay: Days;
+  closeTime: string;
+}
+
+export enum Days {
+  Monday,
+  Tuesday,
+  Wednesday,
+  Thursday,
+  Friday,
+  Saturday,
+  Sunday
+}
+
+export enum Status {
+  Active,
+  Inactive
 }

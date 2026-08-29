@@ -137,6 +137,11 @@ export default tseslint.config(
 
       "@typescript-eslint/prefer-readonly": "error",
 
+      // Observable<void>/HttpClient's own generic methods (get<void>, post<void>, etc.)
+      // conflict with this rule's generic-position check — void here is the
+      // idiomatic Angular way to type an empty HTTP response body.
+      "@typescript-eslint/no-invalid-void-type": "off",
+
       // ====================================================
       // Naming conventions
       // ====================================================

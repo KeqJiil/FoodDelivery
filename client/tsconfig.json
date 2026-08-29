@@ -35,6 +35,7 @@
     "experimentalDecorators": true,
 
     "skipLibCheck": true,
+    "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
       "@/core": ["src/Core/*"],

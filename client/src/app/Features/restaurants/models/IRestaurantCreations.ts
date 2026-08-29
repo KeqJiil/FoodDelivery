@@ -5,5 +5,5 @@ export interface IRestaurantCreation {
   description: string;
   amount: number;
   currency: number;
-  schedules: IOpeningWindow;
+  schedules: IOpeningWindow[];
 }
