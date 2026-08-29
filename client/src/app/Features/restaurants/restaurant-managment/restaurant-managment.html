@@ -1,0 +1,5 @@
+@if (restaurant().value(); as r) {
+  <button type="button" (click)="toggleActivation()">
+    {{ r.status === Status.Active ? 'Deactivate' : 'Activate' }}
+  </button>
+}

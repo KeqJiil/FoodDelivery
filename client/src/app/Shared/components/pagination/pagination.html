@@ -1,11 +1,20 @@
 <div class="pagination">
-  <button type="button" [disabled]="!hasPreviousPage()" (click)="onPreviousPage()">Prev</button>
-  <span>Page {{ page() }}</span>
-  <button type="button" [disabled]="!hasNextPage()" (click)="onNextPage()">Next</button>
+  <button mat-icon-button [disabled]="!hasPreviousPage()" (click)="onPreviousPage()" aria-label="Previous page">
+    <mat-icon>chevron_left</mat-icon>
+  </button>
 
-  <select [value]="pageSize()" (change)="onPageSizeChange(+$any($event.target).value)">
-    <option [value]="10">10</option>
-    <option [value]="20">20</option>
-    <option [value]="50">50</option>
-  </select>
+  <span class="page-label">Page {{ page() }}</span>
+
+  <button mat-icon-button [disabled]="!hasNextPage()" (click)="onNextPage()" aria-label="Next page">
+    <mat-icon>chevron_right</mat-icon>
+  </button>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="page-size-field">
+    <mat-label>Per page</mat-label>
+    <mat-select [value]="pageSize()" (selectionChange)="onPageSizeChange($event.value)">
+      @for (size of pageSizeOptions; track size) {
+        <mat-option [value]="size">{{ size }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
 </div>

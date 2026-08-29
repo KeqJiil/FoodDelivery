@@ -1,11 +1,16 @@
 import type { Routes } from '@angular/router';
-import { RestaurantsList } from './Features/restaurants/restaurants-list/restaurants-list';
-import {RestaurantDetails} from './Features/restaurants/restaurant-details/restaurant-details';
+import { RestaurantsPage } from './Features/restaurants/restaurants-page/restaurants-page';
+import { RestaurantDetails } from './Features/restaurants/restaurant-details/restaurant-details';
 
 export const AppRoutes: Routes = [
   {
+    path: "",
+    redirectTo: "restaurants",
+    pathMatch: "full"
+  },
+  {
     path: "restaurants",
-    component: RestaurantsList
+    component: RestaurantsPage
   },
   {
     path: "restaurants/:id",

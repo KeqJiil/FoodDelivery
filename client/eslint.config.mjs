@@ -142,6 +142,10 @@ export default tseslint.config(
       // idiomatic Angular way to type an empty HTTP response body.
       "@typescript-eslint/no-invalid-void-type": "off",
 
+      // Static utilities like Validators.required don't use `this` —
+      // referencing them unbound (e.g. in a FormControl validators array) is safe.
+      "@typescript-eslint/unbound-method": ["error", { ignoreStatic: true }],
+
       // ====================================================
       // Naming conventions
       // ====================================================

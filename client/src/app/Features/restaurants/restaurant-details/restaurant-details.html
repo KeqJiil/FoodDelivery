@@ -1,1 +1,6 @@
-<p>restaurant-details works!</p>
+@if (restaurant.value(); as r) {
+  <h2>{{ r.name }}</h2>
+  <p>{{ r.description }}</p>
+
+  <app-restaurant-managment [restaurant]="restaurant" />
+}

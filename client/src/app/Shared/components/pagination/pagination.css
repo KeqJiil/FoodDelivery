@@ -1,0 +1,16 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+.page-label {
+  min-width: 64px;
+  text-align: center;
+}
+
+.page-size-field {
+  width: 100px;
+  margin-left: auto;
+}

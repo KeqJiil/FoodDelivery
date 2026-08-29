@@ -1,8 +1,10 @@
-<app-restaurants-list [restaurantsList]="restaurantsResource.value()?.restaurants ?? []" />
-<app-pagination
-[hasNextPage]="restaurantsResource.value()?.hasNextPage ?? false"
-[hasPreviousPage]="restaurantsResource.value()?.hasPreviousPage ?? false"
-[page]="requestParams().currentPage ?? 1"
-[pageSize]="requestParams().pageSize"
-(outputNextPageReq)="onNextPageReq($event)"
-/>
+<div class="restaurants-page">
+  <app-restaurants-list [restaurantsList]="restaurantsResource.value()?.restaurants ?? []" />
+  <app-pagination
+    [hasNextPage]="restaurantsResource.value()?.hasNextPage ?? false"
+    [hasPreviousPage]="restaurantsResource.value()?.hasPreviousPage ?? false"
+    [page]="requestParams().currentPage ?? 1"
+    [pageSize]="requestParams().pageSize"
+    (outputNextPageReq)="onNextPageReq($event)"
+  />
+</div>
