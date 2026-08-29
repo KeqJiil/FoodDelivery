@@ -1,4 +1,4 @@
-import { Component, inject, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, type Signal } from '@angular/core';
 import type { IRestaurantDetails } from '../models/IRestaurantDetails';
 import { RestaurantsService } from '../restaurants-service';
 import { ActivatedRoute } from '@angular/router';
@@ -7,10 +7,10 @@ import { map, type Observable } from 'rxjs';
 
 @Component({
   selector: 'app-restaurant-details',
-  standalone: true,
   imports: [],
   templateUrl: './restaurant-details.html',
   styleUrl: './restaurant-details.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RestaurantDetails {
   private readonly _route: ActivatedRoute = inject(ActivatedRoute);

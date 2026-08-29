@@ -35,7 +35,7 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
-
+launch.json
 .angular
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -482,3 +482,4 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+client/src/app/Features/restaurants/restaurant-creation/restaurant-creation.ts

@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,6 +10,7 @@ import type { IRestaurantListRequest } from '@/app/Features/restaurants/restaura
   imports: [MatButtonModule, MatIconModule, MatFormFieldModule, MatSelectModule],
   templateUrl: './pagination.html',
   styleUrl: './pagination.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Pagination {
   public readonly page = input<number>(PaginationDefaultValues.page);

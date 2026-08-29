@@ -1,90 +1,84 @@
-import { Component, inject, input, type ResourceRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, type ResourceRef } from '@angular/core';
 import { RestaurantsService } from '../restaurants-service';
 import type { Observable } from 'rxjs';
 import { Status, type IOpeningWindow, type IRestaurantDetails } from '../models/IRestaurantDetails';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import type { HttpErrorResponse } from '@angular/common/http';
-import type { IErrorDetails } from '@/app/Shared/models/IErrorDetails';
+import type { IRestaurantMenuItemCreation } from '../models/IRestaurantMenuItemCreation';
+import { OptimisticService } from '@/app/Shared/services/optimistic.service';
 
 @Component({
   selector: 'app-restaurant-managment',
   imports: [],
   templateUrl: './restaurant-managment.html',
   styleUrl: './restaurant-managment.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RestaurantManagment {
-  public readonly restaurant = input.required<ResourceRef<IRestaurantDetails | undefined>>();
+  public readonly restaurant = input.required<ResourceRef<IRestaurantDetails>>();
 
   protected Status = Status;
 
-  private readonly _snackBar: MatSnackBar = inject(MatSnackBar);
   private readonly _restaurantService: RestaurantsService = inject(RestaurantsService);
 
   public changeName(newName: string): void {
     const restaurant = this.restaurant().value();
-    if (!restaurant) return;
 
     const id = restaurant.id;
 
-    this.optimisticUpdate(
-      (r): IRestaurantDetails | undefined => r && { ...r, name: newName },
+    this.optimistic(
+      (r): IRestaurantDetails => ({ ...r, name: newName }),
       this._restaurantService.changeName(id, newName),
     );
   }
 
   public changeDescription(newDescription: string): void {
     const restaurant = this.restaurant().value();
-    if (!restaurant) return;
 
     const id = restaurant.id;
 
-    this.optimisticUpdate(
-      (r): IRestaurantDetails | undefined => r && { ...r, description: newDescription },
+    this.optimistic(
+      (r): IRestaurantDetails  => ({ ...r, description: newDescription }),
       this._restaurantService.changeDescription(id, newDescription),
     );
   }
 
   public onSaveSchedule(schedule: IOpeningWindow[]): void {
     const restaurant = this.restaurant().value();
-    if (!restaurant) return;
 
-    this.optimisticUpdate(
-      (r): IRestaurantDetails | undefined => r && { ...r, openingWindows: schedule },
+    this.optimistic(
+      (r): IRestaurantDetails => ({ ...r, openingWindows: schedule }),
       this._restaurantService.changeSchedule(restaurant.id, schedule),
     );
   }
 
   public toggleActivation(): void {
     const restaurant = this.restaurant().value();
-    if (!restaurant) return;
 
     const id = restaurant.id;
     const wasActive = restaurant.status === Status.Active;
 
-    this.optimisticUpdate(
-      (r): IRestaurantDetails | undefined =>
-        r && { ...r, status: wasActive ? Status.Inactive : Status.Active },
+    this.optimistic(
+      (r): IRestaurantDetails => ({ ...r, status: wasActive ? Status.Inactive : Status.Active }),
       wasActive ? this._restaurantService.deactivate(id) : this._restaurantService.activate(id),
     );
   }
 
-  private optimisticUpdate<T>(
-    apply: (r: IRestaurantDetails | undefined) => IRestaurantDetails | undefined,
-    request: Observable<T>,
-  ): void {
-    const previous = this.restaurant().value();
-    this.restaurant().update(apply);
+  public addMenuItem(menuItem: IRestaurantMenuItemCreation): void {
+    const restaurant = this.restaurant().value();
 
-    request.subscribe({
-      error: (err: HttpErrorResponse): void => {
-        this.restaurant().set(previous);
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        const problem = err.error as IErrorDetails;
-        const firstFieldError = Object.values<string[]>(problem.errors ?? {})[0]?.[0];
-        this._snackBar.open(problem.detail ?? firstFieldError ?? 'Something went wrong', 'Close', {
-          duration: 4000,
-        });
-      },
+    const id = restaurant.id;
+
+    this._restaurantService.createMenuItem(id, menuItem).subscribe({
+    });
+  }
+
+  private optimistic<TReturn>(
+    apply: (r: IRestaurantDetails) => IRestaurantDetails,
+    request: Observable<TReturn>,
+  ): void {
+    OptimisticService.optimisticUpdate<TReturn, IRestaurantDetails>({
+      apply: apply,
+      request: request,
+      signal: this.restaurant(),
     });
   }
 }

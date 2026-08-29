@@ -1,4 +1,4 @@
-import { Component, input, output, signal, type ResourceRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal, type ResourceRef } from '@angular/core';
 import { Days, type IOpeningWindow, type IRestaurantDetails } from '../models/IRestaurantDetails';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
@@ -7,9 +7,10 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
   imports: [],
   templateUrl: './restaurant-schedule-managment.html',
   styleUrl: './restaurant-schedule-managment.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RestaurantScheduleManagment {
-  public readonly restaurant = input.required<ResourceRef<IRestaurantDetails | undefined>>();
+  public readonly restaurant = input.required<ResourceRef<IRestaurantDetails>>();
 
   public readonly isEditingSchedule = signal(false);
   public readonly draftSchedule = signal<IOpeningWindow[]>([]);
@@ -23,7 +24,7 @@ export class RestaurantScheduleManagment {
   public readonly outputDraftSchedule = output<IOpeningWindow[]>();
 
   public startEditSchedule(): void {
-    this.draftSchedule.set([...(this.restaurant().value()?.openingWindows ?? [])]);
+    this.draftSchedule.set([...(this.restaurant().value().openingWindows)]);
     this.isEditingSchedule.set(true);
   }
 

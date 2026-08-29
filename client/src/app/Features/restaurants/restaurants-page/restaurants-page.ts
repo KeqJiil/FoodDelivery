@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RestaurantsService, type IRestaurantListRequest } from '../restaurants-service';
 import type { IRestaurantsList } from '../models/IRestaurantsList';
 import { RestaurantsList } from '../restaurants-list/restaurants-list';
@@ -12,6 +12,7 @@ import { ActivatedRoute } from '@angular/router';
   imports: [RestaurantsList, Pagination],
   templateUrl: './restaurants-page.html',
   styleUrl: './restaurants-page.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RestaurantsPage {
   private readonly _route: ActivatedRoute = inject(ActivatedRoute);

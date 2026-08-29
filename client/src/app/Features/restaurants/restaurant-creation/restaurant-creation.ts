@@ -1,11 +1,9 @@
 import { Currency } from '@/app/Shared/enums/currency';
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { RestaurantsService } from '../restaurants-service';
 import type { IOpeningWindow } from '../models/IRestaurantDetails';
 import type { IRestaurantCreation } from '../models/IRestaurantCreations';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import type { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -13,6 +11,7 @@ import { finalize } from 'rxjs';
   imports: [],
   templateUrl: './restaurant-creation.html',
   styleUrl: './restaurant-creation.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RestaurantCreation {
   public readonly restaurantCreationForm = new FormGroup({
@@ -40,7 +39,7 @@ export class RestaurantCreation {
   private readonly _restaurantService: RestaurantsService = inject(RestaurantsService);
 
   public onScheduleChange(newSchedule: IOpeningWindow[]): void {
-    if (!(this.schedules().length > 0)) return;
+    if (!(newSchedule.length > 0)) return;
     this.schedules.set(newSchedule);
   }
 
@@ -66,9 +65,6 @@ export class RestaurantCreation {
         }),
       )
       .subscribe({
-        error: (err: HttpErrorResponse): void => {
-          
-        },
       });
   }
 }
