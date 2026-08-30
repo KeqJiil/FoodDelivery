@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, input, type ResourceRef } from '@angular/core';
 import { RestaurantsService } from '../restaurants-service';
-import type { Observable } from 'rxjs';
-import { Status, type IOpeningWindow, type IRestaurantDetails } from '../models/IRestaurantDetails';
+import { type Observable } from 'rxjs';
+import { Status, type IMenuItem, type IOpeningWindow, type IRestaurantDetails } from '../models/IRestaurantDetails';
 import type { IRestaurantMenuItemCreation } from '../models/IRestaurantMenuItemCreation';
 import { OptimisticService } from '@/app/Shared/services/optimistic.service';
+import { RestaurantScheduleManagment } from "../restaurant-schedule-managment/restaurant-schedule-managment";
 
 @Component({
   selector: 'app-restaurant-managment',
-  imports: [],
+  imports: [RestaurantScheduleManagment],
   templateUrl: './restaurant-managment.html',
   styleUrl: './restaurant-managment.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -64,11 +65,24 @@ export class RestaurantManagment {
 
   public addMenuItem(menuItem: IRestaurantMenuItemCreation): void {
     const restaurant = this.restaurant().value();
-
     const id = restaurant.id;
 
-    this._restaurantService.createMenuItem(id, menuItem).subscribe({
-    });
+    const optimisticItem: IMenuItem = { id: crypto.randomUUID(), ...menuItem, price: { currency: menuItem.currency, amount: menuItem.amount }};
+
+    this.optimistic(
+      (r): IRestaurantDetails => ({...r, menuItems: [ ...r.menuItems, optimisticItem ] }),
+      this._restaurantService.createMenuItem(id, menuItem)
+    );
+  }
+
+  public removeMenuItem(menuItemId: string): void {
+    const restaurant = this.restaurant().value();
+    const id = restaurant.id;
+
+    this.optimistic(
+      (r): IRestaurantDetails => ({...r, menuItems: ((): IMenuItem[] => r.menuItems.filter((x): boolean => x.id !== menuItemId ))() }),
+      this._restaurantService.removeMenuItem(id, menuItemId)
+    );
   }
 
   private optimistic<TReturn>(

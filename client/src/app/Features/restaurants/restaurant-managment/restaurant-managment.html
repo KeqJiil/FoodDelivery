@@ -1,5 +1,4 @@
-@if (restaurant().value(); as r) {
-  <button type="button" (click)="toggleActivation()">
-    {{ r.status === Status.Active ? 'Deactivate' : 'Activate' }}
-  </button>
-}
+<button type="button" (click)="toggleActivation()">
+  {{ restaurant().value().status === Status.Active ? 'Deactivate' : 'Activate' }}
+</button>
+<app-restaurant-schedule-managment [restaurant]="restaurant()" />

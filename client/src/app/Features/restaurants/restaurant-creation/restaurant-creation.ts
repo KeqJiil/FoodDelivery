@@ -1,9 +1,11 @@
 import { Currency } from '@/app/Shared/enums/currency';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { RestaurantsService } from '../restaurants-service';
 import type { IOpeningWindow } from '../models/IRestaurantDetails';
 import type { IRestaurantCreation } from '../models/IRestaurantCreations';
+import type { ICreatedResource } from '@/app/Shared/models/ICreatedResource';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -37,6 +39,7 @@ export class RestaurantCreation {
   protected readonly schedules = signal<IOpeningWindow[]>([]);
 
   private readonly _restaurantService: RestaurantsService = inject(RestaurantsService);
+  private readonly _router: Router = inject(Router);
 
   public onScheduleChange(newSchedule: IOpeningWindow[]): void {
     if (!(newSchedule.length > 0)) return;
@@ -65,6 +68,9 @@ export class RestaurantCreation {
         }),
       )
       .subscribe({
+        next: (created: ICreatedResource): void => {
+          void this._router.navigate(['/restaurants', created.id]);
+        },
       });
   }
 }

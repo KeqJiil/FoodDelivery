@@ -4,10 +4,11 @@ import { RestaurantsService } from '../restaurants-service';
 import { ActivatedRoute } from '@angular/router';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { map, type Observable } from 'rxjs';
+import { RestaurantManagment } from "../restaurant-managment/restaurant-managment";
 
 @Component({
   selector: 'app-restaurant-details',
-  imports: [],
+  imports: [RestaurantManagment],
   templateUrl: './restaurant-details.html',
   styleUrl: './restaurant-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush
