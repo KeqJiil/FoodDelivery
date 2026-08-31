@@ -1,6 +1,73 @@
-@if (restaurant.hasValue()) {
-  <h2>{{ restaurant.value().name }}</h2>
-  <p>{{ restaurant.value().description }}</p>
+<div class="restaurant-details">
+  @if (restaurant.hasValue()) {
+    <mat-card appearance="outlined" class="info-card">
+      <mat-card-content>
+        <div class="header-row">
+          <div>
+            <h2>{{ restaurant.value().name }}</h2>
+            <mat-chip-set>
+              <mat-chip [highlighted]="restaurant.value().status === Status.Active">
+                {{ restaurant.value().status === Status.Active ? 'Active' : 'Inactive' }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
 
-  <app-restaurant-managment [restaurant]="restaurant" />
-}
+          <a mat-flat-button color="primary" [routerLink]="['/restaurants', restaurantId(), 'manage']">
+            <mat-icon>edit</mat-icon>
+            Manage
+          </a>
+        </div>
+
+        <p class="description">{{ restaurant.value().description }}</p>
+
+        <p class="min-order">
+          Minimal order: {{ restaurant.value().minimalOrderPrice.currency }} {{ restaurant.value().minimalOrderPrice.amount }}
+        </p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined" class="schedule-card">
+      <mat-card-content>
+        <h3>Schedule</h3>
+
+        @if (restaurant.value().openingWindows.length > 0) {
+          <mat-list>
+            @for (window of restaurant.value().openingWindows; track $index) {
+              <mat-list-item>
+                {{ dayName(window.openDay) }} {{ window.openTime }} — {{ dayName(window.closeDay) }} {{ window.closeTime }}
+              </mat-list-item>
+            }
+          </mat-list>
+        } @else {
+          <p class="empty-hint">No opening windows set.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined" class="menu-card">
+      <mat-card-content>
+        <h3>Menu items</h3>
+
+        @if (restaurant.value().menuItems.length > 0) {
+          <mat-list>
+            @for (item of restaurant.value().menuItems; track item.id) {
+              <mat-list-item>
+                <span matListItemTitle>{{ item.name }}</span>
+                <span matListItemLine>{{ item.description }}</span>
+                <span matListItemMeta>{{ item.price.currency }} {{ item.price.amount }}</span>
+              </mat-list-item>
+            }
+          </mat-list>
+        } @else {
+          <p class="empty-hint">No menu items yet.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+  } @else if (restaurant.isLoading()) {
+    <div class="loading">
+      <mat-progress-spinner diameter="32" mode="indeterminate" />
+    </div>
+  } @else if (restaurant.error()) {
+    <p class="empty-hint">Failed to load restaurant.</p>
+  }
+</div>

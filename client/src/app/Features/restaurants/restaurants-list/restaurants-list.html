@@ -1,14 +1,16 @@
 <div class="restaurants-grid">
   @for (restaurant of restaurantsList(); track restaurant.id) {
-    <mat-card appearance="outlined" class="restaurant-card">
-      <mat-card-header>
-        <mat-card-title>{{ restaurant.name }}</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p>{{ restaurant.description }}</p>
-        <p class="min-order">Min order: {{ restaurant.minimalOrderPrice.currency }} {{ restaurant.minimalOrderPrice.amount }}</p>
-      </mat-card-content>
-    </mat-card>
+    <a class="restaurant-card-link" [routerLink]="['/restaurants', restaurant.id]">
+      <mat-card appearance="outlined" class="restaurant-card">
+        <mat-card-header>
+          <mat-card-title>{{ restaurant.name }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>{{ restaurant.description }}</p>
+          <p class="min-order">Min order: {{ restaurant.minimalOrderPrice.currency }} {{ restaurant.minimalOrderPrice.amount }}</p>
+        </mat-card-content>
+      </mat-card>
+    </a>
   } @empty {
     <p>No restaurants found.</p>
   }

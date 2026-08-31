@@ -1,4 +1,4 @@
-import { type ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { type ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { AppRoutes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -8,6 +8,7 @@ import { ErrorInterceptor } from './Core/interceptors/error.interceptor';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    provideZonelessChangeDetection(),
     provideRouter(AppRoutes),
     provideHttpClient(withInterceptors([ErrorInterceptor])),
   ],

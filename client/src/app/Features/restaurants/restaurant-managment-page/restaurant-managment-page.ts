@@ -1,45 +1,23 @@
 import { ChangeDetectionStrategy, Component, inject, type Signal } from '@angular/core';
-import { Days, Status, type IRestaurantDetails } from '../models/IRestaurantDetails';
+import type { IRestaurantDetails } from '../models/IRestaurantDetails';
 import { RestaurantsService } from '../restaurants-service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatListModule } from '@angular/material/list';
 import { map, type Observable } from 'rxjs';
-import { MatCardModule } from '@angular/material/card';
+import { RestaurantManagment } from '../restaurant-managment/restaurant-managment';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
-  selector: 'app-restaurant-details',
-  imports: [
-    RouterLink,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
-    MatListModule,
-    MatProgressSpinnerModule,
-  ],
-  templateUrl: './restaurant-details.html',
-  styleUrl: './restaurant-details.css',
+  selector: 'app-restaurant-managment-page',
+  imports: [RestaurantManagment, RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  templateUrl: './restaurant-managment-page.html',
+  styleUrl: './restaurant-managment-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class RestaurantDetails {
-  protected readonly Status = Status;
-
+export class RestaurantManagmentPage {
   private readonly _route: ActivatedRoute = inject(ActivatedRoute);
-  private readonly _dayNames: Record<Days, string> = {
-    [Days.Monday]: 'Monday',
-    [Days.Tuesday]: 'Tuesday',
-    [Days.Wednesday]: 'Wednesday',
-    [Days.Thursday]: 'Thursday',
-    [Days.Friday]: 'Friday',
-    [Days.Saturday]: 'Saturday',
-    [Days.Sunday]: 'Sunday',
-  };
-
   // eslint-disable-next-line @typescript-eslint/member-ordering
   protected readonly restaurantId: Signal<string> = toSignal(
     this._route.paramMap.pipe(
@@ -67,8 +45,4 @@ export class RestaurantDetails {
     stream: ({ params }: { params: { id: string } }): Observable<IRestaurantDetails> =>
       this._restaurantService.getRestaurantById(params.id),
   });
-
-  protected dayName(day: Days): string {
-    return this._dayNames[day];
-  }
 }

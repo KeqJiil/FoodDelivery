@@ -1,0 +1,42 @@
+.restaurant-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header-row h2 {
+  margin: 0 0 8px;
+}
+
+.description {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.min-order {
+  font-size: 0.875rem;
+}
+
+.schedule-card h3,
+.menu-card h3 {
+  margin: 0 0 8px;
+}
+
+.empty-hint {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 32px;
+}

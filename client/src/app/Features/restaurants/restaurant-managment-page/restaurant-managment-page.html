@@ -1,0 +1,16 @@
+<div class="page">
+  <a mat-button [routerLink]="['/restaurants', restaurantId()]">
+    <mat-icon>arrow_back</mat-icon>
+    Back to details
+  </a>
+
+  @if (restaurant.hasValue()) {
+    <app-restaurant-managment [restaurant]="restaurant" />
+  } @else if (restaurant.isLoading()) {
+    <div class="loading">
+      <mat-progress-spinner diameter="32" mode="indeterminate" />
+    </div>
+  } @else if (restaurant.error()) {
+    <p class="empty-hint">Failed to load restaurant.</p>
+  }
+</div>

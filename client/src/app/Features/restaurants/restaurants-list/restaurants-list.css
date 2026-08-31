@@ -9,3 +9,19 @@
   color: var(--mat-sys-on-surface-variant);
   font-size: 0.875rem;
 }
+
+.restaurant-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.restaurant-card {
+  height: 100%;
+  transition: box-shadow 0.15s ease;
+}
+
+.restaurant-card-link:hover .restaurant-card,
+.restaurant-card-link:focus-visible .restaurant-card {
+  box-shadow: var(--mat-sys-level2);
+}

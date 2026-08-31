@@ -1,1 +1,37 @@
-<p>menu-item-managment works!</p>
+<div class="menu-item">
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Name</mat-label>
+    <input matInput #nameInput [value]="menuItem().value().name">
+    <button matSuffix mat-icon-button type="button" (click)="changeName(nameInput.value)" aria-label="Save name">
+      <mat-icon>check</mat-icon>
+    </button>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Description</mat-label>
+    <textarea matInput #descriptionInput rows="2" [value]="menuItem().value().description"></textarea>
+    <button matSuffix mat-icon-button type="button" (click)="changeDescription(descriptionInput.value)" aria-label="Save description">
+      <mat-icon>check</mat-icon>
+    </button>
+  </mat-form-field>
+
+  <div class="price-row">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Currency</mat-label>
+      <mat-select #currencySelect [value]="menuItem().value().price.currency">
+        <mat-option [value]="Currency.Usd">USD</mat-option>
+        <mat-option [value]="Currency.Eur">EUR</mat-option>
+        <mat-option [value]="Currency.Gbp">GBP</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Price</mat-label>
+      <input matInput #amountInput type="number" step="0.01" [value]="menuItem().value().price.amount">
+    </mat-form-field>
+
+    <button mat-icon-button type="button" (click)="changePrice(currencySelect.value, +amountInput.value)" aria-label="Save price">
+      <mat-icon>check</mat-icon>
+    </button>
+  </div>
+</div>

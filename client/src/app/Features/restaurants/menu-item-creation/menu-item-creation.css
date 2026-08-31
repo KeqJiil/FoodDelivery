@@ -1,0 +1,24 @@
+.menu-item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.menu-item-form h4 {
+  margin: 0 0 4px;
+}
+
+.price-row {
+  display: flex;
+  gap: 12px;
+}
+
+.price-row mat-form-field:first-child {
+  width: 120px;
+}
+
+.price-row mat-form-field:last-child {
+  flex: 1;
+}

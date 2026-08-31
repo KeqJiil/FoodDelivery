@@ -1,0 +1,38 @@
+.creation-card {
+  max-width: 640px;
+  margin: 16px auto;
+}
+
+.creation-card h2 {
+  margin-top: 0;
+}
+
+.restaurant-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.restaurant-form mat-form-field {
+  width: 100%;
+}
+
+.price-row {
+  display: flex;
+  gap: 12px;
+}
+
+.price-row mat-form-field:first-child {
+  width: 120px;
+}
+
+.price-row mat-form-field:last-child {
+  flex: 1;
+}
+
+.submit-row {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}

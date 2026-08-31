@@ -1,0 +1,39 @@
+.restaurant-managment {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-card mat-card-content,
+.menu-card mat-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-card mat-form-field,
+.menu-card mat-form-field {
+  width: 100%;
+}
+
+.menu-card h3 {
+  margin: 0;
+}
+
+.menu-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.menu-item-row-content {
+  flex: 1;
+}
+
+.empty-hint {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+  margin: 0;
+}

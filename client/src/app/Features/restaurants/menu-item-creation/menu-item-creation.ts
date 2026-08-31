@@ -1,12 +1,24 @@
 import { Currency } from '@/app/Shared/enums/currency';
 import { ChangeDetectionStrategy, Component, input, output, type ResourceRef } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
 import type { IRestaurantDetails } from '../models/IRestaurantDetails';
 import type { IRestaurantMenuItemCreation } from '../models/IRestaurantMenuItemCreation';
 
 @Component({
   selector: 'app-menu-item-creation',
-  imports: [],
+  imports: [
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
+  ],
   templateUrl: './menu-item-creation.html',
   styleUrl: './menu-item-creation.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -44,5 +56,12 @@ export class MenuItemCreation {
 
     const data: IRestaurantMenuItemCreation = this.menuItemForm.getRawValue();
     this.menuItemOutput.emit(data);
+
+    this.menuItemForm.reset({
+      name: '',
+      description: '',
+      currency: Currency.Usd,
+      amount: 0.1,
+    });
   }
 }

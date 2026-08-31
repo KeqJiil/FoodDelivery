@@ -1,1 +1,80 @@
-<p>restaurant-schedule-managment works!</p>
+<div class="schedule">
+  <div class="schedule-header">
+    <h3>Schedule</h3>
+    @if (!isEditingSchedule()) {
+      <button mat-stroked-button type="button" (click)="startEditSchedule()">
+        <mat-icon>edit</mat-icon>
+        Edit schedule
+      </button>
+    }
+  </div>
+
+  @if (!isEditingSchedule()) {
+    @if (openingWindows().length > 0) {
+      <mat-list>
+        @for (window of openingWindows(); track $index) {
+          <mat-list-item>
+            {{ dayName(window.openDay) }} {{ window.openTime }} — {{ dayName(window.closeDay) }} {{ window.closeTime }}
+          </mat-list-item>
+        }
+      </mat-list>
+    } @else {
+      <p class="empty-hint">No opening windows set.</p>
+    }
+  } @else {
+    <mat-list>
+      @for (window of draftSchedule(); track $index) {
+        <mat-list-item>
+          <span matListItemTitle>{{ dayName(window.openDay) }} {{ window.openTime }} — {{ dayName(window.closeDay) }} {{ window.closeTime }}</span>
+          <button mat-icon-button matListItemMeta type="button" (click)="removeWindow($index)" aria-label="Remove window">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-list-item>
+      } @empty {
+        <p class="empty-hint">No opening windows yet — add one below.</p>
+      }
+    </mat-list>
+
+    <form [formGroup]="openingWindowForm" class="window-form">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Open day</mat-label>
+        <mat-select formControlName="openDay">
+          @for (day of dayOptions; track day.value) {
+            <mat-option [value]="day.value">{{ day.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Open time</mat-label>
+        <input matInput type="time" formControlName="openTime">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Close day</mat-label>
+        <mat-select formControlName="closeDay">
+          @for (day of dayOptions; track day.value) {
+            <mat-option [value]="day.value">{{ day.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Close time</mat-label>
+        <input matInput type="time" formControlName="closeTime">
+      </mat-form-field>
+
+      <button mat-stroked-button type="button" (click)="addWindow()">
+        <mat-icon>add</mat-icon>
+        Add window
+      </button>
+    </form>
+
+    <div class="schedule-actions">
+      <button mat-flat-button color="primary" type="button" [disabled]="draftSchedule().length === 0" (click)="onSaveSchedule()">
+        Save schedule
+      </button>
+      <button mat-button type="button" (click)="cancelEditSchedule()">Cancel</button>
+    </div>
+  }
+</div>

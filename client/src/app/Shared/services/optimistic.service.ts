@@ -1,6 +1,5 @@
 import type { HttpErrorResponse } from "@angular/common/http";
 import type { Observable } from "rxjs";
-import type { ResourceRef } from "@angular/core";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class OptimisticService {
@@ -21,5 +20,11 @@ export class OptimisticService {
 export interface IOptimisticServiceData<T, TReturn> {
   apply: (r: TReturn) => TReturn,
   request: Observable<T>,
-  signal: ResourceRef<TReturn>,
+  signal: IWritableValue<TReturn>,
 };
+
+export interface IWritableValue<T> {
+  value(): T;
+  set(value: T): void;
+  update(updater: (value: T) => T): void;
+}

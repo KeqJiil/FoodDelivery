@@ -1,1 +1,60 @@
-<p>restaurant-creation works!</p>
+<mat-card appearance="outlined" class="creation-card">
+  <mat-card-content>
+    <h2>Create restaurant</h2>
+
+    <form [formGroup]="restaurantCreationForm" class="restaurant-form">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name">
+        @if (restaurantCreationForm.controls.name.invalid && restaurantCreationForm.controls.name.touched) {
+          <mat-error>Name must be 3-30 characters.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+        @if (restaurantCreationForm.controls.description.invalid && restaurantCreationForm.controls.description.touched) {
+          <mat-error>Description must be 10-200 characters.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="price-row">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Currency</mat-label>
+          <mat-select formControlName="currency">
+            <mat-option [value]="Currency.Usd">USD</mat-option>
+            <mat-option [value]="Currency.Eur">EUR</mat-option>
+            <mat-option [value]="Currency.Gbp">GBP</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Minimal order price</mat-label>
+          <input matInput type="number" step="0.01" formControlName="amount">
+          @if (restaurantCreationForm.controls.amount.invalid && restaurantCreationForm.controls.amount.touched) {
+            <mat-error>Minimal order price must be at least 0.01.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </form>
+
+    <app-restaurant-schedule-managment [openingWindows]="schedules()" [autoEdit]="true" (outputDraftSchedule)="onScheduleChange($event)" />
+
+    <div class="submit-row">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        [disabled]="isRequestInFlight()"
+        (click)="createNewRestaurant()"
+      >
+        @if (isRequestInFlight()) {
+          <mat-progress-spinner diameter="20" mode="indeterminate" />
+        } @else {
+          Create restaurant
+        }
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

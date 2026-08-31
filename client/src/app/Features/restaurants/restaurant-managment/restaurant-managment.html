@@ -1,4 +1,62 @@
-<button type="button" (click)="toggleActivation()">
-  {{ restaurant().value().status === Status.Active ? 'Deactivate' : 'Activate' }}
-</button>
-<app-restaurant-schedule-managment [restaurant]="restaurant()" />
+<div class="restaurant-managment">
+  <mat-card appearance="outlined" class="info-card">
+    <mat-card-content>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Name</mat-label>
+        <input matInput #nameInput [value]="restaurant().value().name">
+        <button matSuffix mat-icon-button type="button" (click)="changeName(nameInput.value)" aria-label="Save name">
+          <mat-icon>check</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Description</mat-label>
+        <textarea matInput #descriptionInput rows="3" [value]="restaurant().value().description"></textarea>
+        <button matSuffix mat-icon-button type="button" (click)="changeDescription(descriptionInput.value)" aria-label="Save description">
+          <mat-icon>check</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <button
+        mat-flat-button
+        type="button"
+        [color]="restaurant().value().status === Status.Active ? 'warn' : 'primary'"
+        (click)="toggleActivation()"
+      >
+        {{ restaurant().value().status === Status.Active ? 'Deactivate' : 'Activate' }}
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined" class="schedule-card">
+    <mat-card-content>
+      <app-restaurant-schedule-managment
+        [openingWindows]="restaurant().value().openingWindows"
+        (outputDraftSchedule)="onSaveSchedule($event)"
+      />
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined" class="menu-card">
+    <mat-card-content>
+      <h3>Menu items</h3>
+
+      @for (item of restaurant().value().menuItems; track item.id) {
+        <div class="menu-item-row">
+          <app-menu-item-managment
+            class="menu-item-row-content"
+            [menuItem]="menuItemResource(item.id)"
+            [restaurantId]="restaurant().value().id"
+          />
+          <button mat-icon-button type="button" (click)="removeMenuItem(item.id)" aria-label="Remove menu item">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      } @empty {
+        <p class="empty-hint">No menu items yet.</p>
+      }
+
+      <app-menu-item-creation [restaurant]="restaurant()" (menuItemOutput)="addMenuItem($event)" />
+    </mat-card-content>
+  </mat-card>
+</div>

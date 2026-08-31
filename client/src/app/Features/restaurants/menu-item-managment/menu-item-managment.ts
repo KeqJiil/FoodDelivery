@@ -1,19 +1,26 @@
-import { ChangeDetectionStrategy, Component, inject, input, type ResourceRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import type { IMenuItem, IMoney } from '../models/IRestaurantDetails';
 import { RestaurantsService } from '../restaurants-service';
-import { OptimisticService } from '@/app/Shared/services/optimistic.service';
-import type { Currency } from '@/app/Shared/enums/currency';
+import { OptimisticService, type IWritableValue } from '@/app/Shared/services/optimistic.service';
+import { Currency } from '@/app/Shared/enums/currency';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-menu-item-managment',
-  imports: [],
+  imports: [MatButtonModule, MatIconModule, MatFormFieldModule, MatSelectModule, MatInputModule],
   templateUrl: './menu-item-managment.html',
   styleUrl: './menu-item-managment.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MenuItemManagment {
-  public readonly menuItem = input.required<ResourceRef<IMenuItem>>();
+  public readonly menuItem = input.required<IWritableValue<IMenuItem>>();
   public readonly restaurantId = input.required<string>();
+
+  protected readonly Currency = Currency;
 
   private readonly _restaurantService: RestaurantsService = inject(RestaurantsService);
 

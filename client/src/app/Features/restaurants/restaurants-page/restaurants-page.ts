@@ -5,11 +5,13 @@ import { RestaurantsList } from '../restaurants-list/restaurants-list';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Pagination, PaginationDefaultValues } from '@/app/Shared/components/pagination/pagination';
 import { type Observable } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-restaurants-page',
-  imports: [RestaurantsList, Pagination],
+  imports: [RestaurantsList, Pagination, RouterLink, MatButtonModule, MatIconModule],
   templateUrl: './restaurants-page.html',
   styleUrl: './restaurants-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush

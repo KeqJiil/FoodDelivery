@@ -1,4 +1,11 @@
 <div class="restaurants-page">
+  <div class="restaurants-page-header">
+    <a mat-flat-button color="primary" routerLink="/restaurants/create">
+      <mat-icon>add</mat-icon>
+      Create restaurant
+    </a>
+  </div>
+
   <app-restaurants-list [restaurantsList]="restaurantsResource.value()?.restaurants ?? []" />
   <app-pagination
     [hasNextPage]="restaurantsResource.value()?.hasNextPage ?? false"

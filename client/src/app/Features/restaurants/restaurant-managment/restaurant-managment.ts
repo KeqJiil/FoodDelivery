@@ -3,12 +3,28 @@ import { RestaurantsService } from '../restaurants-service';
 import { type Observable } from 'rxjs';
 import { Status, type IMenuItem, type IOpeningWindow, type IRestaurantDetails } from '../models/IRestaurantDetails';
 import type { IRestaurantMenuItemCreation } from '../models/IRestaurantMenuItemCreation';
-import { OptimisticService } from '@/app/Shared/services/optimistic.service';
+import { OptimisticService, type IWritableValue } from '@/app/Shared/services/optimistic.service';
 import { RestaurantScheduleManagment } from "../restaurant-schedule-managment/restaurant-schedule-managment";
+import { MenuItemManagment } from "../menu-item-managment/menu-item-managment";
+import { MenuItemCreation } from "../menu-item-creation/menu-item-creation";
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-restaurant-managment',
-  imports: [RestaurantScheduleManagment],
+  imports: [
+    RestaurantScheduleManagment,
+    MenuItemManagment,
+    MenuItemCreation,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
   templateUrl: './restaurant-managment.html',
   styleUrl: './restaurant-managment.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -83,6 +99,35 @@ export class RestaurantManagment {
       (r): IRestaurantDetails => ({...r, menuItems: ((): IMenuItem[] => r.menuItems.filter((x): boolean => x.id !== menuItemId ))() }),
       this._restaurantService.removeMenuItem(id, menuItemId)
     );
+  }
+
+  public menuItemResource(menuItemId: string): IWritableValue<IMenuItem> {
+    const restaurant = this.restaurant();
+
+    const findItem = (r: IRestaurantDetails): IMenuItem => {
+      const item = r.menuItems.find((m): boolean => m.id === menuItemId);
+
+      if (!item) {
+        throw new Error(`Menu item ${menuItemId} not found`);
+      }
+
+      return item;
+    };
+
+    const replaceItem = (r: IRestaurantDetails, value: IMenuItem): IRestaurantDetails => ({
+      ...r,
+      menuItems: r.menuItems.map((m): IMenuItem => (m.id === menuItemId ? value : m)),
+    });
+
+    return {
+      value: (): IMenuItem => findItem(restaurant.value()),
+      set: (value: IMenuItem): void => {
+        restaurant.set(replaceItem(restaurant.value(), value));
+      },
+      update: (updater: (value: IMenuItem) => IMenuItem): void => {
+        restaurant.update((r): IRestaurantDetails => replaceItem(r, updater(findItem(r))));
+      },
+    };
   }
 
   private optimistic<TReturn>(
