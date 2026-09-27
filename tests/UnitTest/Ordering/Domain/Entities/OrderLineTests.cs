@@ -3,25 +3,28 @@ using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.ValueObjects;
 using Ordering.Domain.Entities;
 using Ordering.Domain.Ids;
+using SharedKernel.Domain.Errors;
 
 namespace Ordering.UnitTest.Domain.Entities;
 
 public class OrderLineTests
 {
     [Fact]
-    public void Create_ShouldThrow_WhenQuantityIsZero()
+    public void Create_ShouldFail_WhenQuantityIsZero()
     {
-        var fn = () => OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
+        var orderLineRes = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()), 0);
 
-        fn.Should().Throw<InvalidOperationException>();
+        orderLineRes.IsSuccess.Should().BeFalse();
     }
 
     [Fact]
     public void Create_ShouldSetInitialPriceAndQuantity()
     {
-        var orderLine = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
+        var orderLineRes = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()), 10);
+
+        var orderLine = orderLineRes.Ok!;
 
         orderLine.Quantity.Should().Be(10);
         orderLine.Price.Amount.Should().Be(10m);
@@ -31,8 +34,10 @@ public class OrderLineTests
     [Fact]
     public void ChangePrice_ShouldUpdatePrice()
     {
-        var orderLine = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
+        var orderLineRes = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
+
+        var orderLine = orderLineRes.Ok!;
 
         orderLine.ChangePrice(Money.Create(Currency.Usd, 5m).Ok!);
 
@@ -45,8 +50,10 @@ public class OrderLineTests
     {
         var price = 10m;
         byte quantity = 3;
-        var orderLine = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, price).Ok!,
+        var orderLineRes = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, price).Ok!,
             new MenuItemRefId(Guid.NewGuid()), quantity);
+
+        var orderLine = orderLineRes.Ok!;
 
         var totalPrice = orderLine.GetTotalPrice();
         totalPrice.Amount.Should().Be(price * quantity);
@@ -55,8 +62,9 @@ public class OrderLineTests
     [Fact]
     public void IncreaseQuantity_ShouldAddToQuantity()
     {
-        var orderLine = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
+        var orderLineRes = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
+        var orderLine = orderLineRes.Ok!;
         orderLine.IncreaseQuantity(10);
 
         orderLine.Quantity.Should().Be(11);
@@ -65,19 +73,19 @@ public class OrderLineTests
     [Fact]
     public void DecreaseQuantity_ShouldSubtractOne()
     {
-        var orderLine = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
+        var orderLineRes = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()), 11);
+        var orderLine = orderLineRes.Ok!;
         orderLine.DecreaseQuantity();
         orderLine.Quantity.Should().Be(10);
     }
 
     [Fact]
-    public void DecreaseQuantity_ShouldThrow_WhenQuantityIsOne()
+    public void DecreaseQuantity_ShouldBeTrue_WhenQuantityIsNone()
     {
-        var orderLine = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
+        var orderLineRes = OrderLine.Create(new OrderLineId(Guid.NewGuid()), Money.Create(Currency.Usd, 10m).Ok!,
             new MenuItemRefId(Guid.NewGuid()));
-
-        var fn = () => orderLine.DecreaseQuantity();
-        fn.Should().Throw<InvalidOperationException>();
+        orderLineRes.IsSuccess.Should().BeTrue();
+        orderLineRes.Ok!.Should().NotBeNull();
     }
 }

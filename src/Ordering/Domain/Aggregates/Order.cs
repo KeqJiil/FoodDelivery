@@ -97,7 +97,8 @@ public class Order : AggregateRoot<OrderId>
         if (orderLine is null)
         {
             var orderLineNewItem = OrderLine.Create(orderLineId, newPrice, menuItemRefId, quantity);
-            _orderLines.Add(orderLineNewItem);
+            if (!orderLineNewItem.IsSuccess) return Result<Error>.Fail(orderLineNewItem.Error ?? Error.Unexpected());
+            _orderLines.Add(orderLineNewItem.Ok!);
             return Result<Error>.Success();
         }
 

@@ -1,5 +1,7 @@
 ﻿using SharedKernel.Domain.ValueObjects;
 using Ordering.Domain.Ids;
+using SharedKernel.Domain;
+using SharedKernel.Domain.Errors;
 
 namespace Ordering.Domain.Entities;
 
@@ -17,14 +19,14 @@ public class OrderLine
         Quantity = quantity;
     }
 
-    public static OrderLine Create(OrderLineId id, Money price, MenuItemRefId refId, byte quantity = 1)
+    public static Result<OrderLine, Error> Create(OrderLineId id, Money price, MenuItemRefId refId, byte quantity = 1)
     {
         if (quantity == 0)
-            throw new InvalidOperationException("Cannot create a new order line with 0 quantity");
+            return Result<OrderLine, Error>.Fail(Error.Validation("Cannot create a new order line with 0 quantity"));
 
         var orderLine = new OrderLine(id, refId, quantity);
         orderLine.ChangePrice(price);
-        return orderLine;
+        return Result<OrderLine, Error>.Success(orderLine);
     }
 
     public void ChangePrice(Money price)
