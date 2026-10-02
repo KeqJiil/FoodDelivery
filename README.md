@@ -46,8 +46,8 @@ flowchart TB
     Saga ==>|confirm / fail| Ordering
     OrderRequests & Payments & Deliveries -.->|status events| Saga
 
-    Modules --> DB[(MSSQL<br/>+ outbox table)]
-    DB -.->|transactional outbox| MQ[(RabbitMQ /<br/>Azure Service Bus)]
+    Modules --> DB[(MSSQL)]
+    Modules -.->|direct publish<br/>no outbox yet| MQ[(RabbitMQ /<br/>Azure Service Bus)]
     MQ -.->|integration events| Modules
 
     style Ordering fill:#e8f4f8
@@ -84,11 +84,11 @@ Instead, module boundaries are enforced *in code* while keeping a single process
 
 **Trade-off accepted:** the boundary is enforced by discipline and project references, not by the network. Nothing physically prevents a shortcut; a reviewer would have to catch it.
 
-### 2. Transactional outbox for every published message
+### 2. Transactional outbox — **known gap, deliberately deferred**
 
 Writing to the database and publishing to the message broker are two separate systems. Doing both without coordination is the classic **dual-write problem**: the database commit succeeds, the broker publish fails, and the system is silently inconsistent.
 
-MassTransit's EF Core outbox is wired so that outgoing messages are written to an outbox table **inside the same transaction** as the business change, then relayed by a background delivery service afterwards:
+**Current state: the dual-write problem is not solved for HTTP-originated events, and this is a deliberate, temporary decision.** The outbox is not wired up yet because the right fix depends on an architectural choice (see below) that hasn't been made, and a half-working `UseBusOutbox()` would be worse than none (it would silently lose other modules' events). Each module registers MassTransit's EF Core outbox:
 
 ```csharp
 x.AddEntityFrameworkOutbox<OrderingDbContext>(o =>
@@ -98,11 +98,26 @@ x.AddEntityFrameworkOutbox<OrderingDbContext>(o =>
 });
 ```
 
-`UseBusOutbox()` (a bus-wide middleware that captures *any* `Send`/`Publish` call app-wide into the outbox) is deliberately left out: `DomainEventPublishInterceptor` is the only place the codebase ever calls `Publish`, and it always does so during that same `OrderingDbContext`'s `SaveChangesAsync` — the exact scope `AddEntityFrameworkOutbox<OrderingDbContext>` already covers on its own. The bus-wide catch-all has nothing extra to catch here.
+but `UseBusOutbox()` is **not** enabled, and without it `IPublishEndpoint` is not redirected into the outbox table. `DomainEventPublishInterceptor` calls `Publish` from `SavingChangesAsync` — *before* the commit — so the message goes straight to the broker. Consequences:
 
-Consumers additionally use `UseInMemoryOutbox`, so messages a consumer produces are only published once its own transaction commits — no phantom events from a handler that later rolled back.
+- The event can reach the broker even if `SaveChanges` then fails (conflict, timeout, retry from `EnableRetryOnFailure`) — a phantom event for state that was never persisted, possibly published twice on retry.
+- A broker outage fails the database write.
+- The `OutboxMessage`/`OutboxState`/`InboxState` tables exist in the migrations but stay empty, and the outbox delivery service (registered via `UseBusOutbox()`) is not running.
 
-**Consequence:** delivery is at-least-once, never exactly-once. Consumers must be idempotent; that is a property of the handlers, not of the broker. Idempotency (redelivery-safe consumers, unique-constraint-backed conflict handling) is covered explicitly in the integration test suite.
+An earlier version of this section argued that `UseBusOutbox()` was unnecessary because the interceptor is the only `Publish` call site. That reasoning was wrong: `AddEntityFrameworkOutbox` alone does not intercept `Publish`.
+
+Consumers use `UseInMemoryOutbox`, so messages a consumer produces are held until the consumer completes and are not published if the handler throws. This is in-memory only: a crash between the database commit and the flush loses the messages.
+
+**Why it isn't a one-line fix:** MassTransit 8.x supports only one bus outbox per bus, and this app has five `DbContext`s (one per module). Enabling `UseBusOutbox()` for a single context would route other modules' publishes into a context that never saves them.
+
+**Planned resolution — one of two options:**
+
+1. **A shared `DbContext`** for all modules (or at least for outbox writes), so MassTransit's `UseBusOutbox()` applies as designed: one outbox, atomic with every write. Cost: weakens the per-module persistence boundary.
+2. **A self-written outbox table** with a generic background publisher shared by all module `DbContext`s. The interceptor adds a row to the module's own context within the same `SaveChanges` instead of calling `Publish`. Cost: extra code to own (serialization, locking for multiple instances, cleanup), and MassTransit's own outbox tables become unused.
+
+Writing rows into MassTransit's `OutboxMessage` table from the interceptor is not an option: its delivery service is only registered via `UseBusOutbox()`.
+
+**Delivery guarantee today:** best-effort. Even once an outbox is in place it will be at-least-once, never exactly-once, so consumers must be idempotent; that is a property of the handlers, not of the broker. Idempotency (redelivery-safe consumers, unique-constraint-backed conflict handling) is covered in the integration test suite.
 
 ### 3. Saga orchestration for the cross-module order flow
 
@@ -206,8 +221,8 @@ This is deliberate, not an oversight. The project demonstrates domain modeling, 
 
 | Concern | Mechanism |
 |---|---|
-| Dual-write inconsistency | Transactional outbox (`AddEntityFrameworkOutbox<OrderingDbContext>`, written from the same `SaveChangesAsync` that persists the business change) |
-| Phantom events from rolled-back handlers | `UseInMemoryOutbox` on consumers |
+| Dual-write inconsistency | **Not solved yet** — events are published directly from `SavingChangesAsync`, before commit (see design decision 2 and the roadmap) |
+| Phantom events from rolled-back handlers | `UseInMemoryOutbox` on consumers (in-memory only; does not cover HTTP-originated events) |
 | Transient failures | `UseMessageRetry(r => r.Immediate(5))` |
 | Persistent failures | `UseDelayedRedelivery` — 5 min → 15 min → 30 min, then the error queue |
 | Duplicate/redelivered messages | Idempotent consumers; DB-level unique constraints mapped to `Error.Conflict` instead of an unhandled exception |
@@ -341,6 +356,7 @@ tests/
 
 ## Roadmap
 
+- [ ] **Make the transactional outbox real** (see design decision 2; deliberately not done yet). Decision pending between a shared `DbContext` (so MassTransit's `UseBusOutbox()` applies) and a self-written outbox table with a shared background publisher. Either way, the interceptor must stop calling `Publish` before commit. Verify with an integration test that stops the broker, hits an endpoint, and asserts the row is committed and the event is delivered after the broker returns
 - [ ] Read models for cross-module queries (e.g. an order-details view spanning Ordering/Payments/Deliveries), built off the same integration events already flowing through the outbox instead of readers querying each module's write-side schema directly — accepting eventual consistency on the read side in exchange for read models shaped for actual query needs rather than joins across module boundaries
 - [ ] Application Insights in production (Azure Monitor exporter is wired; Azure resource provisioning and Key Vault/secrets strategy not yet done)
 - [ ] Decide whether the hand-rolled correlation ID is still worth keeping now that OpenTelemetry's `TraceId` propagates end-to-end natively
