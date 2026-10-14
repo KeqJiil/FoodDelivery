@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Moq;
 using SharedKernel.Domain.Enums;
 using SharedKernel.Domain.ValueObjects;
@@ -27,13 +27,16 @@ public class ChangeOrderLinePriceHandlerTests
     {
         var menuItemRefId = new MenuItemRefId(Guid.NewGuid());
         var command = new ChangeOrderLinePriceCommand(menuItemRefId, Currency.Usd, 5m);
-        _repository.Setup(r => r.GetByMenuItemIdAsync(menuItemRefId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Order>());
+        _repository.Setup(r => r.GetDraftIdsByMenuItemIdAsync(menuItemRefId, It.IsAny<int>(), It.IsAny<OrderId?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<OrderId>());
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(r => r.GetByIdsAsync(It.IsAny<IReadOnlyCollection<OrderId>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -47,8 +50,7 @@ public class ChangeOrderLinePriceHandlerTests
 
         var newPrice = Money.Create(Currency.Usd, 7m).Ok!;
         var command = new ChangeOrderLinePriceCommand(menuItemRefId, Currency.Usd, 7m);
-        _repository.Setup(r => r.GetByMenuItemIdAsync(menuItemRefId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Order> { order1, order2 });
+        SetupOrders(menuItemRefId, order1, order2);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -72,8 +74,7 @@ public class ChangeOrderLinePriceHandlerTests
 
         var newPrice = Money.Create(Currency.Usd, 7m).Ok!;
         var command = new ChangeOrderLinePriceCommand(menuItemRefId, Currency.Usd, 7m);
-        _repository.Setup(r => r.GetByMenuItemIdAsync(menuItemRefId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Order> { draftOrder, placedOrder });
+        SetupOrders(menuItemRefId, draftOrder, placedOrder);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -81,5 +82,69 @@ public class ChangeOrderLinePriceHandlerTests
         draftOrder.OrderLines[0].Price.Should().Be(newPrice);
         placedOrder.OrderLines[0].Price.Amount.Should().Be(10m);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldFetchNextPageAfterLastId_WhenBatchIsFull()
+    {
+        var menuItemRefId = new MenuItemRefId(Guid.NewGuid());
+        var firstPage = Enumerable.Range(0, 500).Select(_ => new OrderId(Guid.NewGuid())).ToList();
+        var cursor = firstPage[^1];
+        var secondPage = new List<OrderId> { new(Guid.NewGuid()) };
+        var command = new ChangeOrderLinePriceCommand(menuItemRefId, Currency.Usd, 7m);
+        _repository.Setup(r => r.GetDraftIdsByMenuItemIdAsync(menuItemRefId, 500, null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(firstPage);
+        _repository.Setup(r => r.GetDraftIdsByMenuItemIdAsync(menuItemRefId, 500, cursor,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(secondPage);
+        _repository.Setup(r => r.GetByIdsAsync(It.IsAny<IReadOnlyCollection<OrderId>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Order>());
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _repository.Verify(r => r.GetByIdsAsync(firstPage, It.IsAny<CancellationToken>()), Times.Once);
+        _repository.Verify(r => r.GetByIdsAsync(secondPage, It.IsAny<CancellationToken>()), Times.Once);
+        _repository.Verify(r => r.GetDraftIdsByMenuItemIdAsync(It.IsAny<MenuItemRefId>(), It.IsAny<int>(),
+            It.IsAny<OrderId?>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+        _unitOfWork.Verify(u => u.ClearChangeTracker(), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task Handle_ShouldStop_WhenNextPageIsEmpty()
+    {
+        var menuItemRefId = new MenuItemRefId(Guid.NewGuid());
+        var firstPage = Enumerable.Range(0, 500).Select(_ => new OrderId(Guid.NewGuid())).ToList();
+        var cursor = firstPage[^1];
+        var command = new ChangeOrderLinePriceCommand(menuItemRefId, Currency.Usd, 7m);
+        _repository.Setup(r => r.GetDraftIdsByMenuItemIdAsync(menuItemRefId, 500, null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(firstPage);
+        _repository.Setup(r => r.GetDraftIdsByMenuItemIdAsync(menuItemRefId, 500, cursor,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<OrderId>());
+        _repository.Setup(r => r.GetByIdsAsync(It.IsAny<IReadOnlyCollection<OrderId>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Order>());
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _repository.Verify(r => r.GetByIdsAsync(It.IsAny<IReadOnlyCollection<OrderId>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private void SetupOrders(MenuItemRefId menuItemRefId, params Order[] orders)
+    {
+        _repository.Setup(r => r.GetDraftIdsByMenuItemIdAsync(menuItemRefId, It.IsAny<int>(), It.IsAny<OrderId?>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(orders.Select(o => o.Id).ToList());
+        _repository.Setup(r => r.GetByIdsAsync(It.IsAny<IReadOnlyCollection<OrderId>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(orders.ToList());
     }
 }

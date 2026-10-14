@@ -8,4 +8,9 @@ public class UnitOfWork(OrderingDbContext context) : IUnitOfWork
     {
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public void ClearChangeTracker()
+    {
+        context.ChangeTracker.Clear();
+    }
 }
