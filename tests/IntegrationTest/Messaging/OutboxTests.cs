@@ -58,6 +58,8 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
         });
         builder.Services.AddMassTransitTestHarness(x =>
         {
+            // Timeouts must be set before the host starts the harness; assigning them afterwards has no effect.
+            x.SetTestTimeouts(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
             x.AddConsumer<OrderPlacedIntegrationSubscriber>();
             x.AddEntityFrameworkOutbox<AppDbContext>(o =>
             {
@@ -72,8 +74,6 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
         await _host.StartAsync();
 
         var harness = _host.Services.GetRequiredService<ITestHarness>();
-        harness.TestTimeout = TimeSpan.FromSeconds(10);
-        harness.TestInactivityTimeout = TimeSpan.FromSeconds(10);
         await harness.Start();
         return harness;
     }
