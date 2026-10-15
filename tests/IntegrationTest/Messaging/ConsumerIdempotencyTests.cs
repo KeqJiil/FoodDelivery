@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using MassTransit;
@@ -35,9 +36,9 @@ public class ConsumerIdempotencyTests(MsSqlContainerFixture fixture)
     private async Task<(ServiceProvider Provider, ITestHarness Harness)> StartOrderingHarnessAsync()
     {
         var services = new ServiceCollection();
-        services.AddScoped<DomainEventPublishInterceptor>();
+        services.AddPersistence(Configuration);
         services.AddOrderingModule(Configuration);
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(OrderingDbContext).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(OrderingModel).Assembly));
         services.AddMassTransitTestHarness(x =>
         {
             x.AddConsumer<OrderProcessConsumer>().Endpoint(e => e.Name = Queues.OrderProcess);
@@ -55,9 +56,9 @@ public class ConsumerIdempotencyTests(MsSqlContainerFixture fixture)
     private async Task<(ServiceProvider Provider, ITestHarness Harness)> StartDeliveriesHarnessAsync()
     {
         var services = new ServiceCollection();
-        services.AddScoped<DomainEventPublishInterceptor>();
+        services.AddPersistence(Configuration);
         services.AddDeliveriesModule(Configuration);
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DeliveriesDbContext).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DeliveriesModel).Assembly));
         services.AddMassTransitTestHarness(x =>
         {
             x.AddConsumer<CreateDeliveryConsumer>().Endpoint(e => e.Name = Queues.CreateDelivery);
@@ -90,8 +91,8 @@ public class ConsumerIdempotencyTests(MsSqlContainerFixture fixture)
         var order = CreatePendingOrder();
         using (var scope = provider.CreateScope())
         {
-            var context = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-            context.Orders.Add(order);
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            context.Set<Order>().Add(order);
             await context.SaveChangesAsync();
         }
         
@@ -101,8 +102,8 @@ public class ConsumerIdempotencyTests(MsSqlContainerFixture fixture)
         (await harness.Consumed.SelectAsync<OrderProcess>().CountAsync()).Should().Be(2);
 
         using var readScope = provider.CreateScope();
-        var readContext = readScope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-        var reloaded = await readContext.Orders.FirstAsync(o => o.Id == order.Id);
+        var readContext = readScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var reloaded = await readContext.Set<Order>().FirstAsync(o => o.Id == order.Id);
         reloaded.Status.Should().Be(OrderStatus.Processing);
     }
 
@@ -118,8 +119,8 @@ public class ConsumerIdempotencyTests(MsSqlContainerFixture fixture)
         order.Confirm();
         using (var scope = provider.CreateScope())
         {
-            var context = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-            context.Orders.Add(order);
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            context.Set<Order>().Add(order);
             await context.SaveChangesAsync();
         }
 
@@ -127,8 +128,8 @@ public class ConsumerIdempotencyTests(MsSqlContainerFixture fixture)
         (await harness.Consumed.Any<ConfirmOrder>()).Should().BeTrue();
 
         using var readScope = provider.CreateScope();
-        var readContext = readScope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-        var reloaded = await readContext.Orders.FirstAsync(o => o.Id == order.Id);
+        var readContext = readScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var reloaded = await readContext.Set<Order>().FirstAsync(o => o.Id == order.Id);
         reloaded.Status.Should().Be(OrderStatus.Confirmed);
     }
 
@@ -147,8 +148,8 @@ public class ConsumerIdempotencyTests(MsSqlContainerFixture fixture)
         (await harness.Consumed.SelectAsync<CreateDelivery>().CountAsync()).Should().Be(2);
 
         using var readScope = provider.CreateScope();
-        var readContext = readScope.ServiceProvider.GetRequiredService<DeliveriesDbContext>();
-        var deliveries = await readContext.Deliveries
+        var readContext = readScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var deliveries = await readContext.Set<global::Deliveries.Domain.Aggregates.Delivery>()
             .Where(d => d.OrderRefId == new OrderRefId(orderId))
             .ToListAsync();
         

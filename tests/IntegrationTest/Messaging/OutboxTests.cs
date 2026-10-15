@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using MassTransit;
@@ -49,16 +50,16 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
         builder.Services.AddScoped<DomainEventPublishInterceptor>();
         builder.Services.AddScoped<IIntegrationEventTranslator<Ordering.Domain.Events.OrderPlaced>,
             Ordering.Infrastructure.Messaging.Translators.OrderPlacedIntegrationEventTranslator>();
-        builder.Services.AddDbContext<OrderingDbContext>((sp, options) =>
+        builder.Services.AddDbContext<AppDbContext>((sp, options) =>
         {
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
-                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", "ordering").EnableRetryOnFailure());
+                sql => sql.EnableRetryOnFailure());
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
         builder.Services.AddMassTransitTestHarness(x =>
         {
             x.AddConsumer<OrderPlacedIntegrationSubscriber>();
-            x.AddEntityFrameworkOutbox<OrderingDbContext>(o =>
+            x.AddEntityFrameworkOutbox<AppDbContext>(o =>
             {
                 o.UseSqlServer();
                 o.QueryDelay = TimeSpan.FromMilliseconds(200);
@@ -96,8 +97,8 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
 
         using (var scope = _host!.Services.CreateScope())
         {
-            var context = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-            context.Orders.Add(order);
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            context.Set<Order>().Add(order);
             await context.SaveChangesAsync();
         }
 
@@ -121,12 +122,12 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
 
         using (var scope = _host!.Services.CreateScope())
         {
-            var context = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var strategy = context.Database.CreateExecutionStrategy();
             await strategy.ExecuteAsync(async () =>
             {
                 await using var transaction = await context.Database.BeginTransactionAsync();
-                context.Orders.Add(order);
+                context.Set<Order>().Add(order);
                 await context.SaveChangesAsync();
                 await transaction.RollbackAsync();
             });
@@ -137,7 +138,7 @@ public class OutboxTests(MsSqlContainerFixture fixture) : IAsyncDisposable
             .Should().BeFalse();
 
         using var readScope = _host!.Services.CreateScope();
-        var readContext = readScope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-        (await readContext.Orders.AnyAsync(o => o.Id == order.Id)).Should().BeFalse();
+        var readContext = readScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await readContext.Set<Order>().AnyAsync(o => o.Id == order.Id)).Should().BeFalse();
     }
 }

@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -19,12 +20,12 @@ public class OrderRequestPersistenceTests(MsSqlContainerFixture fixture) : Integ
 
         await using (var writeContext = CreateOrderRequestsContext())
         {
-            writeContext.OrderRequests.Add(request);
+            writeContext.Set<OrderRequest>().Add(request);
             await writeContext.SaveChangesAsync();
         }
 
         await using var readContext = CreateOrderRequestsContext();
-        var reloaded = await readContext.OrderRequests.FirstOrDefaultAsync(r => r.Id == request.Id);
+        var reloaded = await readContext.Set<OrderRequest>().FirstOrDefaultAsync(r => r.Id == request.Id);
 
         reloaded.Should().NotBeNull();
         reloaded!.Status.Should().Be(OrderRequestStatus.Pending);
@@ -40,15 +41,15 @@ public class OrderRequestPersistenceTests(MsSqlContainerFixture fixture) : Integ
 
         await using (var writeContext = CreateOrderRequestsContext())
         {
-            writeContext.OrderRequests.Add(request);
+            writeContext.Set<OrderRequest>().Add(request);
             await writeContext.SaveChangesAsync();
         }
 
         await using var firstContext = CreateOrderRequestsContext();
         await using var secondContext = CreateOrderRequestsContext();
 
-        var firstCopy = await firstContext.OrderRequests.FirstAsync(r => r.Id == request.Id);
-        var secondCopy = await secondContext.OrderRequests.FirstAsync(r => r.Id == request.Id);
+        var firstCopy = await firstContext.Set<OrderRequest>().FirstAsync(r => r.Id == request.Id);
+        var secondCopy = await secondContext.Set<OrderRequest>().FirstAsync(r => r.Id == request.Id);
 
         firstCopy.Approve();
         await firstContext.SaveChangesAsync();
@@ -68,6 +69,6 @@ public class OrderRequestPersistenceTests(MsSqlContainerFixture fixture) : Integ
         caughtException.Should().NotBeNull();
     }
 
-    private OrderRequestsDbContext CreateOrderRequestsContext() =>
-        CreateContext<OrderRequestsDbContext>("order_requests", o => new OrderRequestsDbContext(o));
+    private AppDbContext CreateOrderRequestsContext() =>
+        CreateAppContext();
 }

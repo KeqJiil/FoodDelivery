@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Ordering.Domain.Aggregates;
@@ -23,7 +24,7 @@ public class OrderReaderTests(MsSqlContainerFixture fixture) : IntegrationTestBa
 
         await using (var context = CreateOrderingContext())
         {
-            context.Orders.Add(order);
+            context.Set<Order>().Add(order);
             await context.SaveChangesAsync();
         }
 
@@ -46,7 +47,7 @@ public class OrderReaderTests(MsSqlContainerFixture fixture) : IntegrationTestBa
 
         await using (var context = CreateOrderingContext())
         {
-            context.Orders.Add(order);
+            context.Set<Order>().Add(order);
             await context.SaveChangesAsync();
         }
 
@@ -70,8 +71,8 @@ public class OrderReaderTests(MsSqlContainerFixture fixture) : IntegrationTestBa
         dto.Should().BeNull();
     }
 
-    private OrderingDbContext CreateOrderingContext()
+    private AppDbContext CreateOrderingContext()
     {
-        return CreateContext<OrderingDbContext>("ordering", o => new OrderingDbContext(o));
+        return CreateAppContext();
     }
 }

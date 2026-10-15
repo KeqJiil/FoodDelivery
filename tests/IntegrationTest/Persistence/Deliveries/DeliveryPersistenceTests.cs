@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -18,12 +19,12 @@ public class DeliveryPersistenceTests(MsSqlContainerFixture fixture) : Integrati
 
         await using (var writeContext = CreateDeliveriesContext())
         {
-            writeContext.Deliveries.Add(delivery);
+            writeContext.Set<Delivery>().Add(delivery);
             await writeContext.SaveChangesAsync();
         }
 
         await using var readContext = CreateDeliveriesContext();
-        var reloaded = await readContext.Deliveries.FirstOrDefaultAsync(d => d.Id == delivery.Id);
+        var reloaded = await readContext.Set<Delivery>().FirstOrDefaultAsync(d => d.Id == delivery.Id);
 
         reloaded.Should().NotBeNull();
         reloaded!.Status.Should().Be(DeliveryStatus.Pending);
@@ -38,26 +39,26 @@ public class DeliveryPersistenceTests(MsSqlContainerFixture fixture) : Integrati
 
         await using (var writeContext = CreateDeliveriesContext())
         {
-            writeContext.Deliveries.Add(delivery);
+            writeContext.Set<Delivery>().Add(delivery);
             await writeContext.SaveChangesAsync();
         }
 
         await using (var pickUpContext = CreateDeliveriesContext())
         {
-            var tracked = await pickUpContext.Deliveries.FirstAsync(d => d.Id == delivery.Id);
+            var tracked = await pickUpContext.Set<Delivery>().FirstAsync(d => d.Id == delivery.Id);
             tracked.MarkPickedUp();
             await pickUpContext.SaveChangesAsync();
         }
 
         await using (var completeContext = CreateDeliveriesContext())
         {
-            var tracked = await completeContext.Deliveries.FirstAsync(d => d.Id == delivery.Id);
+            var tracked = await completeContext.Set<Delivery>().FirstAsync(d => d.Id == delivery.Id);
             tracked.Complete();
             await completeContext.SaveChangesAsync();
         }
 
         await using var readContext = CreateDeliveriesContext();
-        var reloaded = await readContext.Deliveries.FirstAsync(d => d.Id == delivery.Id);
+        var reloaded = await readContext.Set<Delivery>().FirstAsync(d => d.Id == delivery.Id);
 
         reloaded.Status.Should().Be(DeliveryStatus.Delivered);
     }
@@ -69,15 +70,15 @@ public class DeliveryPersistenceTests(MsSqlContainerFixture fixture) : Integrati
 
         await using (var writeContext = CreateDeliveriesContext())
         {
-            writeContext.Deliveries.Add(delivery);
+            writeContext.Set<Delivery>().Add(delivery);
             await writeContext.SaveChangesAsync();
         }
 
         await using var firstContext = CreateDeliveriesContext();
         await using var secondContext = CreateDeliveriesContext();
 
-        var firstCopy = await firstContext.Deliveries.FirstAsync(d => d.Id == delivery.Id);
-        var secondCopy = await secondContext.Deliveries.FirstAsync(d => d.Id == delivery.Id);
+        var firstCopy = await firstContext.Set<Delivery>().FirstAsync(d => d.Id == delivery.Id);
+        var secondCopy = await secondContext.Set<Delivery>().FirstAsync(d => d.Id == delivery.Id);
 
         firstCopy.MarkPickedUp();
         await firstContext.SaveChangesAsync();
@@ -97,6 +98,6 @@ public class DeliveryPersistenceTests(MsSqlContainerFixture fixture) : Integrati
         caughtException.Should().NotBeNull();
     }
 
-    private DeliveriesDbContext CreateDeliveriesContext() =>
-        CreateContext<DeliveriesDbContext>("deliveries", o => new DeliveriesDbContext(o));
+    private AppDbContext CreateDeliveriesContext() =>
+        CreateAppContext();
 }

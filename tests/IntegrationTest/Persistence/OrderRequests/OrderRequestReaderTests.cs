@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using OrderRequests.Domain.Aggregates;
@@ -19,7 +20,7 @@ public class OrderRequestReaderTests(MsSqlContainerFixture fixture) : Integratio
 
         await using (var writeContext = CreateOrderRequestsContext())
         {
-            writeContext.OrderRequests.Add(request);
+            writeContext.Set<OrderRequest>().Add(request);
             await writeContext.SaveChangesAsync();
         }
 
@@ -61,7 +62,7 @@ public class OrderRequestReaderTests(MsSqlContainerFixture fixture) : Integratio
 
         await using (var writeContext = CreateOrderRequestsContext())
         {
-            writeContext.OrderRequests.AddRange(pendingForTarget, approvedForTarget, pendingForOther);
+            writeContext.Set<OrderRequest>().AddRange(pendingForTarget, approvedForTarget, pendingForOther);
             await writeContext.SaveChangesAsync();
         }
 
@@ -84,7 +85,7 @@ public class OrderRequestReaderTests(MsSqlContainerFixture fixture) : Integratio
 
         await using (var writeContext = CreateOrderRequestsContext())
         {
-            writeContext.OrderRequests.AddRange(requests);
+            writeContext.Set<OrderRequest>().AddRange(requests);
             await writeContext.SaveChangesAsync();
         }
 
@@ -105,6 +106,6 @@ public class OrderRequestReaderTests(MsSqlContainerFixture fixture) : Integratio
             .BeEquivalentTo(requests.Select(r => r.Id.Id));
     }
 
-    private OrderRequestsDbContext CreateOrderRequestsContext() =>
-        CreateContext<OrderRequestsDbContext>("order_requests", o => new OrderRequestsDbContext(o));
+    private AppDbContext CreateOrderRequestsContext() =>
+        CreateAppContext();
 }

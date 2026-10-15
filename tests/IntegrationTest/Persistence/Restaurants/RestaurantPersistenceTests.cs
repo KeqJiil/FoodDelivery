@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -30,12 +31,12 @@ public class RestaurantPersistenceTests(MsSqlContainerFixture fixture) : Integra
 
         await using (var writeContext = CreateRestaurantsContext())
         {
-            writeContext.Restaurants.Add(restaurant);
+            writeContext.Set<Restaurant>().Add(restaurant);
             await writeContext.SaveChangesAsync();
         }
 
         await using var readContext = CreateRestaurantsContext();
-        var reloaded = await readContext.Restaurants
+        var reloaded = await readContext.Set<Restaurant>()
             .Include(r => r.MenuItems)
             .FirstOrDefaultAsync(r => r.Id == restaurant.Id);
 
@@ -49,8 +50,8 @@ public class RestaurantPersistenceTests(MsSqlContainerFixture fixture) : Integra
         reloaded.MenuItems.Should().ContainSingle().Which.Price.Should().Be(Money.Create(Currency.Usd, 8m).Ok!);
     }
 
-    private RestaurantsDbContext CreateRestaurantsContext()
+    private AppDbContext CreateRestaurantsContext()
     {
-        return CreateContext<RestaurantsDbContext>("restaurants", o => new RestaurantsDbContext(o));
+        return CreateAppContext();
     }
 }

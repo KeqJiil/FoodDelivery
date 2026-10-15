@@ -1,8 +1,9 @@
-﻿using Restaurants.Application.Abstractions;
+﻿using Microsoft.EntityFrameworkCore;
+using Restaurants.Application.Abstractions;
 
 namespace Restaurants.Infrastructure.Persistence;
 
-public class UnitOfWork(RestaurantsDbContext context) : IUnitOfWork
+public class UnitOfWork(DbContext context) : IUnitOfWork
 {
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {

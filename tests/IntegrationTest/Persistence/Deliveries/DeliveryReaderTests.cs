@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Deliveries.Domain.Aggregates;
@@ -18,7 +19,7 @@ public class DeliveryReaderTests(MsSqlContainerFixture fixture) : IntegrationTes
 
         await using (var writeContext = CreateDeliveriesContext())
         {
-            writeContext.Deliveries.Add(delivery);
+            writeContext.Set<Delivery>().Add(delivery);
             await writeContext.SaveChangesAsync();
         }
 
@@ -44,6 +45,6 @@ public class DeliveryReaderTests(MsSqlContainerFixture fixture) : IntegrationTes
         dto.Should().BeNull();
     }
 
-    private DeliveriesDbContext CreateDeliveriesContext() =>
-        CreateContext<DeliveriesDbContext>("deliveries", o => new DeliveriesDbContext(o));
+    private AppDbContext CreateDeliveriesContext() =>
+        CreateAppContext();
 }

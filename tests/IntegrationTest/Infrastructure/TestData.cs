@@ -1,3 +1,4 @@
+using Api.Persistence;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -126,14 +127,13 @@ public static class TestData
         return body.FirstOrDefault(x => x.OrderId == orderId);
     }
 
-    private static TContext CreateContext<TContext>(string connectionString, string schema,
-        Func<DbContextOptions<TContext>, TContext> create) where TContext : DbContext
+    private static AppDbContext CreateAppContext(string connectionString)
     {
-        var options = new DbContextOptionsBuilder<TContext>()
-            .UseSqlServer(connectionString, sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", schema))
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlServer(connectionString)
             .Options;
 
-        return create(options);
+        return new AppDbContext(options);
     }
     
     public static async Task<Guid> SeedPayment(string connectionString, decimal amount = 25m)
@@ -143,9 +143,8 @@ public static class TestData
             new Payments.Domain.Ids.OrderRefId(Guid.NewGuid()),
             Money.Create(Currency.Usd, amount).Ok!);
 
-        await using var context = CreateContext<PaymentsDbContext>(connectionString, "payments",
-            o => new PaymentsDbContext(o));
-        context.Payments.Add(payment);
+        await using var context = CreateAppContext(connectionString);
+        context.Set<global::Payments.Domain.Aggregates.Payment>().Add(payment);
         await context.SaveChangesAsync();
 
         return payment.Id.Id;
@@ -157,9 +156,8 @@ public static class TestData
             new Deliveries.Domain.Ids.DeliveryId(Guid.NewGuid()),
             new Deliveries.Domain.Ids.OrderRefId(Guid.NewGuid()));
 
-        await using var context = CreateContext<DeliveriesDbContext>(connectionString, "deliveries",
-            o => new DeliveriesDbContext(o));
-        context.Deliveries.Add(delivery);
+        await using var context = CreateAppContext(connectionString);
+        context.Set<global::Deliveries.Domain.Aggregates.Delivery>().Add(delivery);
         await context.SaveChangesAsync();
 
         return delivery.Id.Id;
@@ -172,9 +170,8 @@ public static class TestData
             new OrderRequests.Domain.Ids.OrderRefId(Guid.NewGuid()),
             new OrderRequests.Domain.Ids.RestaurantRefId(Guid.NewGuid()));
 
-        await using var context = CreateContext<OrderRequestsDbContext>(connectionString, "order_requests",
-            o => new OrderRequestsDbContext(o));
-        context.OrderRequests.Add(orderRequest);
+        await using var context = CreateAppContext(connectionString);
+        context.Set<global::OrderRequests.Domain.Aggregates.OrderRequest>().Add(orderRequest);
         await context.SaveChangesAsync();
 
         return orderRequest.Id.Id;
@@ -183,27 +180,25 @@ public static class TestData
     public static async Task<Payments.Domain.Aggregates.Payment?> FindPaymentByOrderId(string connectionString,
         Guid orderId)
     {
-        await using var context = CreateContext<PaymentsDbContext>(connectionString, "payments",
-            o => new PaymentsDbContext(o));
+        await using var context = CreateAppContext(connectionString);
 
-        return await context.Payments.AsNoTracking()
+        return await context.Set<global::Payments.Domain.Aggregates.Payment>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.OrderRefId == new Payments.Domain.Ids.OrderRefId(orderId));
     }
 
     public static async Task<Deliveries.Domain.Aggregates.Delivery?> FindDeliveryByOrderId(string connectionString,
         Guid orderId)
     {
-        await using var context = CreateContext<DeliveriesDbContext>(connectionString, "deliveries",
-            o => new DeliveriesDbContext(o));
+        await using var context = CreateAppContext(connectionString);
 
-        return await context.Deliveries.AsNoTracking()
+        return await context.Set<global::Deliveries.Domain.Aggregates.Delivery>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.OrderRefId == new Deliveries.Domain.Ids.OrderRefId(orderId));
     }
 
     public static async Task<OrderState?> GetSagaState(string connectionString, Guid orderId)
     {
-        await using var context = CreateContext<SagaDbContext>(connectionString, "saga", o => new SagaDbContext(o));
+        await using var context = CreateAppContext(connectionString);
 
-        return await context.OrderStates.AsNoTracking().FirstOrDefaultAsync(x => x.CorrelationId == orderId);
+        return await context.Set<OrderState>().AsNoTracking().FirstOrDefaultAsync(x => x.CorrelationId == orderId);
     }
 }

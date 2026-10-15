@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using MassTransit;
@@ -44,15 +45,14 @@ public abstract class OrderSagaIntegrationTestBase(MsSqlContainerFixture fixture
     {
         var services = new ServiceCollection();
         services.AddSingleton(Microsoft.Extensions.Options.Options.Create(Options));
-        services.AddDbContext<SagaDbContext>(o => o.UseSqlServer(fixture.ConnectionString,
-            sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", "saga")));
+        services.AddDbContext<AppDbContext>(o => o.UseSqlServer(fixture.ConnectionString));
         services.AddMassTransitTestHarness(x =>
         {
             x.AddDelayedMessageScheduler();
             x.AddSagaStateMachine<OrderSaga, OrderState>().EntityFrameworkRepository(r =>
             {
                 r.ConcurrencyMode = ConcurrencyMode.Optimistic;
-                r.ExistingDbContext<SagaDbContext>();
+                r.ExistingDbContext<AppDbContext>();
             });
             x.UsingInMemory((context, cfg) =>
             {
@@ -86,8 +86,8 @@ public abstract class OrderSagaIntegrationTestBase(MsSqlContainerFixture fixture
     protected async Task<OrderState?> LoadFromDbAsync(Guid orderId)
     {
         using var scope = _provider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<SagaDbContext>();
-        return await context.OrderStates.AsNoTracking().FirstOrDefaultAsync(x => x.CorrelationId == orderId);
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return await context.Set<OrderState>().AsNoTracking().FirstOrDefaultAsync(x => x.CorrelationId == orderId);
     }
 
     protected async Task<OrderState> LoadFromDbOrThrowAsync(Guid orderId)
@@ -100,8 +100,8 @@ public abstract class OrderSagaIntegrationTestBase(MsSqlContainerFixture fixture
     protected async Task<int> CountRowsAsync(Guid orderId)
     {
         using var scope = _provider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<SagaDbContext>();
-        return await context.OrderStates.CountAsync(x => x.CorrelationId == orderId);
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return await context.Set<OrderState>().CountAsync(x => x.CorrelationId == orderId);
     }
 
     protected Task<Guid?> GivenAwaitingApproval(Guid orderId, decimal amount = 50m, Currency currency = Currency.Usd) =>

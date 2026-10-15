@@ -1,16 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using Payments.Domain.Aggregates;
 using Payments.Application.Abstractions;
 using Payments.Application.GetPaymentById;
 using Payments.Domain.Ids;
 
 namespace Payments.Infrastructure.Persistence.Readers;
 
-public class PaymentReader(PaymentsDbContext context) : IPaymentReader
+public class PaymentReader(DbContext context) : IPaymentReader
 {
     public async Task<PaymentDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var paymentId = new PaymentId(id);
-        return await context.Payments.AsNoTracking().Where(x => x.Id == paymentId).Select(x =>
+        return await context.Set<Payment>().AsNoTracking().Where(x => x.Id == paymentId).Select(x =>
             new PaymentDto(x.Id.Id, x.OrderRefId.Id, x.Amount, x.Status, x.FailureReason,
                 EF.Property<DateTime>(x, "CreatedAt"))).FirstOrDefaultAsync(cancellationToken);
     }

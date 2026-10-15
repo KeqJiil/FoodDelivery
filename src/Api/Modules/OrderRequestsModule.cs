@@ -1,5 +1,5 @@
 ﻿using MassTransit;
-using Microsoft.EntityFrameworkCore;
+using SharedKernel.Infrastructure.Interceptors;
 using OrderRequests.Application.Abstractions;
 using OrderRequests.Domain.Events;
 using OrderRequests.Infrastructure.Messaging.Consumers;
@@ -8,7 +8,6 @@ using SharedKernel.Infrastructure.Messaging;
 using OrderRequests.Infrastructure.Persistence;
 using OrderRequests.Infrastructure.Persistence.Readers;
 using OrderRequests.Infrastructure.Persistence.Repositories;
-using SharedKernel.Infrastructure.Interceptors;
 using UnitOfWork = OrderRequests.Infrastructure.Persistence.UnitOfWork;
 
 namespace Api.Modules;
@@ -24,12 +23,6 @@ public static class OrderRequestsModule
         services.AddScoped<IIntegrationEventTranslator<OrderCancelled>, OrderRequestCancelledIntegrationTranslator>();
         services.AddScoped<IIntegrationEventTranslator<OrderRejected>, OrderRejectedIntegrationEventTranslator>();
 
-        services.AddDbContext<OrderRequestsDbContext>((sp, options) =>
-        {
-            options.UseSqlServer(config.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "order_requests"); });
-            options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
-        });
-
         return services;
     }
 
@@ -40,22 +33,7 @@ public static class OrderRequestsModule
             .Endpoint(e => e.Name = Queues.CreateRequest);
         busConfigurator.AddConsumer<OrderCancelConsumer>()
             .Endpoint(e => e.Name = Queues.CancelOrderRequest);
-        busConfigurator.AddEntityFrameworkOutbox<OrderRequestsDbContext>(o =>
-            {
-                o.UseSqlServer();
-                o.QueryDelay = TimeSpan.FromMilliseconds(configuration.GetValue("Messaging:OutboxQueryDelayMs", 10000));
-            }
-        );
 
         return busConfigurator;
-    }
-
-    public static async Task MigrateOrderRequestsDatabaseAsync(this WebApplication app, IConfiguration configuration)
-    {
-        var options = new DbContextOptionsBuilder<OrderRequestsDbContext>()
-            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "order_requests"); })
-            .Options;
-        await using var context = new OrderRequestsDbContext(options);
-        await context.Database.MigrateAsync();
     }
 }

@@ -5,16 +5,16 @@ using OrderRequests.Domain.Ids;
 
 namespace OrderRequests.Infrastructure.Persistence.Repositories;
 
-public class OrderRequestRepository(OrderRequestsDbContext ctx) : IOrderRequestRepository
+public class OrderRequestRepository(DbContext ctx) : IOrderRequestRepository
 {
     public async Task<OrderRequest?> GetByIdAsync(OrderRequestId id, CancellationToken cancellationToken)
     {
-        return await ctx.OrderRequests.Where(x => x.Id == id).FirstOrDefaultAsync(cancellationToken);
+        return await ctx.Set<OrderRequest>().Where(x => x.Id == id).FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<OrderRequest?> GetByOrderRefIdAsync(OrderRefId orderRefId, CancellationToken cancellationToken = default)
     {
-        return await ctx.OrderRequests.Where(x => x.OrderRefId == orderRefId).FirstOrDefaultAsync(cancellationToken);
+        return await ctx.Set<OrderRequest>().Where(x => x.OrderRefId == orderRefId).FirstOrDefaultAsync(cancellationToken);
     }
 
     public void Add(OrderRequest orderRequest)

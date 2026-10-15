@@ -1,8 +1,11 @@
-﻿using Ordering.Application.Abstractions;
+using Microsoft.EntityFrameworkCore;
+using Ordering.Application.Abstractions;
+using Ordering.Domain.Aggregates;
+using Ordering.Domain.Entities;
 
 namespace Ordering.Infrastructure.Persistence;
 
-public class UnitOfWork(OrderingDbContext context) : IUnitOfWork
+public class UnitOfWork(DbContext context) : IUnitOfWork
 {
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -11,6 +14,12 @@ public class UnitOfWork(OrderingDbContext context) : IUnitOfWork
 
     public void ClearChangeTracker()
     {
-        context.ChangeTracker.Clear();
+        var entries = context.ChangeTracker.Entries<Order>()
+            .Cast<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry>()
+            .Concat(context.ChangeTracker.Entries<OrderLine>())
+            .ToList();
+
+        foreach (var entry in entries)
+            entry.State = EntityState.Detached;
     }
 }

@@ -7,7 +7,7 @@ namespace FoodDelivery.IntegrationTest.Infrastructure;
 public class DatabaseResetter(string connectionString)
 {
     private static readonly string[] Schemas =
-        ["ordering", "restaurants", "order_requests", "payments", "deliveries", "saga"];
+        ["ordering", "restaurants", "order_requests", "payments", "deliveries", "saga", "messaging"];
 
     private Respawner _respawner = null!;
     
@@ -20,7 +20,7 @@ public class DatabaseResetter(string connectionString)
         {
             DbAdapter = DbAdapter.SqlServer,
             SchemasToInclude = Schemas,
-            TablesToIgnore = Schemas.Select(schema => new Table(schema, "__EFMigrationsHistory")).ToArray()
+            TablesToIgnore = [new Table("messaging", "__EFMigrationsHistory")]
         });
     }
 

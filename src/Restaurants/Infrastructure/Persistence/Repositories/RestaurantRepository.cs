@@ -5,16 +5,16 @@ using Restaurants.Domain.Ids;
 
 namespace Restaurants.Infrastructure.Persistence.Repositories;
 
-public class RestaurantRepository(RestaurantsDbContext context) : IRestaurantRepository
+public class RestaurantRepository(DbContext context) : IRestaurantRepository
 {
     public async Task<Restaurant?> GetById(RestaurantId id, CancellationToken cancellationToken = default)
     {
-        return await context.Restaurants.Where(r => r.Id == id).Include(r => r.MenuItems)
+        return await context.Set<Restaurant>().Where(r => r.Id == id).Include(r => r.MenuItems)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
     public void Add(Restaurant restaurant)
     {
-        context.Restaurants.Add(restaurant);
+        context.Set<Restaurant>().Add(restaurant);
     }
 }

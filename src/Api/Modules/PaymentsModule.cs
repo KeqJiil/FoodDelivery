@@ -1,5 +1,5 @@
 ﻿using MassTransit;
-using Microsoft.EntityFrameworkCore;
+using SharedKernel.Infrastructure.Interceptors;
 using Payments.Application.Abstractions;
 using Payments.Domain.Events;
 using Payments.Infrastructure.Adapters;
@@ -9,7 +9,6 @@ using SharedKernel.Infrastructure.Messaging;
 using Payments.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence.Readers;
 using Payments.Infrastructure.Persistence.Repositories;
-using SharedKernel.Infrastructure.Interceptors;
 using UnitOfWork = Payments.Infrastructure.Persistence.UnitOfWork;
 
 namespace Api.Modules;
@@ -26,12 +25,6 @@ public static class PaymentsModule
         services.AddScoped<IIntegrationEventTranslator<PaymentFailed>, PaymentFailedIntegrationEventTranslator>();
         services.AddScoped<IIntegrationEventTranslator<PaymentCancelled>, PaymentCancelledIntegrationTranslator>();
 
-        services.AddDbContext<PaymentsDbContext>((sp, options) =>
-        {
-            options.UseSqlServer(config.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "payments"); });
-            options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
-        });
-
         return services;
     }
 
@@ -42,22 +35,7 @@ public static class PaymentsModule
             .Endpoint(e => e.Name = Queues.CreatePayment);
         busConfigurator.AddConsumer<CancelPaymentConsumer>()
             .Endpoint(e => e.Name = Queues.CancelPayment);
-        busConfigurator.AddEntityFrameworkOutbox<PaymentsDbContext>(o =>
-            {
-                o.UseSqlServer();
-                o.QueryDelay = TimeSpan.FromMilliseconds(configuration.GetValue("Messaging:OutboxQueryDelayMs", 10000));
-            }
-        );
 
         return busConfigurator;
-    }
-
-    public static async Task MigratePaymentsDatabaseAsync(this WebApplication app, IConfiguration configuration)
-    {
-        var options = new DbContextOptionsBuilder<PaymentsDbContext>()
-            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "payments"); })
-            .Options;
-        await using var context = new PaymentsDbContext(options);
-        await context.Database.MigrateAsync();
     }
 }

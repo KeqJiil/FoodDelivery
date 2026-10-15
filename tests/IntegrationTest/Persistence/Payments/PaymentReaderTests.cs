@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Payments.Domain.Aggregates;
@@ -20,7 +21,7 @@ public class PaymentReaderTests(MsSqlContainerFixture fixture) : IntegrationTest
 
         await using (var writeContext = CreatePaymentsContext())
         {
-            writeContext.Payments.Add(payment);
+            writeContext.Set<Payment>().Add(payment);
             await writeContext.SaveChangesAsync();
         }
 
@@ -47,6 +48,6 @@ public class PaymentReaderTests(MsSqlContainerFixture fixture) : IntegrationTest
         dto.Should().BeNull();
     }
 
-    private PaymentsDbContext CreatePaymentsContext() =>
-        CreateContext<PaymentsDbContext>("payments", o => new PaymentsDbContext(o));
+    private AppDbContext CreatePaymentsContext() =>
+        CreateAppContext();
 }

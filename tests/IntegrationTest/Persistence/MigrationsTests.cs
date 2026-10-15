@@ -1,7 +1,7 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Ordering.Infrastructure.Persistence;
 
 namespace FoodDelivery.IntegrationTest.Persistence;
 
@@ -9,14 +9,13 @@ namespace FoodDelivery.IntegrationTest.Persistence;
 public class MigrationsTests(MsSqlContainerFixture fixture)
 {
     [Fact]
-    public async Task OrderingDbContext_ShouldHaveNoPendingMigrations()
+    public async Task AppDbContext_ShouldHaveNoPendingMigrations()
     {
-        var options = new DbContextOptionsBuilder<OrderingDbContext>()
-            .UseSqlServer(fixture.ConnectionString,
-                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", "ordering"))
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlServer(fixture.ConnectionString, PersistenceModule.ConfigureSqlServer)
             .Options;
 
-        await using var context = new OrderingDbContext(options);
+        await using var context = new AppDbContext(options);
 
         var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
 

@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -22,12 +23,12 @@ public class OrderPersistenceTests(MsSqlContainerFixture fixture) : IntegrationT
 
         await using (var writeContext = CreateOrderingContext())
         {
-            writeContext.Orders.Add(order);
+            writeContext.Set<Order>().Add(order);
             await writeContext.SaveChangesAsync();
         }
 
         await using var readContext = CreateOrderingContext();
-        var reloaded = await readContext.Orders
+        var reloaded = await readContext.Set<Order>()
             .Include(o => o.OrderLines)
             .FirstOrDefaultAsync(o => o.Id == order.Id);
 
@@ -38,8 +39,8 @@ public class OrderPersistenceTests(MsSqlContainerFixture fixture) : IntegrationT
         reloaded.OrderLines[0].Price.Should().Be(Money.Create(Currency.Usd, 12.50m).Ok!);
     }
 
-    private OrderingDbContext CreateOrderingContext()
+    private AppDbContext CreateOrderingContext()
     {
-        return CreateContext<OrderingDbContext>("ordering", o => new OrderingDbContext(o));
+        return CreateAppContext();
     }
 }

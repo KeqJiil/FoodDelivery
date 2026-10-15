@@ -1,3 +1,4 @@
+using Api.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace FoodDelivery.IntegrationTest.Infrastructure;
@@ -17,13 +18,12 @@ public abstract class IntegrationTestBase(MsSqlContainerFixture fixture) : IAsyn
         return Task.CompletedTask;
     }
 
-    protected TContext CreateContext<TContext>(string schema, Func<DbContextOptions<TContext>, TContext> createContext)
-        where TContext : DbContext
+    protected AppDbContext CreateAppContext()
     {
-        var options = new DbContextOptionsBuilder<TContext>()
-            .UseSqlServer(ConnectionString, sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", schema))
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlServer(ConnectionString)
             .Options;
 
-        return createContext(options);
+        return new AppDbContext(options);
     }
 }

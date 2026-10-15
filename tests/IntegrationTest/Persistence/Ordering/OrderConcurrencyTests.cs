@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -20,15 +21,15 @@ public class OrderConcurrencyTests(MsSqlContainerFixture fixture) : IntegrationT
 
         await using (var writeContext = CreateOrderingContext())
         {
-            writeContext.Orders.Add(order);
+            writeContext.Set<Order>().Add(order);
             await writeContext.SaveChangesAsync();
         }
 
         await using var firstContext = CreateOrderingContext();
         await using var secondContext = CreateOrderingContext();
 
-        var firstCopy = await firstContext.Orders.Include(o => o.OrderLines).FirstAsync(o => o.Id == order.Id);
-        var secondCopy = await secondContext.Orders.Include(o => o.OrderLines).FirstAsync(o => o.Id == order.Id);
+        var firstCopy = await firstContext.Set<Order>().Include(o => o.OrderLines).FirstAsync(o => o.Id == order.Id);
+        var secondCopy = await secondContext.Set<Order>().Include(o => o.OrderLines).FirstAsync(o => o.Id == order.Id);
 
         firstCopy.Place(Money.Create(Currency.Usd, 1m).Ok!);
         await firstContext.SaveChangesAsync();
@@ -48,8 +49,8 @@ public class OrderConcurrencyTests(MsSqlContainerFixture fixture) : IntegrationT
         caughtException.Should().NotBeNull();
     }
 
-    private OrderingDbContext CreateOrderingContext()
+    private AppDbContext CreateOrderingContext()
     {
-        return CreateContext<OrderingDbContext>("ordering", o => new OrderingDbContext(o));
+        return CreateAppContext();
     }
 }

@@ -1,12 +1,11 @@
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
+using SharedKernel.Infrastructure.Interceptors;
 using Restaurants.Application.Abstractions;
 using Restaurants.Domain.Events;
 using Restaurants.Infrastructure.Messaging.Translators;
 using Restaurants.Infrastructure.Persistence;
 using Restaurants.Infrastructure.Persistence.Readers;
 using Restaurants.Infrastructure.Persistence.Repositories;
-using SharedKernel.Infrastructure.Interceptors;
 
 namespace Api.Modules;
 
@@ -19,34 +18,14 @@ public static class RestaurantsModule
         services.AddScoped<IRestaurantReader, RestaurantReader>();
         services.AddScoped<IIntegrationEventTranslator<MenuItemPriceChanged>, MenuItemPriceChangedIntegrationEventTranslator>();
 
-        services.AddDbContext<RestaurantsDbContext>((sp, options) =>
-        {
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "restaurants"); });
-            options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
-        });
-
         return services;
     }
 
     public static IBusRegistrationConfigurator AddRestaurantsMessaging(this IBusRegistrationConfigurator busConfigurator,
         IConfiguration configuration)
     {
-        busConfigurator.AddConsumers(typeof(RestaurantsDbContext).Assembly);
-        busConfigurator.AddEntityFrameworkOutbox<RestaurantsDbContext>(o =>
-        {
-            o.UseSqlServer();
-            o.QueryDelay = TimeSpan.FromMilliseconds(configuration.GetValue("Messaging:OutboxQueryDelayMs", 10000));
-        });
+        busConfigurator.AddConsumers(typeof(RestaurantsModel).Assembly);
 
         return busConfigurator;
-    }
-
-    public static async Task MigrateRestaurantsDatabaseAsync(this WebApplication app, IConfiguration configuration)
-    {
-        var options = new DbContextOptionsBuilder<RestaurantsDbContext>()
-            .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), sqlOptions => { sqlOptions.EnableRetryOnFailure(); sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "restaurants"); })
-            .Options;
-        await using var context = new RestaurantsDbContext(options);
-        await context.Database.MigrateAsync();
     }
 }

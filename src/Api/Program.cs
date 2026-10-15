@@ -4,8 +4,8 @@ using Api.ExceptionHandlers;
 using Api.Middleware;
 using Api.Modules;
 using Api.OpenApi;
+using Api.Persistence;
 using Azure.Monitor.OpenTelemetry.Exporter;
-using Deliveries.Infrastructure.Persistence;
 using MassTransit;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
@@ -16,12 +16,11 @@ using Ordering.Infrastructure.Persistence;
 using OrderRequests.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence;
 using Restaurants.Infrastructure.Persistence;
+using Deliveries.Infrastructure.Persistence;
 using Saga.Application;
-using Saga.Infrastructure.Persistence;
 using Serilog;
 using SharedKernel.Domain;
 using SharedKernel.Infrastructure;
-using SharedKernel.Infrastructure.Interceptors;
 using SharedKernel.Infrastructure.Messaging;
 using SharedKernel.Options;
 
@@ -55,15 +54,8 @@ if (!builder.Environment.IsDevelopment())
                 }));
     });
 
-builder.Services.AddScoped<DomainEventPublishInterceptor>();
-
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<OrderingDbContext>("ordering-db")
-    .AddDbContextCheck<RestaurantsDbContext>("restaurants-db")
-    .AddDbContextCheck<OrderRequestsDbContext>("order-requests-db")
-    .AddDbContextCheck<PaymentsDbContext>("payments-db")
-    .AddDbContextCheck<DeliveriesDbContext>("deliveries-db")
-    .AddDbContextCheck<SagaDbContext>("saga-db");
+    .AddDbContextCheck<AppDbContext>("db");
 
 var hasAzureMonitorConnectionString =
     !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING"));
@@ -89,12 +81,12 @@ builder.Services.AddOpenTelemetry().ConfigureResource(resource =>
             metrics.AddAzureMonitorMetricExporter();
     });
 
+builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddOrderingModule(builder.Configuration);
 builder.Services.AddRestaurantsModule(builder.Configuration);
 builder.Services.AddOrderRequestsModule(builder.Configuration);
 builder.Services.AddPaymentsModule(builder.Configuration);
 builder.Services.AddDeliveriesModule(builder.Configuration);
-builder.Services.AddSagaModule(builder.Configuration);
 
 builder.Services.AddOptions<SagaOptions>().Bind(builder.Configuration.GetSection(SagaOptions.SectionName))
     .ValidateDataAnnotations().ValidateOnStart();
@@ -108,6 +100,7 @@ builder.Services.AddMassTransit(x =>
     x.AddOrderRequestsMessaging(builder.Configuration);
     x.AddPaymentsMessaging(builder.Configuration);
     x.AddDeliveriesMessaging(builder.Configuration);
+    x.AddPersistenceOutbox(builder.Configuration);
 
     x.AddHealthChecks();
 
@@ -116,7 +109,7 @@ builder.Services.AddMassTransit(x =>
         cfg.UseDelayedRedelivery(r =>
             r.Intervals(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30)));
         cfg.UseMessageRetry(r => r.Immediate(5));
-        cfg.UseInMemoryOutbox(context);
+        cfg.UseEntityFrameworkOutbox<AppDbContext>(context);
     });
 
     x.AddDelayedMessageScheduler();
@@ -152,16 +145,16 @@ builder.Services.AddMassTransit(x =>
     x.AddSagaStateMachine<OrderSaga, OrderState>().EntityFrameworkRepository(r =>
     {
         r.ConcurrencyMode = ConcurrencyMode.Optimistic;
-        r.ExistingDbContext<SagaDbContext>();
+        r.ExistingDbContext<AppDbContext>();
     });
 });
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
-    typeof(OrderingDbContext).Assembly,
-    typeof(RestaurantsDbContext).Assembly,
-    typeof(OrderRequestsDbContext).Assembly,
-    typeof(PaymentsDbContext).Assembly,
-    typeof(DeliveriesDbContext).Assembly
+    typeof(OrderingModel).Assembly,
+    typeof(RestaurantsModel).Assembly,
+    typeof(OrderRequestsModel).Assembly,
+    typeof(PaymentsModel).Assembly,
+    typeof(DeliveriesModel).Assembly
 ));
 
 builder.Host.UseSerilog((context, services, configuration) =>
@@ -187,12 +180,7 @@ app.UseForwardedHeaders(forwardedHeadersOptions);
 app.MapOpenApi();
 app.MapSwaggerUI(setupAction: options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
 
-await app.MigrateOrderingDatabaseAsync(builder.Configuration);
-await app.MigrateRestaurantsDatabaseAsync(builder.Configuration);
-await app.MigrateOrderRequestsDatabaseAsync(builder.Configuration);
-await app.MigratePaymentsDatabaseAsync(builder.Configuration);
-await app.MigrateDeliveriesDatabaseAsync(builder.Configuration);
-await app.MigrateSagaDatabaseAsync(builder.Configuration);
+await app.MigrateDatabaseAsync();
 
 app.UseCors("AllowAll");
 app.UseMiddleware<CorrelationMiddleware>();

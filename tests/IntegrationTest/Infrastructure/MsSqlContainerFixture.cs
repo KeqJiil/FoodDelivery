@@ -1,3 +1,4 @@
+using Api.Persistence;
 using Deliveries.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -33,26 +34,20 @@ public class MsSqlContainerFixture : IAsyncLifetime
         };
 
         ConnectionString = builder.ConnectionString;
-        await MigrateAsync<OrderingDbContext>("ordering", o => new OrderingDbContext(o));
-        await MigrateAsync<RestaurantsDbContext>("restaurants", o => new RestaurantsDbContext(o));
-        await MigrateAsync<OrderRequestsDbContext>("order_requests", o => new OrderRequestsDbContext(o));
-        await MigrateAsync<PaymentsDbContext>("payments", o => new PaymentsDbContext(o));
-        await MigrateAsync<DeliveriesDbContext>("deliveries", o => new DeliveriesDbContext(o));
-        await MigrateAsync<SagaDbContext>("saga", o => new SagaDbContext(o));
+        await MigrateAsync();
         _resetter = new DatabaseResetter(ConnectionString);
         await _resetter.InitializeAsync();
     }
 
     public Task ResetDatabaseAsync() => _resetter.ResetAsync();
 
-    private async Task MigrateAsync<TContext>(string schema, Func<DbContextOptions<TContext>, TContext> createContext)
-        where TContext : DbContext
+    private async Task MigrateAsync()
     {
-        var options = new DbContextOptionsBuilder<TContext>()
-            .UseSqlServer(ConnectionString, sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", schema))
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlServer(ConnectionString, PersistenceModule.ConfigureSqlServer)
             .Options;
 
-        await using var context = createContext(options);
+        await using var context = new AppDbContext(options);
         await context.Database.MigrateAsync();
     }
 

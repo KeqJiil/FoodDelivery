@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Restaurants.Domain.Aggregates;
 using Restaurants.Application.Abstractions;
 using Restaurants.Application.GetRestaurantById;
 using Restaurants.Domain.Entities;
@@ -8,12 +9,12 @@ using SharedKernel.Domain.ValueObjects;
 
 namespace Restaurants.Infrastructure.Persistence.Readers;
 
-public class RestaurantReader(RestaurantsDbContext context, IClock clock) : IRestaurantReader
+public class RestaurantReader(DbContext context, IClock clock) : IRestaurantReader
 {
     public async Task<RestaurantDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var restaurantId = new RestaurantId(id);
-        return await context.Restaurants.AsNoTracking().Where(r => r.Id == restaurantId).Select(r => new RestaurantDto(
+        return await context.Set<Restaurant>().AsNoTracking().Where(r => r.Id == restaurantId).Select(r => new RestaurantDto(
             r.Id.Id,
             r.Name.Data,
             r.Description.Data,
@@ -34,7 +35,7 @@ public class RestaurantReader(RestaurantsDbContext context, IClock clock) : IRes
     public async Task<bool?> IsActiveAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var restaurantId = new RestaurantId(id);
-        var restaurant = await context.Restaurants.AsNoTracking().Where(x => x.Id == restaurantId)
+        var restaurant = await context.Set<Restaurant>().AsNoTracking().Where(x => x.Id == restaurantId)
             .FirstOrDefaultAsync(cancellationToken);
 
         return restaurant is not null && restaurant.IsActive() && restaurant.IsOpen(clock.Now);

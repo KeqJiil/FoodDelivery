@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OrderRequests.Domain.Aggregates;
 using OrderRequests.Application.Abstractions;
 using OrderRequests.Application.GetOrderRequestById;
 using OrderRequests.Domain.Enums;
@@ -6,12 +7,12 @@ using OrderRequests.Domain.Ids;
 
 namespace OrderRequests.Infrastructure.Persistence.Readers;
 
-public class OrderRequestReader(OrderRequestsDbContext context) : IOrderRequestReader
+public class OrderRequestReader(DbContext context) : IOrderRequestReader
 {
     public async Task<OrderRequestDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var orderRequestId = new OrderRequestId(id);
-        return await context.OrderRequests.AsNoTracking().Where(x => x.Id == orderRequestId).Select(x =>
+        return await context.Set<OrderRequest>().AsNoTracking().Where(x => x.Id == orderRequestId).Select(x =>
             new OrderRequestDto(x.Id.Id, x.RestaurantRefId.Id, x.OrderRefId.Id, x.Status,
                 EF.Property<DateTime>(x, "CreatedAt"))).FirstOrDefaultAsync(cancellationToken);
     }
@@ -22,7 +23,7 @@ public class OrderRequestReader(OrderRequestsDbContext context) : IOrderRequestR
     {
         var restaurantRefId = new RestaurantRefId(restaurantId);
 
-        var query = context.OrderRequests.AsNoTracking()
+        var query = context.Set<OrderRequest>().AsNoTracking()
             .Where(x => x.RestaurantRefId == restaurantRefId);
 
         if (statusFilter.HasValue)

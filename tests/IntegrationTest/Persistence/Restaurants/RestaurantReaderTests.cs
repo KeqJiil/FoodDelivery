@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Restaurants.Domain.Aggregates;
@@ -30,7 +31,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
 
         await using (var writeContext = CreateRestaurantsContext())
         {
-            writeContext.Restaurants.Add(restaurant);
+            writeContext.Set<Restaurant>().Add(restaurant);
             await writeContext.SaveChangesAsync();
         }
 
@@ -61,7 +62,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
 
         await using (var writeContext = CreateRestaurantsContext())
         {
-            writeContext.Restaurants.Add(restaurant);
+            writeContext.Set<Restaurant>().Add(restaurant);
             await writeContext.SaveChangesAsync();
         }
 
@@ -97,7 +98,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
 
         await using (var writeContext = CreateRestaurantsContext())
         {
-            writeContext.Restaurants.Add(restaurant);
+            writeContext.Set<Restaurant>().Add(restaurant);
             await writeContext.SaveChangesAsync();
         }
 
@@ -118,7 +119,7 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
 
         await using (var writeContext = CreateRestaurantsContext())
         {
-            writeContext.Restaurants.Add(restaurant);
+            writeContext.Set<Restaurant>().Add(restaurant);
             await writeContext.SaveChangesAsync();
         }
 
@@ -141,8 +142,8 @@ public class RestaurantReaderTests(MsSqlContainerFixture fixture) : IntegrationT
         isActive.Should().BeFalse();
     }
 
-    private RestaurantsDbContext CreateRestaurantsContext()
+    private AppDbContext CreateRestaurantsContext()
     {
-        return CreateContext<RestaurantsDbContext>("restaurants", o => new RestaurantsDbContext(o));
+        return CreateAppContext();
     }
 }

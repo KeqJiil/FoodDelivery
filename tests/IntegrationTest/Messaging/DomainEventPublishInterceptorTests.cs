@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using MassTransit;
@@ -31,10 +32,9 @@ public class DomainEventPublishInterceptorTests(MsSqlContainerFixture fixture) :
         services.AddScoped<IIntegrationEventTranslator<OrderPlaced>, OrderPlacedIntegrationEventTranslator>();
         services.AddScoped<IIntegrationEventTranslator<OrderConfirmed>, OrderConfirmedIntegrationEventTranslator>();
 
-        services.AddDbContext<OrderingDbContext>((sp, options) =>
+        services.AddDbContext<AppDbContext>((sp, options) =>
         {
-            options.UseSqlServer(fixture.ConnectionString,
-                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", "ordering"));
+            options.UseSqlServer(fixture.ConnectionString);
             options.AddInterceptors(sp.GetRequiredService<DomainEventPublishInterceptor>());
         });
 
@@ -66,8 +66,8 @@ public class DomainEventPublishInterceptorTests(MsSqlContainerFixture fixture) :
         order.Place(Money.Create(Currency.Usd, 0m).Ok!);
 
         using var scope = _provider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-        context.Orders.Add(order);
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        context.Set<Order>().Add(order);
         await context.SaveChangesAsync();
 
         (await _harness.Published.Any<OrderPlacedIntegration>(m => m.Context.Message.OrderId == order.Id.Id))
@@ -81,8 +81,8 @@ public class DomainEventPublishInterceptorTests(MsSqlContainerFixture fixture) :
         order.Place(Money.Create(Currency.Usd, 0m).Ok!);
 
         using var scope = _provider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-        context.Orders.Add(order);
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        context.Set<Order>().Add(order);
         await context.SaveChangesAsync();
 
         await context.SaveChangesAsync();
@@ -99,14 +99,14 @@ public class DomainEventPublishInterceptorTests(MsSqlContainerFixture fixture) :
 
         using (var placeScope = _provider.CreateScope())
         {
-            var placeContext = placeScope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-            placeContext.Orders.Add(order);
+            var placeContext = placeScope.ServiceProvider.GetRequiredService<AppDbContext>();
+            placeContext.Set<Order>().Add(order);
             await placeContext.SaveChangesAsync();
         }
 
         using var scope = _provider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-        var reloaded = await context.Orders.FirstAsync(o => o.Id == order.Id);
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var reloaded = await context.Set<Order>().FirstAsync(o => o.Id == order.Id);
         var failResult = reloaded.Fail();
 
         var act = async () => await context.SaveChangesAsync();
@@ -126,8 +126,8 @@ public class DomainEventPublishInterceptorTests(MsSqlContainerFixture fixture) :
         secondOrder.Place(Money.Create(Currency.Usd, 0m).Ok!);
 
         using var scope = _provider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-        context.Orders.AddRange(firstOrder, secondOrder);
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        context.Set<Order>().AddRange(firstOrder, secondOrder);
         await context.SaveChangesAsync();
 
         (await _harness.Published.Any<OrderPlacedIntegration>(m => m.Context.Message.OrderId == firstOrder.Id.Id))

@@ -1,3 +1,4 @@
+using Api.Persistence;
 using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -20,12 +21,12 @@ public class PaymentPersistenceTests(MsSqlContainerFixture fixture) : Integratio
 
         await using (var writeContext = CreatePaymentsContext())
         {
-            writeContext.Payments.Add(payment);
+            writeContext.Set<Payment>().Add(payment);
             await writeContext.SaveChangesAsync();
         }
 
         await using var readContext = CreatePaymentsContext();
-        var reloaded = await readContext.Payments.FirstOrDefaultAsync(p => p.Id == payment.Id);
+        var reloaded = await readContext.Set<Payment>().FirstOrDefaultAsync(p => p.Id == payment.Id);
 
         reloaded.Should().NotBeNull();
         reloaded!.Status.Should().Be(PaymentStatus.Pending);
@@ -42,15 +43,15 @@ public class PaymentPersistenceTests(MsSqlContainerFixture fixture) : Integratio
 
         await using (var writeContext = CreatePaymentsContext())
         {
-            writeContext.Payments.Add(payment);
+            writeContext.Set<Payment>().Add(payment);
             await writeContext.SaveChangesAsync();
         }
 
         await using var firstContext = CreatePaymentsContext();
         await using var secondContext = CreatePaymentsContext();
 
-        var firstCopy = await firstContext.Payments.FirstAsync(p => p.Id == payment.Id);
-        var secondCopy = await secondContext.Payments.FirstAsync(p => p.Id == payment.Id);
+        var firstCopy = await firstContext.Set<Payment>().FirstAsync(p => p.Id == payment.Id);
+        var secondCopy = await secondContext.Set<Payment>().FirstAsync(p => p.Id == payment.Id);
 
         firstCopy.Succeed();
         await firstContext.SaveChangesAsync();
@@ -70,6 +71,6 @@ public class PaymentPersistenceTests(MsSqlContainerFixture fixture) : Integratio
         caughtException.Should().NotBeNull();
     }
 
-    private PaymentsDbContext CreatePaymentsContext() =>
-        CreateContext<PaymentsDbContext>("payments", o => new PaymentsDbContext(o));
+    private AppDbContext CreatePaymentsContext() =>
+        CreateAppContext();
 }

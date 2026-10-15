@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using Api.Persistence;
+using FluentAssertions;
 using FoodDelivery.IntegrationTest.Infrastructure;
 using Ordering.Domain.Aggregates;
 using Ordering.Domain.Ids;
@@ -105,8 +106,8 @@ public class OrderRepositoryTests(MsSqlContainerFixture fixture) : IntegrationTe
         result.Should().OnlyContain(o => o.OrderLines.Count == 1);
     }
 
-    private OrderingDbContext CreateOrderingContext()
+    private AppDbContext CreateOrderingContext()
     {
-        return CreateContext<OrderingDbContext>("ordering", o => new OrderingDbContext(o));
+        return CreateAppContext();
     }
 }
